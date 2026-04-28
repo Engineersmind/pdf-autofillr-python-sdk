@@ -1,0 +1,39 @@
+{
+  "user_id": "openai_fb_user",
+  "session_id": "openai_fb_session",
+  "pdf_id": "openai_fb_pdf",
+  "pdf_hash": "openai_feedback_test_hash",
+  "timestamp": "2026-03-25T21:53:16.574727Z",
+  "errors": [
+    {
+      "error_type": "wrong_field_name",
+      "field_name": "tax_identification_number",
+      "field_type": "text",
+      "value": "123-45-6789",
+      "feedback": "This is specifically the SSN field for individuals, or EIN for entities \u2014 it is the combined tax ID number used for KYC and tax reporting",
+      "page_number": 3,
+      "timestamp": "2026-03-25T21:53:16.574727Z",
+      "user_id": "openai_fb_user",
+      "session_id": "openai_fb_session",
+      "pdf_id": "openai_fb_pdf",
+      "corrected_field_name": "ssn_ein_tax_id",
+      "gpt4_confidence": 0.95,
+      "gpt4_reasoning": "The field name is updated to reflect both the SSN and EIN usage for individuals and entities, respectively, in tax and KYC contexts."
+    },
+    {
+      "error_type": "wrong_field_name",
+      "field_name": "date_of_birth",
+      "field_type": "date",
+      "value": "2001-03-15",
+      "feedback": "For entity investors this is actually the date of incorporation, not date of birth of a person",
+      "page_number": 1,
+      "timestamp": "2026-03-25T21:53:16.574727Z",
+      "user_id": "openai_fb_user",
+      "session_id": "openai_fb_session",
+      "pdf_id": "openai_fb_pdf",
+      "corrected_field_name": "date_of_incorporation",
+      "gpt4_confidence": 0.95,
+      "gpt4_reasoning": "The user feedback indicates that the field is used to capture the date of incorporation for investors, not their date of birth."
+    }
+  ]
+}

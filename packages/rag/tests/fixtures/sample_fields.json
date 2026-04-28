@@ -1,0 +1,31 @@
+{
+  "fields": [
+    {
+      "field_id": "f001",
+      "field_name": "Investor Name",
+      "context": "Full legal name of the investor as it appears on government ID",
+      "section_context": "Investor Identity",
+      "headers": ["Section 1", "Personal Information"]
+    },
+    {
+      "field_id": "f002",
+      "field_name": "Email",
+      "context": "Email address for correspondence",
+      "section_context": "Contact Details",
+      "headers": ["Section 2", "Contact"]
+    },
+    {
+      "field_id": "f003",
+      "field_name": "Tax ID",
+      "context": "Social Security Number or Employer Identification Number",
+      "section_context": "Tax Information",
+      "headers": ["Section 3", "Tax Details"]
+    }
+  ],
+  "pdf_hash": "abc123def456",
+  "pdf_category": {
+    "category": "Private Markets",
+    "sub_category": "Private Equity",
+    "document_type": "LP Subscription Agreement"
+  }
+}

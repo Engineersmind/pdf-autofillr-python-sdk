@@ -1,0 +1,111 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pdf-autofillr"
+version = "1.1.2"
+description = "PDF form-filling ecosystem: chatbot, doc-upload, mapper and RAG — install any combination"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+keywords = ["pdf", "form-filling", "llm", "rag", "chatbot", "document-extraction"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+# No hard deps — user chooses via extras
+dependencies = []
+
+[project.optional-dependencies]
+# ── Individual modules ──────────────────────────────────────
+chatbot    = [
+    "pdf-autofillr-chatbot>=0.2.7",
+    "pdf-autofillr-mapper>=1.0.6",
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.20.0",
+]
+doc-upload = [
+    "pdf-autofillr-doc-upload>=0.1.3",
+    "pdf-autofillr-mapper>=1.0.6",
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.20.0",
+]
+mapper = [
+    "pdf-autofillr-mapper>=1.0.6",
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.20.0",
+]
+rag = [
+    "pdf-autofillr-rag[openai]>=0.2.2",
+]
+
+# ── Common combinations ─────────────────────────────────────
+chatbot-mapper = [
+    "pdf-autofillr-chatbot>=0.2.7",
+    "pdf-autofillr-mapper>=1.0.6",
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.20.0",
+]
+doc-upload-mapper = [
+    "pdf-autofillr-doc-upload>=0.1.3",
+    "pdf-autofillr-mapper>=1.0.6",
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.20.0",
+]
+chatbot-rag = [
+    "pdf-autofillr-chatbot>=0.2.7",
+    "pdf-autofillr-mapper>=1.0.6",
+    "pdf-autofillr-rag[openai]>=0.2.2",
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.20.0",
+]
+doc-upload-rag = [
+    "pdf-autofillr-doc-upload>=0.1.3",
+    "pdf-autofillr-mapper>=1.0.6",
+    "pdf-autofillr-rag[openai]>=0.2.2",
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.20.0",
+]
+chatbot-doc-upload = [
+    "pdf-autofillr-chatbot>=0.2.7",
+    "pdf-autofillr-doc-upload>=0.1.3",
+    "pdf-autofillr-mapper>=1.0.6",
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.20.0",
+]
+
+# ── Full stack ──────────────────────────────────────────────
+all = [
+    "pdf-autofillr-chatbot>=0.2.7",
+    "pdf-autofillr-doc-upload>=0.1.3",
+    "pdf-autofillr-mapper>=1.0.6",
+    "pdf-autofillr-rag[openai]>=0.2.2",
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.20.0",
+]
+
+# ── Cloud storage add-ons ───────────────────────────────────
+s3    = ["boto3>=1.35.0", "botocore>=1.35.0"]
+gcp   = ["google-cloud-storage>=2.14.0"]
+azure = ["azure-storage-blob>=12.19.0", "azure-identity>=1.15.0"]
+
+# ── RAG vector store add-ons ────────────────────────────────
+rag-openai   = ["pdf-autofillr-rag[openai]>=0.2.2"]
+rag-pinecone = ["pdf-autofillr-rag[pinecone]>=0.2.2"]
+rag-chroma   = ["pdf-autofillr-rag[chroma]>=0.2.2"]
+rag-weaviate = ["pdf-autofillr-rag[weaviate]>=0.2.2"]
+
+[project.scripts]
+pdf-autofillr = "pdf_autofillr.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/yourorg/pdf-autofillr"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pdf_autofillr"]

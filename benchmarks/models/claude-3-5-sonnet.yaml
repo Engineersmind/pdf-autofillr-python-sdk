@@ -1,0 +1,12 @@
+name: claude-3-5-sonnet
+provider: anthropic
+litellm_model: anthropic/claude-3-5-sonnet-20241022
+context_window: 200000
+pricing:
+  input_per_1m_tokens: 3.00
+  output_per_1m_tokens: 15.00
+env_key: ANTHROPIC_API_KEY
+local: false
+notes: >
+  Strong reasoning on ambiguous field labels. Largest context window — useful
+  for very long forms. Compare against gpt-4o for complex categories.

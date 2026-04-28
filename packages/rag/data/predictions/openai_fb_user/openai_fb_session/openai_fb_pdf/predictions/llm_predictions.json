@@ -1,0 +1,76 @@
+{
+  "user_id": "user_test",
+  "session_id": "session_test",
+  "pdf_id": "pdf_test",
+  "model": "llm",
+  "timestamp": "2026-03-25T10:00:00Z",
+  "pdf_hash": "testpdf_abc123",
+  "predictions": {
+    "f001": {
+      "predicted_field_name": "investor_full_legal_name",
+      "confidence": 0.93,
+      "reasoning": "Full legal name of the investor"
+    },
+    "f002": {
+      "predicted_field_name": "investor_email_address",
+      "confidence": 0.91,
+      "reasoning": "Email address for fund correspondence"
+    },
+    "f003": {
+      "predicted_field_name": "tax_identification_number",
+      "confidence": 0.89,
+      "reasoning": "SSN or EIN for tax reporting"
+    },
+    "f004": {
+      "predicted_field_name": "commitment_amount_usd",
+      "confidence": 0.92,
+      "reasoning": "Capital commitment in USD"
+    },
+    "f005": {
+      "predicted_field_name": "investor_type",
+      "confidence": 0.88,
+      "reasoning": "Type of investor entity"
+    },
+    "f006": {
+      "predicted_field_name": "residential_address_line1",
+      "confidence": 0.87,
+      "reasoning": "Street address line 1"
+    },
+    "f007": {
+      "predicted_field_name": "date_of_birth",
+      "confidence": 0.9,
+      "reasoning": "Date of birth or incorporation"
+    },
+    "f008": {
+      "predicted_field_name": "accredited_investor_status",
+      "confidence": 0.91,
+      "reasoning": "Accredited investor confirmation"
+    },
+    "f009": {
+      "predicted_field_name": "bank_account_number",
+      "confidence": 0.86,
+      "reasoning": "Bank account for wire transfers"
+    },
+    "f010": {
+      "predicted_field_name": "signature_date",
+      "confidence": 0.88,
+      "reasoning": "Date subscription was signed"
+    },
+    "f011": {
+      "predicted_field_name": "country_of_citizenship",
+      "confidence": 0.89,
+      "reasoning": "Country for FATCA/CRS"
+    },
+    "f012": {
+      "predicted_field_name": "beneficial_owner_name",
+      "confidence": 0.85,
+      "reasoning": "Ultimate beneficial owner"
+    }
+  },
+  "summary": {
+    "total_fields": 12,
+    "predicted_fields": 12,
+    "unpredicted_fields": 0,
+    "avg_confidence": 0.894
+  }
+}

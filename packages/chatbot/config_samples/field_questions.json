@@ -1,0 +1,174 @@
+{
+  "investor_type_id": "What is the investor type?",
+  "investor_full_legal_name_id": "Please provide the investor's full legal name.",
+  "investor_type": {
+    "_group_question": "Do you want to provide your investor type (yes/no)?",
+    "individual_check": "Is the investor an Individual?",
+    "partnership_check": "Is the investor a Partnership?",
+    "corporation_check": "Is the investor a Corporation?",
+    "llc_check": "Is the investor a LLC?",
+    "trust_check": "Is the investor a Trust?",
+    "nonprofit_check": "Is the investor a Non-Profit?",
+    "fund_fund_of_funds_check": "Is the investor a Fund or Fund of Funds?",
+    "ira_check": "Is the investor an IRA?",
+    "government_check": "Is the investor a Government entity?",
+    "education_institution_check": "Is the investor an Educational Institution?"
+  },
+
+  "address_registered": {
+    "_group_question": "Do you want to provide your registered address (yes/no)?",
+    "address_registered_line1_id": "Please provide the registered address (Line 1: Street name and building number).",
+    "address_registered_line2_id": "Please provide the registered address (Line 2: Block, apartment, or area details).",
+    "address_registered_city_id": "Please provide the registered city.",
+    "address_registered_state_id": "Please provide the registered state.",
+    "address_registered_country_id": "Please provide the registered country.",
+    "address_registered_zip_id": "Please provide the registered zip code."
+  },
+
+  "address_mailing": {
+    "_group_question": "Do you want to provide your mailing address (yes/no)?",
+    "address_mailing_line1_id": "Please provide the mailing address (Line 1: Street name and building number).",
+    "address_mailing_line2_id": "Please provide the mailing address (Line 2: Block, apartment, or area details).",
+    "address_mailing_city_id": "Please provide the mailing city.",
+    "address_mailing_state_id": "Please provide the mailing state.",
+    "address_mailing_country_id": "Please provide the mailing country.",
+    "address_mailing_zip_id": "Please provide the mailing zip code."
+  },
+
+  "address_jurisdiction": {
+    "_group_question": "Do you want to provide your jurisdiction address (yes/no)?",
+    "address_jurisdiction_line1_id": "Please provide the jurisdiction address (Line 1: Street name and building number).",
+    "address_jurisdiction_line2_id": "Please provide the jurisdiction address (Line 2: Block, apartment, or area details).",
+    "address_jurisdiction_city_id": "Please provide the jurisdiction city.",
+    "address_jurisdiction_state_id": "Please provide the jurisdiction state.",
+    "address_jurisdiction_country_id": "Please provide the jurisdiction country.",
+    "address_jurisdiction_zip_id": "Please provide the jurisdiction zip code."
+  },
+
+  "investor_ein_tax_id": "Please provide the Investor's Employer Identification Number or Tax Identification Number.",
+  "investor_ssn_id": "Please provide the Investor's Social Security Number.",
+  "investor_telephone_id": "Please provide the Investor's telephone number.",
+  "investor_telephone_country_code_id": "Please provide the country code for the Investor's telephone number.",
+  "investor_telephone_part_1_id": "Please provide the first part of the Investor's telephone number.",
+  "investor_telephone_part_2_id": "Please provide the second part of the Investor's telephone number.",
+  "investor_telephone_part_3_id": "Please provide the third part of the Investor's telephone number.",
+  "investor_fax_id": "Please provide the Investor's fax number.",
+  "investor_fax_part_1_id": "Please provide the first part of the Investor's fax number.",
+  "investor_fax_part_2_id": "Please provide the second part of the Investor's fax number.",
+  "investor_fax_part_3_id": "Please provide the third part of the Investor's fax number.",
+  "investor_email_id": "Please provide the Investor's email address.",
+
+  "form_pf": {
+    "_group_question": "Do you want to provide your form pf classification (yes/no)?",
+    "form_pf_non_individual_investment_company_check": "Is the investor a Non-Individual Investment Company?",
+    "form_pf_non_individual_private_fund_check": "Is the investor a Non-Individual Private Fund?",
+    "form_pf_non_individual_banking_or_thrift_institution_check": "Is the investor a Banking or Thrift Institution?",
+    "form_pf_non_individual_non_profit_organization_check": "Is the investor a Non-Profit Organization?",
+    "form_pf_non_individual_sovereign_wealth_fund_or_foreign_official_institution_check": "Is the investor a Sovereign Wealth Fund or Foreign Official Institution?",
+    "form_pf_non_individual_government_entity_check": "Is the investor a Government Entity?",
+    "form_pf_non_individual_government_pension_plan_check": "Is the investor a Government Pension Plan?",
+    "form_pf_non_individual_pension_plan_check": "Is the investor a Pension Plan (non-governmental)?",
+    "form_pf_individual_us_person_check": "Is the investor an Individual United States Person?",
+    "form_pf_individual_non_us_person_check": "Is the investor an Individual who is not a United States Person?"
+  },
+
+  "investor_date_of_birth_id": "Please provide the investor's date of birth.",
+  "inception_date_id": "Please provide the inception date of the entity or investment.",
+
+  "entity_representative": {
+    "_group_question": "Do you want to provide your entity representative details (yes/no)?",
+    "entity_representative_name_id": "Please provide the Entity Representative's name.",
+    "entity_representative_title_id": "Please provide the Entity Representative's title.",
+    "entity_representative_email_id": "Please provide the Entity Representative's email address."
+  },
+
+  "co_investor": {
+    "_group_question": "Do you want to provide your co-investor details (yes/no)?",
+    "co_investor_name_id": "Please provide the Co-Investor's full name.",
+    "co_investor_email_id": "Please provide the Co-Investor's email address.",
+    "co_investor_dob_id": "Please provide the Co-Investor's date of birth."
+  },
+
+  "investor_occupation_id": "Please provide the Investor's occupation.",
+  "nature_of_business_id": "Please provide the nature of the Investor's business.",
+  "principal_place_of_business_id": "Please provide the Investor's principal place of business.",
+  "domicile_or_country_of_incorporation_id": "Please provide the country of incorporation or domicile.",
+  "point_of_contact_information_id": "Please provide the primary point of contact information.",
+
+  "wiring_details": {
+    "_group_question": "Do you want to provide your wiring details (yes/no)?",
+    "wiring_details_bank_name_id": "Please provide the bank name.",
+    "wiring_details_account_name_id": "Please provide the account name.",
+    "wiring_details_account_number_id": "Please provide the account number.",
+    "wiring_details_aba_or_chips_number_id": "Please provide the ABA or CHIPS number.",
+    "wiring_details_iban_id": "Please provide the IBAN.",
+    "wiring_details_swift_code_id": "Please provide the SWIFT code.",
+    "wiring_details_for_further_credit_id": "Please provide any further credit instructions. If this is not applicable, please respond with 'N/A'.",
+    "wiring_details_bank_in_fatf_country_check": "Is the bank located in a Financial Action Task Force (FATF) compliant country?",
+
+
+    "wiring_address": {
+      "_group_question": "Do you want to provide your bank address (yes/no)?",
+      "wiring_details_address_line1_id": "Please provide the bank address (Line 1: Street name and building number).",
+      "wiring_details_address_line2_id": "Please provide the bank address (Line 2: Block, apartment, or area details).",
+      "wiring_details_address_city_id": "Please provide the bank's city.",
+      "wiring_details_address_state_id": "Please provide the bank's state.",
+      "wiring_details_address_country_id": "Please provide the bank's country.",
+      "wiring_details_address_zip_id": "Please provide the bank's zip code."
+    }
+  },
+
+  "authorized_signatory_id": "Please provide details of the authorized signatory.",
+  "commitment_amount_id": "Please provide the commitment amount.",
+  "pep_check": "Is the investor a Politically Exposed Person?",
+  "currency_id": "Please specify the preferred transaction currency.",
+  "minimum_investment_amount_id": "Please provide the minimum investment amount.",
+  "restricted_domicile_check": "Is the investor's domicile in a restricted jurisdiction?",
+  "aml_kyc_clearance_check": "Has the investor completed AML/KYC clearance?",
+
+  "directors_ids": "Please provide the list of directors.",
+  "joint_owner_ids": "Please provide details of any joint owners.",
+  "managing_partners_ids": "Please provide the list of managing partners.",
+  "managing_director_ids": "Please provide the list of managing directors.",
+  "trustees_ids": "Please provide the list of trustees.",
+  "beneficial_owners_ids": "Please provide the list of beneficial owners.",
+
+  "share_class": {
+    "_group_question": "Do you want to provide your share class (yes/no)?",
+    "share_class_ordinary_common_check": "Does the subscription include Ordinary/Common shares?",
+    "share_class_preferred_check": "Does the subscription include Preferred shares?",
+    "share_class_class_a_check": "Does the subscription include Class A shares?",
+    "share_class_class_b_check": "Does the subscription include Class B shares?",
+    "share_class_class_c_check": "Does the subscription include Class C shares?",
+    "share_class_class_d_check": "Does the subscription include Class D shares?",
+    "share_class_class_e_check": "Does the subscription include Class E shares?",
+    "share_class_class_f_check": "Does the subscription include Class F shares?",
+    "share_class_non_voting_check": "Does the subscription include Non-Voting shares?",
+    "share_class_founders_check": "Does the subscription include Founders shares?",
+    "share_class_employee_esop_check": "Does the subscription include Employee (ESOP) shares?",
+    "share_class_deferred_check": "Does the subscription include Deferred shares?",
+    "share_class_growth_check": "Does the subscription include Growth shares?"
+  },
+
+  "investor_eligibility": {
+    "_group_question": "Do you want to provide your investor eligibility (yes/no)?",
+    "investor_eligibility_us_person_check": "Is the investor a United States Person?",
+    "investor_eligibility_accredited_investor_check": "Does the investor qualify as an Accredited Investor?",
+    "investor_eligibility_qualified_client_check": "Does the investor meet the Qualified Client criteria?",
+    "investor_eligibility_erisa_check": "Is the investor subject to ERISA rules?",
+    "investor_eligibility_qualified_purchaser_check": "Does the investor meet Qualified Purchaser requirements?",
+    "investor_eligibility_restricted_check": "Is the investor considered a Restricted Person?",
+    "investor_eligibility_finra_new_issue_eligibility_check": "Does the investor comply with FINRA New Issue Eligibility (Rules 5130/5131)?"
+  },
+
+  "custodian_details": {
+    "_group_question": "Do you want to provide your custodian details (yes/no)?",
+    "custodian_details_custodian_name_id": "Please provide the custodian's name.",
+    "custodian_details_account_number_id": "Please provide the custodian account number.",
+    "custodian_details_email_id": "Please provide the custodian's email address.",
+    "custodian_details_phone_id": "Please provide the custodian's telephone number.",
+    "custodian_details_swift_code_id": "Please provide the custodian's SWIFT code."
+  },
+
+  "self_certification_check": "Do you confirm self-certification?"
+}

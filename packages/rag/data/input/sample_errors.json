@@ -1,0 +1,28 @@
+[
+  {
+    "error_type": "wrong_field_name",
+    "field_name": "tax_identification_number",
+    "field_type": "text",
+    "value": "123-45-6789",
+    "feedback": "This field is the combined SSN/EIN field, not just tax ID",
+    "page_number": 3,
+    "corners": [
+      [
+        120,
+        340
+      ],
+      [
+        480,
+        340
+      ],
+      [
+        480,
+        360
+      ],
+      [
+        120,
+        360
+      ]
+    ]
+  }
+]

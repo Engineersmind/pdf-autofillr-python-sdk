@@ -1,0 +1,37 @@
+{
+  "user_id": "test_u",
+  "session_id": "test_s",
+  "pdf_id": "test_p",
+  "final_predictions": {
+    "tf_001": {
+      "selected_field_name": "investor_type",
+      "selected_from": "rag",
+      "rag_confidence": 0.9832375878330376,
+      "llm_confidence": 0.9832375878330376
+    },
+    "tf_002": {
+      "selected_field_name": "investormailingaddressline1_ID",
+      "selected_from": "rag",
+      "rag_confidence": 0.9999996523481872,
+      "llm_confidence": 0.9999996523481872
+    },
+    "tf_003": {
+      "selected_field_name": "NonIndividualStateorMunicipalGovernmentEntity(otherthanagovernmentalpensionplan)_ID",
+      "selected_from": "rag",
+      "rag_confidence": 0.9999939227976037,
+      "llm_confidence": 0.9999939227976037
+    },
+    "tf_004": {
+      "selected_field_name": "IBAN",
+      "selected_from": "rag",
+      "rag_confidence": 0.999999073059755,
+      "llm_confidence": 0.999999073059755
+    },
+    "tf_005": {
+      "selected_field_name": "share_class_A",
+      "selected_from": "rag",
+      "rag_confidence": 0.9999996895545433,
+      "llm_confidence": 0.9999996895545433
+    }
+  }
+}

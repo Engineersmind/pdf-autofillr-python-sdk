@@ -1,0 +1,70 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+!README.md
+docs/
+rough_docs/
+
+# Tests (uncomment to exclude tests from image)
+# tests/
+# test_*.py
+# *_test.py
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Temporary files
+*.log
+*.tmp
+tmp/
+temp/
+
+# Module-specific excludes
+entrypoints/
+modules/
+setup.py
+pyproject.toml
+requirements.txt
+requirements-aws.txt
+requirements-azure.txt
+requirements-gcp.txt
+requirements-api.txt
+# Keep requirements-full.txt for Docker build

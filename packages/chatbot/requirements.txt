@@ -1,0 +1,14 @@
+# Core runtime dependencies
+# Install with: pip install pdf-autofillr-chatbot
+# Or directly: pip install -r requirements.txt
+
+langchain-openai>=0.2.0
+langchain-core>=0.3.0
+fuzzywuzzy>=0.18.0
+python-levenshtein>=0.12.0
+python-dotenv>=1.0.0
+aiohttp>=3.8.0
+
+# Mapper is now a hard dependency — auto-installed with the chatbot
+pdf-autofillr-mapper>=1.0.0
+httpx>=0.24.0

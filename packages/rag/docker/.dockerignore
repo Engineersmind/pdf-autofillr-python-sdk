@@ -1,0 +1,42 @@
+# .dockerignore
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+.env
+*.env
+.venv
+venv/
+env/
+
+# Test artifacts
+.pytest_cache
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Data dirs (mounted as volumes at runtime)
+ragpdf_data/
+chroma_data/
+
+# Tooling
+.git
+.github
+.ruff_cache
+.mypy_cache
+*.log
+
+# Docs / misc
+*.md
+LICENSE
+*.txt
+*.zip
+ignore_this.txt
+tbd_*.txt
+run.txt
+
+# Docker folder itself doesn't need to be in the build context
+docker/

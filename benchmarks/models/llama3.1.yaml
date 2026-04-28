@@ -1,0 +1,15 @@
+name: llama3.1
+provider: meta (via Ollama)
+litellm_model: ollama/llama3.1
+context_window: 128000
+pricing:
+  input_per_1m_tokens: 0.0
+  output_per_1m_tokens: 0.0
+env_key: null
+local: true
+setup: >
+  Install Ollama: https://ollama.ai/download
+  Pull model: ollama pull llama3.1
+notes: >
+  Free, runs locally. No data leaves the machine — suitable for sensitive forms.
+  Slower than cloud models on CPU. Use a GPU machine for comparable latency.

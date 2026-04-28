@@ -1,0 +1,75 @@
+# =============================================================================
+# PDF-AutoFillr SDK — .gitignore
+# Applies to the sdk branch (SDK/ folder contents)
+# =============================================================================
+
+# ── Secrets & environment ─────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.p12
+*.pfx
+
+# ── Python build artefacts ────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+wheels/
+*.whl
+MANIFEST
+*.egg-info/
+.installed.cfg
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ── Package distribution ──────────────────────────────────────────────────────
+/dist/
+*.tar.gz
+SDK_clean.zip
+
+# ── Test output ───────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.xml
+.tox/
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+# Keep Dockerfiles tracked, ignore local build artefacts
+
+# ── Node ──────────────────────────────────────────────────────────────────────
+node_modules/
+
+# ── Java build artefacts (mapper java_utils) ──────────────────────────────────
+mapper/src/pdf_autofillr_mapper/java_utils/*/target/
+*.class
+*.jar
+# Keep pom.xml and source tracked, ignore compiled output
+
+# ── OS & editor ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+pypi.txt

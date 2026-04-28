@@ -1,0 +1,14 @@
+# Mapper dependencies (now included automatically via pdf-autofillr-mapper)
+# No separate install needed — pdf-autofillr-mapper is a core dependency.
+#
+# To use HTTP mode (mapper running as a separate server):
+#   Set MAPPER_API_URL=http://your-mapper-server:8000
+#
+# To use in-process mode (default, no server needed):
+#   Leave MAPPER_API_URL unset — PDFPipeline runs inside the chatbot process.
+#
+# Mapper server extras (only if running pdf-mapper-server separately):
+#   pip install 'pdf-autofillr-mapper[api]'
+
+pdf-autofillr-mapper>=1.0.0
+httpx>=0.24.0

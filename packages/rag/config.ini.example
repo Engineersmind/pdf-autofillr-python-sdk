@@ -1,0 +1,38 @@
+[storage]
+backend = local
+data_path = ./data/rag
+s3_bucket =
+s3_region = us-east-1
+s3_prefix = ragpdf/
+
+[embeddings]
+backend = sentence_transformer
+st_model = all-MiniLM-L6-v2
+openai_model = text-embedding-3-small
+
+[vector_store]
+backend = local
+pinecone_index = ragpdf-vectors
+pinecone_namespace = default
+chroma_path = ./chroma_data
+chroma_collection = ragpdf_vectors
+weaviate_url = http://localhost:8080
+
+[corrector]
+backend = noop
+openai_model = gpt-4-turbo-preview
+anthropic_model = claude-sonnet-4-20250514
+
+[prediction]
+threshold = 0.75
+top_k = 5
+ambiguity_threshold = 0.10
+confidence_decay_rate = 0.95
+confidence_growth_rate = 1.05
+max_confidence = 0.99
+min_confidence = 0.50
+
+[server]
+api_key = dev-key
+port = 8000
+host = 0.0.0.0

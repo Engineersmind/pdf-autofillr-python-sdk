@@ -1,0 +1,70 @@
+{
+  "timestamp": "2026-03-25T21:53:16.502523Z",
+  "summary": {
+    "vectors_updated": 12,
+    "vectors_created": 0,
+    "total": 24
+  },
+  "updates": [
+    {
+      "field_id": "f001",
+      "action": "boosted",
+      "reason": "CASE_A"
+    },
+    {
+      "field_id": "f002",
+      "action": "boosted",
+      "reason": "CASE_A"
+    },
+    {
+      "field_id": "f003",
+      "action": "boosted",
+      "reason": "CASE_A"
+    },
+    {
+      "field_id": "f004",
+      "action": "boosted",
+      "reason": "CASE_A"
+    },
+    {
+      "field_id": "f005",
+      "action": "boosted",
+      "reason": "CASE_A"
+    },
+    {
+      "field_id": "f006",
+      "action": "boosted",
+      "reason": "CASE_A"
+    },
+    {
+      "field_id": "f007",
+      "action": "boosted",
+      "reason": "CASE_A"
+    },
+    {
+      "field_id": "f008",
+      "action": "boosted",
+      "reason": "CASE_A"
+    },
+    {
+      "field_id": "f009",
+      "action": "boosted",
+      "reason": "CASE_A"
+    },
+    {
+      "field_id": "f010",
+      "action": "boosted",
+      "reason": "CASE_A"
+    },
+    {
+      "field_id": "f011",
+      "action": "boosted",
+      "reason": "CASE_A"
+    },
+    {
+      "field_id": "f012",
+      "action": "boosted",
+      "reason": "CASE_A"
+    }
+  ]
+}

@@ -1,0 +1,412 @@
+{
+  "user_id": "bu",
+  "session_id": "bs",
+  "pdf_id": "bp",
+  "model": "rag",
+  "timestamp": "2026-03-25T21:47:30.862875Z",
+  "pdf_hash": "benchfinal002",
+  "predictions": {
+    "f001": {
+      "predicted_field_name": "investor_full_legal_name",
+      "confidence": 1.0,
+      "vector_id": "vec_013",
+      "top_k": [
+        {
+          "field_name": "investor_full_legal_name",
+          "confidence": 1.0,
+          "vector_id": "vec_013"
+        },
+        {
+          "field_name": "investor_type",
+          "confidence": 0.5882652121057096,
+          "vector_id": "vec_017"
+        },
+        {
+          "field_name": "accredited_investor_status",
+          "confidence": 0.5797647456305811,
+          "vector_id": "vec_020"
+        },
+        {
+          "field_name": "date_of_birth",
+          "confidence": 0.4177628996445413,
+          "vector_id": "vec_019"
+        },
+        {
+          "field_name": "beneficial_owner_name",
+          "confidence": 0.41226267757539614,
+          "vector_id": "vec_024"
+        }
+      ],
+      "similarity_margin": 0.4117347878942904
+    },
+    "f002": {
+      "predicted_field_name": "investor_email_address",
+      "confidence": 1.0000000000000004,
+      "vector_id": "vec_014",
+      "top_k": [
+        {
+          "field_name": "investor_email_address",
+          "confidence": 1.0000000000000004,
+          "vector_id": "vec_014"
+        },
+        {
+          "field_name": "investor_full_legal_name",
+          "confidence": 0.38605981111310916,
+          "vector_id": "vec_013"
+        },
+        {
+          "field_name": "residential_address_line1",
+          "confidence": 0.3635192966810845,
+          "vector_id": "vec_018"
+        },
+        {
+          "field_name": "bank_account_number",
+          "confidence": 0.3208607615638933,
+          "vector_id": "vec_021"
+        },
+        {
+          "field_name": "date_of_birth",
+          "confidence": 0.3120286148401708,
+          "vector_id": "vec_019"
+        }
+      ],
+      "similarity_margin": 0.6139401888868913
+    },
+    "f003": {
+      "predicted_field_name": "tax_identification_number",
+      "confidence": 1.0000000000000007,
+      "vector_id": "vec_015",
+      "top_k": [
+        {
+          "field_name": "tax_identification_number",
+          "confidence": 1.0000000000000007,
+          "vector_id": "vec_015"
+        },
+        {
+          "field_name": "tax_identification_number",
+          "confidence": 0.7842429929330866,
+          "vector_id": "vec_003"
+        },
+        {
+          "field_name": "date_of_birth",
+          "confidence": 0.42453494022564064,
+          "vector_id": "vec_019"
+        },
+        {
+          "field_name": "investor_full_legal_name",
+          "confidence": 0.348335619448548,
+          "vector_id": "vec_013"
+        },
+        {
+          "field_name": "residential_address_line1",
+          "confidence": 0.2966470082129691,
+          "vector_id": "vec_018"
+        }
+      ],
+      "similarity_margin": 0.21575700706691403
+    },
+    "f004": {
+      "predicted_field_name": "commitment_amount_usd",
+      "confidence": 1.0000000000000004,
+      "vector_id": "vec_016",
+      "top_k": [
+        {
+          "field_name": "commitment_amount_usd",
+          "confidence": 1.0000000000000004,
+          "vector_id": "vec_016"
+        },
+        {
+          "field_name": "accredited_investor_status",
+          "confidence": 0.4233937522463245,
+          "vector_id": "vec_020"
+        },
+        {
+          "field_name": "signature_date",
+          "confidence": 0.35429631278435336,
+          "vector_id": "vec_022"
+        },
+        {
+          "field_name": "bank_account_number",
+          "confidence": 0.3517993231382859,
+          "vector_id": "vec_021"
+        },
+        {
+          "field_name": "investor_full_legal_name",
+          "confidence": 0.33305874690487725,
+          "vector_id": "vec_013"
+        }
+      ],
+      "similarity_margin": 0.576606247753676
+    },
+    "f005": {
+      "predicted_field_name": "investor_type",
+      "confidence": 1.0000000000000009,
+      "vector_id": "vec_017",
+      "top_k": [
+        {
+          "field_name": "investor_type",
+          "confidence": 1.0000000000000009,
+          "vector_id": "vec_017"
+        },
+        {
+          "field_name": "investor_full_legal_name",
+          "confidence": 0.5882652121057096,
+          "vector_id": "vec_013"
+        },
+        {
+          "field_name": "accredited_investor_status",
+          "confidence": 0.5458767443295465,
+          "vector_id": "vec_020"
+        },
+        {
+          "field_name": "beneficial_owner_name",
+          "confidence": 0.44185984321657834,
+          "vector_id": "vec_024"
+        },
+        {
+          "field_name": "date_of_birth",
+          "confidence": 0.3459074482826623,
+          "vector_id": "vec_019"
+        }
+      ],
+      "similarity_margin": 0.4117347878942913
+    },
+    "f006": {
+      "predicted_field_name": "residential_address_line1",
+      "confidence": 1.0000000000000004,
+      "vector_id": "vec_018",
+      "top_k": [
+        {
+          "field_name": "residential_address_line1",
+          "confidence": 1.0000000000000004,
+          "vector_id": "vec_018"
+        },
+        {
+          "field_name": "investor_email_address",
+          "confidence": 0.3635192966810845,
+          "vector_id": "vec_014"
+        },
+        {
+          "field_name": "bank_account_number",
+          "confidence": 0.3409346114003555,
+          "vector_id": "vec_021"
+        },
+        {
+          "field_name": "date_of_birth",
+          "confidence": 0.33474935849594234,
+          "vector_id": "vec_019"
+        },
+        {
+          "field_name": "tax_identification_number",
+          "confidence": 0.2966470082129691,
+          "vector_id": "vec_015"
+        }
+      ],
+      "similarity_margin": 0.6364807033189159
+    },
+    "f007": {
+      "predicted_field_name": "date_of_birth",
+      "confidence": 1.0000000000000004,
+      "vector_id": "vec_019",
+      "top_k": [
+        {
+          "field_name": "date_of_birth",
+          "confidence": 1.0000000000000004,
+          "vector_id": "vec_019"
+        },
+        {
+          "field_name": "tax_identification_number",
+          "confidence": 0.42453494022564064,
+          "vector_id": "vec_015"
+        },
+        {
+          "field_name": "investor_full_legal_name",
+          "confidence": 0.4177628996445413,
+          "vector_id": "vec_013"
+        },
+        {
+          "field_name": "investor_type",
+          "confidence": 0.3459074482826623,
+          "vector_id": "vec_017"
+        },
+        {
+          "field_name": "country_of_citizenship",
+          "confidence": 0.3348739875398775,
+          "vector_id": "vec_023"
+        }
+      ],
+      "similarity_margin": 0.5754650597743598
+    },
+    "f008": {
+      "predicted_field_name": "accredited_investor_status",
+      "confidence": 1.0000000000000002,
+      "vector_id": "vec_020",
+      "top_k": [
+        {
+          "field_name": "accredited_investor_status",
+          "confidence": 1.0000000000000002,
+          "vector_id": "vec_020"
+        },
+        {
+          "field_name": "investor_full_legal_name",
+          "confidence": 0.5797647456305811,
+          "vector_id": "vec_013"
+        },
+        {
+          "field_name": "investor_type",
+          "confidence": 0.5458767443295465,
+          "vector_id": "vec_017"
+        },
+        {
+          "field_name": "commitment_amount_usd",
+          "confidence": 0.4233937522463245,
+          "vector_id": "vec_016"
+        },
+        {
+          "field_name": "beneficial_owner_name",
+          "confidence": 0.37405077891711425,
+          "vector_id": "vec_024"
+        }
+      ],
+      "similarity_margin": 0.4202352543694191
+    },
+    "f009": {
+      "predicted_field_name": "bank_account_number",
+      "confidence": 1.0000000000000007,
+      "vector_id": "vec_021",
+      "top_k": [
+        {
+          "field_name": "bank_account_number",
+          "confidence": 1.0000000000000007,
+          "vector_id": "vec_021"
+        },
+        {
+          "field_name": "commitment_amount_usd",
+          "confidence": 0.3517993231382859,
+          "vector_id": "vec_016"
+        },
+        {
+          "field_name": "residential_address_line1",
+          "confidence": 0.3409346114003555,
+          "vector_id": "vec_018"
+        },
+        {
+          "field_name": "investor_email_address",
+          "confidence": 0.3208607615638933,
+          "vector_id": "vec_014"
+        },
+        {
+          "field_name": "tax_identification_number",
+          "confidence": 0.29462516329265476,
+          "vector_id": "vec_003"
+        }
+      ],
+      "similarity_margin": 0.6482006768617148
+    },
+    "f010": {
+      "predicted_field_name": "signature_date",
+      "confidence": 1.0000000000000007,
+      "vector_id": "vec_022",
+      "top_k": [
+        {
+          "field_name": "signature_date",
+          "confidence": 1.0000000000000007,
+          "vector_id": "vec_022"
+        },
+        {
+          "field_name": "commitment_amount_usd",
+          "confidence": 0.35429631278435336,
+          "vector_id": "vec_016"
+        },
+        {
+          "field_name": "investor_full_legal_name",
+          "confidence": 0.3360503471879588,
+          "vector_id": "vec_013"
+        },
+        {
+          "field_name": "date_of_birth",
+          "confidence": 0.33192903474259466,
+          "vector_id": "vec_019"
+        },
+        {
+          "field_name": "accredited_investor_status",
+          "confidence": 0.315913248989904,
+          "vector_id": "vec_020"
+        }
+      ],
+      "similarity_margin": 0.6457036872156473
+    },
+    "f011": {
+      "predicted_field_name": "country_of_citizenship",
+      "confidence": 1.0000000000000004,
+      "vector_id": "vec_023",
+      "top_k": [
+        {
+          "field_name": "country_of_citizenship",
+          "confidence": 1.0000000000000004,
+          "vector_id": "vec_023"
+        },
+        {
+          "field_name": "date_of_birth",
+          "confidence": 0.3348739875398775,
+          "vector_id": "vec_019"
+        },
+        {
+          "field_name": "investor_full_legal_name",
+          "confidence": 0.28293486563774217,
+          "vector_id": "vec_013"
+        },
+        {
+          "field_name": "investor_email_address",
+          "confidence": 0.26527633805065165,
+          "vector_id": "vec_014"
+        },
+        {
+          "field_name": "accredited_investor_status",
+          "confidence": 0.2636187406479459,
+          "vector_id": "vec_020"
+        }
+      ],
+      "similarity_margin": 0.6651260124601229
+    },
+    "f012": {
+      "predicted_field_name": "beneficial_owner_name",
+      "confidence": 1.0000000000000009,
+      "vector_id": "vec_024",
+      "top_k": [
+        {
+          "field_name": "beneficial_owner_name",
+          "confidence": 1.0000000000000009,
+          "vector_id": "vec_024"
+        },
+        {
+          "field_name": "investor_type",
+          "confidence": 0.44185984321657834,
+          "vector_id": "vec_017"
+        },
+        {
+          "field_name": "investor_full_legal_name",
+          "confidence": 0.41226267757539614,
+          "vector_id": "vec_013"
+        },
+        {
+          "field_name": "accredited_investor_status",
+          "confidence": 0.37405077891711425,
+          "vector_id": "vec_020"
+        },
+        {
+          "field_name": "date_of_birth",
+          "confidence": 0.3215473501517562,
+          "vector_id": "vec_019"
+        }
+      ],
+      "similarity_margin": 0.5581401567834225
+    }
+  },
+  "summary": {
+    "total_fields": 12,
+    "predicted_fields": 12,
+    "unpredicted_fields": 0,
+    "avg_confidence": 1.0
+  }
+}

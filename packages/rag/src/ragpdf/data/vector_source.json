@@ -1,0 +1,1325 @@
+{
+  "vectors": [
+    {
+      "vector_id": "vec_001",
+      "field_name": "investor_type",
+      "context": "Identifies the legal classification of the investor or entity making this subscription, used to determine applicable compliance checks, documentation requirements, and regulatory disclosures.",
+      "section_context": "Investor type classification at the start of the subscription booklet",
+      "headers": [
+        "Investor Information",
+        "Investor Type"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_002",
+      "field_name": "investorFullLegalName_ID",
+      "context": "The complete legal name of the subscribing investor exactly as it appears on official government-issued identification or corporate formation documents, used for all legal agreements, capital account records, and tax filings.",
+      "section_context": "Primary investor legal identity \u00e2\u20ac\u201d name of subscriber",
+      "headers": [
+        "Investor Information",
+        "Name of Subscriber"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_003",
+      "field_name": "individualcheck_ID",
+      "context": "Checkbox indicating the subscriber is a natural person or individual investor, triggering individual-specific eligibility questions, SSN requirement, and FATCA individual status determination.",
+      "section_context": "Type of subscriber entity selection \u00e2\u20ac\u201d individual natural person",
+      "headers": [
+        "Investor Information",
+        "Type of Subscriber",
+        "Individual"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_004",
+      "field_name": "corporationcheck_ID",
+      "context": "Checkbox indicating the subscriber is a corporation (C-Corp, S-Corp, or foreign corporation), requiring certificate of incorporation, board resolution authorizing the investment, and EIN.",
+      "section_context": "Type of subscriber entity selection \u00e2\u20ac\u201d corporation",
+      "headers": [
+        "Investor Information",
+        "Type of Subscriber",
+        "Corporation"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_005",
+      "field_name": "trustcheck_ID",
+      "context": "Checkbox indicating the subscriber is a trust (revocable, irrevocable, living, or testamentary), requiring disclosure of trustee names, trust agreement, and trust formation date.",
+      "section_context": "Type of subscriber entity selection \u00e2\u20ac\u201d trust",
+      "headers": [
+        "Investor Information",
+        "Type of Subscriber",
+        "Trust"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_006",
+      "field_name": "jointtenantscheck_ID",
+      "context": "Checkbox indicating the subscriber holds the investment as joint tenants, requiring both individuals to sign the subscription agreement and provide separate identification and eligibility certifications.",
+      "section_context": "Type of subscriber entity selection \u00e2\u20ac\u201d joint tenants",
+      "headers": [
+        "Investor Information",
+        "Type of Subscriber",
+        "Joint Tenants"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_007",
+      "field_name": "partenershipcheck_ID",
+      "context": "Checkbox indicating the subscriber is a general or limited partnership, requiring submission of the partnership agreement, list of managing partners, and confirmation of authority to bind the partnership.",
+      "section_context": "Type of subscriber entity selection \u00e2\u20ac\u201d partnership",
+      "headers": [
+        "Investor Information",
+        "Type of Subscriber",
+        "Partnership"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_008",
+      "field_name": "limitedliabilitycompanycheck_ID",
+      "context": "Checkbox indicating the subscriber is a Limited Liability Company (LLC), requiring the operating agreement, list of managing members or managers, and EIN for tax and compliance purposes.",
+      "section_context": "Type of subscriber entity selection \u00e2\u20ac\u201d limited liability company (LLC)",
+      "headers": [
+        "Investor Information",
+        "Type of Subscriber",
+        "Limited Liability Company (LLC)"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_009",
+      "field_name": "keoghplancheck_ID",
+      "context": "Checkbox indicating the subscriber is a Keogh (HR-10) tax-deferred retirement plan for self-employed individuals, which may require ERISA plan document review and prohibited transaction analysis.",
+      "section_context": "Type of subscriber entity selection \u00e2\u20ac\u201d Keogh retirement plan",
+      "headers": [
+        "Investor Information",
+        "Type of Subscriber",
+        "Keogh Plan"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_010",
+      "field_name": "fundsoffundscheck_ID",
+      "context": "Checkbox indicating the subscriber is a fund of funds, triggering look-through requirements for beneficial ownership, ERISA plan asset analysis, and Form PF reporting obligations.",
+      "section_context": "Type of subscriber entity selection \u00e2\u20ac\u201d fund of funds",
+      "headers": [
+        "Investor Information",
+        "Type of Subscriber",
+        "Fund of Funds"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_011",
+      "field_name": "otherscheck_ID",
+      "context": "Checkbox for subscriber types that do not fall within any standard listed category, requiring a written description of the entity type for compliance review and classification.",
+      "section_context": "Type of subscriber entity selection \u00e2\u20ac\u201d other non-standard entity",
+      "headers": [
+        "Investor Information",
+        "Type of Subscriber",
+        "Other"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_012",
+      "field_name": "IndividualRetirementAccount_ID",
+      "context": "Checkbox indicating the subscriber is an Individual Retirement Account (IRA) \u00e2\u20ac\u201d Traditional, Roth, SEP, or SIMPLE \u00e2\u20ac\u201d which may require custodian co-signing and prohibited transaction analysis.",
+      "section_context": "Type of subscriber entity selection \u00e2\u20ac\u201d Individual Retirement Account (IRA)",
+      "headers": [
+        "Investor Information",
+        "Type of Subscriber",
+        "Individual Retirement Account (IRA)"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_013",
+      "field_name": "BenefitPlanInvestorcheck_ID",
+      "context": "Checkbox indicating the subscriber is an ERISA benefit plan investor, triggering plan asset analysis and potentially imposing fiduciary obligations and investment restrictions on the fund manager.",
+      "section_context": "Type of subscriber entity selection \u00e2\u20ac\u201d ERISA benefit plan investor",
+      "headers": [
+        "Investor Information",
+        "Type of Subscriber",
+        "Benefit Plan Investor (ERISA)"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_014",
+      "field_name": "BrokerBreakercheck_ID",
+      "context": "Checkbox indicating the subscriber is a registered broker-dealer, subject to FINRA new issue eligibility restrictions and specific suitability review requirements under securities regulations.",
+      "section_context": "Type of subscriber entity selection \u00e2\u20ac\u201d broker-dealer",
+      "headers": [
+        "Investor Information",
+        "Type of Subscriber",
+        "Broker-Dealer"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_015",
+      "field_name": "RegisteredInvestmentCompanycheck_ID",
+      "context": "Checkbox indicating the subscriber is a registered investment company under the Investment Company Act of 1940, subject to regulatory constraints on illiquid investment concentration limits.",
+      "section_context": "Type of subscriber entity selection \u00e2\u20ac\u201d registered investment company (1940 Act)",
+      "headers": [
+        "Investor Information",
+        "Type of Subscriber",
+        "Registered Investment Company"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_016",
+      "field_name": "others_subsciber_type_check_ID",
+      "context": "Secondary checkbox for supplementary subscriber type classifications when the entity falls into multiple categories or requires an additional classification note for compliance records.",
+      "section_context": "Type of subscriber entity selection \u00e2\u20ac\u201d supplementary other classification",
+      "headers": [
+        "Investor Information",
+        "Type of Subscriber",
+        "Other (Supplementary)"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_017",
+      "field_name": "investoradressline1_ID",
+      "context": "First line of the investor's registered legal address (street number and name), used for official legal notices, capital call letters, and regulatory filings such as FATCA and CRS reporting.",
+      "section_context": "Registered address \u00e2\u20ac\u201d street address line 1",
+      "headers": [
+        "Contact Information",
+        "Address (Registered)",
+        "Address Line 1"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_018",
+      "field_name": "investoradressline2_ID",
+      "context": "Second line of the investor's registered address for suite number, apartment, floor, or building name, supplementing the primary street address for accurate legal correspondence delivery.",
+      "section_context": "Registered address \u00e2\u20ac\u201d street address line 2 / suite / floor",
+      "headers": [
+        "Contact Information",
+        "Address (Registered)",
+        "Address Line 2"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_019",
+      "field_name": "investoraddress_City",
+      "context": "City of the investor's registered legal address, used in regulatory filings and jurisdictional determination for tax withholding and compliance purposes.",
+      "section_context": "Registered address \u00e2\u20ac\u201d city",
+      "headers": [
+        "Contact Information",
+        "Address (Registered)",
+        "City"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_020",
+      "field_name": "investoraddress_State",
+      "context": "State or province of the investor's registered address, important for state tax nexus determination, blue sky law compliance, and investor residency classification.",
+      "section_context": "Registered address \u00e2\u20ac\u201d state or province",
+      "headers": [
+        "Contact Information",
+        "Address (Registered)",
+        "State"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_021",
+      "field_name": "investoraddress_Country",
+      "context": "Country of the investor's registered address, critical for determining FATCA status, CRS reporting obligations, AML/KYC risk classification, and applicable tax treaty benefits.",
+      "section_context": "Registered address \u00e2\u20ac\u201d country",
+      "headers": [
+        "Contact Information",
+        "Address (Registered)",
+        "Country"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_022",
+      "field_name": "investoraddress_Zip",
+      "context": "Postal or ZIP code of the investor's registered address, used for correspondence routing and geographic risk profiling in regulatory reporting.",
+      "section_context": "Registered address \u00e2\u20ac\u201d postal / ZIP code",
+      "headers": [
+        "Contact Information",
+        "Address (Registered)",
+        "Zip Code"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_023",
+      "field_name": "investormailingaddressline1_ID",
+      "context": "First line of the investor's mailing address when different from the registered address, used for sending capital call notices, distribution statements, tax documents, and NAV reports.",
+      "section_context": "Mailing address \u00e2\u20ac\u201d street address line 1 for investor correspondence",
+      "headers": [
+        "Contact Information",
+        "Address (Mailing)",
+        "Address Line 1"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_024",
+      "field_name": "investormailingaddressline2_ID",
+      "context": "Second line of the investor's mailing address for suite, floor, care-of designations, or additional routing information for postal delivery of fund communications.",
+      "section_context": "Mailing address \u00e2\u20ac\u201d street address line 2",
+      "headers": [
+        "Contact Information",
+        "Address (Mailing)",
+        "Address Line 2"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_025",
+      "field_name": "investormailingaddress_City",
+      "context": "City of the investor's mailing address, used for routing all postal correspondence and document delivery from the fund.",
+      "section_context": "Mailing address \u00e2\u20ac\u201d city",
+      "headers": [
+        "Contact Information",
+        "Address (Mailing)",
+        "City"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_026",
+      "field_name": "investormailingaddress_State",
+      "context": "State or province of the investor's mailing address, used for postal routing of fund communications and investor correspondence.",
+      "section_context": "Mailing address \u00e2\u20ac\u201d state or province",
+      "headers": [
+        "Contact Information",
+        "Address (Mailing)",
+        "State"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_027",
+      "field_name": "investormailingaddress_Country",
+      "context": "Country of the investor's mailing address, which may differ from the registered or jurisdiction address for investors with international operations or foreign domicile.",
+      "section_context": "Mailing address \u00e2\u20ac\u201d country",
+      "headers": [
+        "Contact Information",
+        "Address (Mailing)",
+        "Country"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_028",
+      "field_name": "investormailingaddress_Zip",
+      "context": "Postal or ZIP code of the investor's mailing address for accurate routing of fund communications and investor correspondence.",
+      "section_context": "Mailing address \u00e2\u20ac\u201d postal / ZIP code",
+      "headers": [
+        "Contact Information",
+        "Address (Mailing)",
+        "Zip Code"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_029",
+      "field_name": "investorjuridictionaddressline1_ID",
+      "context": "First line of the investor's legal jurisdiction address \u00e2\u20ac\u201d the formal location where the entity is incorporated or organized, used to determine governing law, applicable regulations, and tax treaty eligibility.",
+      "section_context": "Jurisdiction address \u00e2\u20ac\u201d legal place of organization, line 1",
+      "headers": [
+        "Contact Information",
+        "Address (Jurisdiction)",
+        "Address Line 1"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_030",
+      "field_name": "investorjuridictionaddressline2_ID",
+      "context": "Second line of the investor's jurisdiction address providing additional detail for the legal place of incorporation or organization.",
+      "section_context": "Jurisdiction address \u00e2\u20ac\u201d legal place of organization, line 2",
+      "headers": [
+        "Contact Information",
+        "Address (Jurisdiction)",
+        "Address Line 2"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_031",
+      "field_name": "investorjuridictionaddress_City",
+      "context": "City in the investor's legal jurisdiction of incorporation or organization, used for regulatory filings and corporate registration verification.",
+      "section_context": "Jurisdiction address \u00e2\u20ac\u201d city",
+      "headers": [
+        "Contact Information",
+        "Address (Jurisdiction)",
+        "City"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_032",
+      "field_name": "investorjuridictionaddress_State",
+      "context": "State or province in the investor's legal jurisdiction of incorporation, such as the U.S. state of formation (e.g., Delaware) or equivalent for offshore entities.",
+      "section_context": "Jurisdiction address \u00e2\u20ac\u201d state or province",
+      "headers": [
+        "Contact Information",
+        "Address (Jurisdiction)",
+        "State"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_033",
+      "field_name": "investorjuridictionaddress_Country",
+      "context": "Country of the investor's legal jurisdiction, used to determine applicable corporate law, FATCA/CRS classification, treaty eligibility, and whether enhanced due diligence is required under AML regulations.",
+      "section_context": "Jurisdiction address \u00e2\u20ac\u201d country of legal incorporation",
+      "headers": [
+        "Contact Information",
+        "Address (Jurisdiction)",
+        "Country"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_034",
+      "field_name": "investorjuridictionaddress_Zip",
+      "context": "Postal or ZIP code of the investor's legal jurisdiction address in the country of incorporation.",
+      "section_context": "Jurisdiction address \u00e2\u20ac\u201d postal / ZIP code",
+      "headers": [
+        "Contact Information",
+        "Address (Jurisdiction)",
+        "Zip Code"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_035",
+      "field_name": "investorEINTAX_ID",
+      "context": "Employer Identification Number (EIN) or Federal Tax Identification Number assigned to the investor entity by the IRS, required for all non-individual investors for tax reporting, Schedule K-1 issuance, and FATCA compliance.",
+      "section_context": "Tax identification \u00e2\u20ac\u201d EIN or TIN for entity investors",
+      "headers": [
+        "Tax Information",
+        "EIN / Tax ID"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_036",
+      "field_name": "investorSSN_ID",
+      "context": "Social Security Number of an individual investor as issued by the Social Security Administration, required for IRS tax reporting, W-9 certification, K-1 issuance, and FATCA individual U.S. person compliance.",
+      "section_context": "Tax identification \u00e2\u20ac\u201d Social Security Number for individual investors",
+      "headers": [
+        "Tax Information",
+        "SSN"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_037",
+      "field_name": "investortelephoneNO_ID",
+      "context": "Primary telephone number where the investor or authorized representative can be reached for time-sensitive matters such as capital calls, redemption notices, or compliance verification.",
+      "section_context": "Primary contact information \u00e2\u20ac\u201d investor telephone number",
+      "headers": [
+        "Contact Information",
+        "Telephone Number"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_038",
+      "field_name": "investor_fax_NO",
+      "context": "Fax number for the investor, used for transmission of signed subscription documents, legal notices, or compliance materials where fax delivery is accepted as valid submission.",
+      "section_context": "Secondary contact information \u00e2\u20ac\u201d investor fax number",
+      "headers": [
+        "Contact Information",
+        "Fax Number"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_039",
+      "field_name": "investoremail_ID",
+      "context": "Primary email address for the investor used for all electronic communications including capital call notices, distribution notifications, quarterly reports, K-1 delivery, and investor portal access.",
+      "section_context": "Primary contact information \u00e2\u20ac\u201d investor email address",
+      "headers": [
+        "Contact Information",
+        "Email Address"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_040",
+      "field_name": "NonIndividualInvestmentCompany_ID",
+      "context": "Form PF classification checkbox indicating the investor is a non-individual registered investment company under the Investment Company Act of 1940, used by SEC-registered advisers for regulatory Form PF reporting.",
+      "section_context": "Form PF investor classification \u00e2\u20ac\u201d non-individual investment company",
+      "headers": [
+        "Investor Classification",
+        "Form PF",
+        "Non-Individual Investment Company"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_041",
+      "field_name": "NonIndividualPrivateFund_ID",
+      "context": "Form PF classification checkbox indicating the investor is a non-individual private fund such as a hedge fund, private equity fund, or venture capital fund, used for systemic risk reporting and investor composition tracking.",
+      "section_context": "Form PF investor classification \u00e2\u20ac\u201d non-individual private fund",
+      "headers": [
+        "Investor Classification",
+        "Form PF",
+        "Non-Individual Private Fund"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_042",
+      "field_name": "NonIndividualBankingorThriftInstitution_ID",
+      "context": "Form PF classification checkbox indicating the investor is a banking institution, savings bank, thrift institution, or credit union subject to bank regulatory oversight and potential Volcker Rule investment restrictions.",
+      "section_context": "Form PF investor classification \u00e2\u20ac\u201d banking or thrift institution",
+      "headers": [
+        "Investor Classification",
+        "Form PF",
+        "Banking or Thrift Institution"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_043",
+      "field_name": "NonIndividualNon-profitOrganization_ID",
+      "context": "Form PF classification checkbox indicating the investor is a non-profit organization such as a foundation, endowment, or charitable entity exempt from federal income taxes under IRC Section 501(c)(3).",
+      "section_context": "Form PF investor classification \u00e2\u20ac\u201d non-profit organization or foundation",
+      "headers": [
+        "Investor Classification",
+        "Form PF",
+        "Non-Profit Organization"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_044",
+      "field_name": "NonIndividualSovereignWealthFundorForeignOfficialInstitution_ID",
+      "context": "Form PF classification checkbox indicating the investor is a sovereign wealth fund, central bank, or foreign official government institution potentially qualifying for special tax treatment under IRC Section 892 and requiring enhanced due diligence.",
+      "section_context": "Form PF investor classification \u00e2\u20ac\u201d sovereign wealth fund or foreign official institution",
+      "headers": [
+        "Investor Classification",
+        "Form PF",
+        "Sovereign Wealth Fund / Foreign Official Institution"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_045",
+      "field_name": "NonIndividualStateorMunicipalGovernmentEntity(otherthanagovernmentalpensionplan)_ID",
+      "context": "Form PF classification checkbox indicating the investor is a U.S. state, county, city, or municipal government entity (excluding pension plans), potentially subject to pay-to-play regulations and placement agent disclosure requirements.",
+      "section_context": "Form PF investor classification \u00e2\u20ac\u201d state or municipal government entity (non-pension)",
+      "headers": [
+        "Investor Classification",
+        "Form PF",
+        "State / Municipal Government Entity"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_046",
+      "field_name": "NonIndividualStateorMunicipalGovernmentalPensionPlan_ID",
+      "context": "Form PF classification checkbox indicating the investor is a state or municipal governmental pension plan such as a public employee retirement system, typically exempt from ERISA but subject to state-specific fiduciary rules.",
+      "section_context": "Form PF investor classification \u00e2\u20ac\u201d state or municipal governmental pension plan",
+      "headers": [
+        "Investor Classification",
+        "Form PF",
+        "Governmental Pension Plan"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_047",
+      "field_name": "NonIndividualPensionPlan(otherthanagovernmentalpensionplan)_ID",
+      "context": "Form PF classification checkbox indicating the investor is a private-sector defined benefit or defined contribution pension plan subject to ERISA, whose participation may trigger plan asset analysis for the fund.",
+      "section_context": "Form PF investor classification \u00e2\u20ac\u201d private pension plan (non-governmental)",
+      "headers": [
+        "Investor Classification",
+        "Form PF",
+        "Pension Plan (Non-Governmental)"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_048",
+      "field_name": "IndividualthatisaUnitedStatesperson_ID",
+      "context": "Form PF classification checkbox indicating the investor is an individual qualifying as a U.S. person under IRS regulations (U.S. citizen, resident alien, or green card holder), triggering W-9 certification and U.S. federal income tax reporting.",
+      "section_context": "Form PF investor classification \u00e2\u20ac\u201d individual U.S. person",
+      "headers": [
+        "Investor Classification",
+        "Form PF",
+        "Individual \u00e2\u20ac\u201d U.S. Person"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_049",
+      "field_name": "IndividualthatisnotaUnitedStatesperson_ID",
+      "context": "Form PF classification checkbox indicating the investor is an individual who is not a U.S. person, triggering W-8BEN certification requirements, potential withholding tax obligations, and FATCA/CRS reporting.",
+      "section_context": "Form PF investor classification \u00e2\u20ac\u201d individual non-U.S. person",
+      "headers": [
+        "Investor Classification",
+        "Form PF",
+        "Individual \u00e2\u20ac\u201d Non-U.S. Person"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_050",
+      "field_name": "investorDOB_ID",
+      "context": "Date of birth of the individual investor (MM/DD/YYYY), used for KYC identity verification, AML screening, and investor age eligibility confirmation during onboarding.",
+      "section_context": "Individual investor personal information \u00e2\u20ac\u201d date of birth",
+      "headers": [
+        "Personal Information",
+        "Date of Birth"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_051",
+      "field_name": "Co-investorDOB_ID",
+      "context": "Date of birth of the co-investor or joint account holder (MM/DD/YYYY), required for KYC identity verification in joint tenancy or co-investor subscription structures.",
+      "section_context": "Co-investor personal information \u00e2\u20ac\u201d date of birth",
+      "headers": [
+        "Personal Information",
+        "Co-Investor Date of Birth"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_052",
+      "field_name": "investorInceptionDate_ID",
+      "context": "Date on which the investor entity was formally incorporated or legally formed (MM/DD/YYYY), used to verify entity existence, assess entity age for AML risk scoring, and confirm good standing at time of subscription.",
+      "section_context": "Entity information \u00e2\u20ac\u201d date of formation or inception",
+      "headers": [
+        "Entity Information",
+        "Inception Date"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_053",
+      "field_name": "EntityRepresentativeName_ID",
+      "context": "Full legal name of the authorized representative acting on behalf of the investor entity, who is authorized to execute the subscription agreement and legally bind the entity to the fund's terms.",
+      "section_context": "Entity representative \u00e2\u20ac\u201d authorized signatory full name",
+      "headers": [
+        "Entity Information",
+        "Entity Representative",
+        "Name"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_054",
+      "field_name": "EntityRepresentativeTitle_ID",
+      "context": "Job title or official position of the entity's authorized representative (e.g., CEO, Managing Partner, Trustee), confirming the individual's legal authority to bind the entity in this subscription.",
+      "section_context": "Entity representative \u00e2\u20ac\u201d authorized signatory title or position",
+      "headers": [
+        "Entity Information",
+        "Entity Representative",
+        "Title"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_055",
+      "field_name": "EntityRepresentativeEmail_ID",
+      "context": "Email address of the entity's authorized representative for receiving official fund communications, compliance correspondence, and execution versions of fund documents.",
+      "section_context": "Entity representative \u00e2\u20ac\u201d authorized signatory email address",
+      "headers": [
+        "Entity Information",
+        "Entity Representative",
+        "Email"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_056",
+      "field_name": "Co-InvestorMail_ID",
+      "context": "Email address of the co-investor or joint account holder for sending joint subscription communications, account statements, and tax documents related to the shared investment.",
+      "section_context": "Co-investor contact information \u00e2\u20ac\u201d email address",
+      "headers": [
+        "Personal Information",
+        "Co-Investor Email"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_057",
+      "field_name": "Co-Investorname_ID",
+      "context": "Full legal name of the co-investor or second joint account holder as it appears on official identity documents, used for KYC screening and joint account registration.",
+      "section_context": "Co-investor identification \u00e2\u20ac\u201d full legal name",
+      "headers": [
+        "Personal Information",
+        "Co-Investor Name"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_058",
+      "field_name": "InvestorOccupation_ID",
+      "context": "Primary occupation or profession of the individual investor, used in suitability assessment, source of wealth verification, and AML risk classification during investor onboarding.",
+      "section_context": "Individual investor background \u00e2\u20ac\u201d occupation and profession",
+      "headers": [
+        "Personal Information",
+        "Investor Occupation"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_059",
+      "field_name": "InvestorNatureofbusiness_ID",
+      "context": "Description of the primary business activity or industry sector of the investor entity, used for AML risk profiling, source of funds verification, and investor suitability review.",
+      "section_context": "Entity information \u00e2\u20ac\u201d nature of business and industry sector",
+      "headers": [
+        "Entity Information",
+        "Nature of Business"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_060",
+      "field_name": "Principal_place_of_business",
+      "context": "Primary location where the investor entity conducts its main business operations, which may differ from the registered address and is used for tax nexus analysis and AML risk assessment.",
+      "section_context": "Entity information \u00e2\u20ac\u201d principal place of business operations",
+      "headers": [
+        "Entity Information",
+        "Principal Place of Business"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_061",
+      "field_name": "Domicile_or_country_of_incorporation",
+      "context": "Country in which the investor entity is legally domiciled or incorporated, used to determine governing corporate law, applicable tax treaties, FATCA/CRS classification, and jurisdiction-based AML risk checks.",
+      "section_context": "Entity information \u00e2\u20ac\u201d country of legal domicile or incorporation",
+      "headers": [
+        "Entity Information",
+        "Country of Incorporation / Domicile"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_062",
+      "field_name": "point_of_contact_information_id",
+      "context": "Name, role, and contact details of the designated primary point of contact for investor relations, operational queries, compliance requests, and document follow-ups during and after onboarding.",
+      "section_context": "Contact information \u00e2\u20ac\u201d designated investor relations point of contact",
+      "headers": [
+        "Contact Information",
+        "Point of Contact"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_063",
+      "field_name": "BankName",
+      "context": "Full legal name of the bank designated by the investor to receive capital distributions, redemption proceeds, and return of capital payments via wire transfer.",
+      "section_context": "Wiring details \u00e2\u20ac\u201d receiving bank name for fund distributions",
+      "headers": [
+        "Banking Details",
+        "Wiring Details",
+        "Bank Name"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_064",
+      "field_name": "AccountName",
+      "context": "Exact legal name registered on the receiving bank account, which must match the investor's legal name to ensure accurate wire settlement and prevent AML compliance flags.",
+      "section_context": "Wiring details \u00e2\u20ac\u201d account holder name on receiving bank account",
+      "headers": [
+        "Banking Details",
+        "Wiring Details",
+        "Account Name"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_065",
+      "field_name": "AccountNumber",
+      "context": "Bank account number at the receiving financial institution used for routing capital distributions and confirming capital call funding, verified against account ownership documentation for AML compliance.",
+      "section_context": "Wiring details \u00e2\u20ac\u201d receiving bank account number",
+      "headers": [
+        "Banking Details",
+        "Wiring Details",
+        "Account Number"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_066",
+      "field_name": "ABA0rchipsNumber",
+      "context": "ABA routing number (9-digit code for U.S. domestic Fedwire or ACH transfers) or CHIPS Universal Identifier for high-value domestic interbank transfers through the Clearing House Interbank Payments System.",
+      "section_context": "Wiring details \u00e2\u20ac\u201d domestic wire transfer routing identifier (ABA or CHIPS)",
+      "headers": [
+        "Banking Details",
+        "Wiring Details",
+        "ABA / CHIPS Number"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_067",
+      "field_name": "IBAN",
+      "context": "International Bank Account Number used for cross-border wire transfers within SEPA and other IBAN-adopting regions, providing standardized account identification to reduce errors in international payments.",
+      "section_context": "Wiring details \u00e2\u20ac\u201d IBAN for international or SEPA transfers",
+      "headers": [
+        "Banking Details",
+        "Wiring Details",
+        "IBAN"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_068",
+      "field_name": "SWIFT",
+      "context": "SWIFT/BIC code identifying the receiving bank for international wire transfers, required for all non-domestic capital flows and correspondent banking instructions.",
+      "section_context": "Wiring details \u00e2\u20ac\u201d SWIFT/BIC code for international bank identification",
+      "headers": [
+        "Banking Details",
+        "Wiring Details",
+        "SWIFT Code"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_069",
+      "field_name": "forfurthercredit",
+      "context": "Further credit (FFC) instructions specifying a sub-account, brokerage account, or intermediary beneficiary to which funds should be credited after reaching the primary receiving bank.",
+      "section_context": "Wiring details \u00e2\u20ac\u201d further credit or intermediary beneficiary instructions",
+      "headers": [
+        "Banking Details",
+        "Wiring Details",
+        "For Further Credit"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_070",
+      "field_name": "address.addressline1",
+      "context": "First line of the receiving bank's physical address (street number and name), required for complete wire instructions and bank address verification in AML documentation.",
+      "section_context": "Wiring details \u00e2\u20ac\u201d receiving bank physical address, line 1",
+      "headers": [
+        "Banking Details",
+        "Wiring Details",
+        "Bank Address",
+        "Address Line 1"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_071",
+      "field_name": "address.addressline2",
+      "context": "Second line of the receiving bank's physical address for suite, floor, or branch name details supplementing the primary bank street address.",
+      "section_context": "Wiring details \u00e2\u20ac\u201d receiving bank physical address, line 2",
+      "headers": [
+        "Banking Details",
+        "Wiring Details",
+        "Bank Address",
+        "Address Line 2"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_072",
+      "field_name": "address.City",
+      "context": "City where the investor's designated receiving bank branch is located, included in wire transfer instructions for complete bank identification.",
+      "section_context": "Wiring details \u00e2\u20ac\u201d receiving bank city",
+      "headers": [
+        "Banking Details",
+        "Wiring Details",
+        "Bank Address",
+        "City"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_073",
+      "field_name": "address.State",
+      "context": "State or province where the investor's receiving bank is located, included in wire transfer instructions for complete bank address identification.",
+      "section_context": "Wiring details \u00e2\u20ac\u201d receiving bank state or province",
+      "headers": [
+        "Banking Details",
+        "Wiring Details",
+        "Bank Address",
+        "State"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_074",
+      "field_name": "address.Country",
+      "context": "Country where the investor's receiving bank is located, used to assess FATF compliance status and whether enhanced due diligence on the banking relationship is required.",
+      "section_context": "Wiring details \u00e2\u20ac\u201d receiving bank country",
+      "headers": [
+        "Banking Details",
+        "Wiring Details",
+        "Bank Address",
+        "Country"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_075",
+      "field_name": "address.ZipCode",
+      "context": "Postal or ZIP code of the investor's receiving bank address, completing the full address for wire transfer instructions.",
+      "section_context": "Wiring details \u00e2\u20ac\u201d receiving bank postal / ZIP code",
+      "headers": [
+        "Banking Details",
+        "Wiring Details",
+        "Bank Address",
+        "Zip Code"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_076",
+      "field_name": "wiring_bank_in_FATF_country_check_id",
+      "context": "AML questionnaire checkbox confirming whether the investor's designated wiring bank is in a FATF member country. Banks in non-FATF blacklisted or greylisted jurisdictions require enhanced due diligence or may be restricted from receiving fund distributions.",
+      "section_context": "AML/KYC compliance questionnaire \u00e2\u20ac\u201d FATF country confirmation for wiring bank",
+      "headers": [
+        "Compliance",
+        "AML Questionnaire",
+        "Wiring Bank Located in FATF Country"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_077",
+      "field_name": "authorized_signatory",
+      "context": "Name, title, and signature block of the individual(s) authorized to legally execute this subscription agreement, confirming all representations, warranties, and certifications made in the subscription booklet.",
+      "section_context": "Subscription execution \u00e2\u20ac\u201d authorized signatory information and signature block",
+      "headers": [
+        "Investment Details",
+        "Authorized Signatory"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_078",
+      "field_name": "commitment_amount",
+      "context": "Total monetary amount the investor commits to invest in the fund, representing the aggregate capital commitment reflected in their capital account and pro-rata fund interest, which may be drawn down in tranches via capital calls.",
+      "section_context": "Investment subscription details \u00e2\u20ac\u201d total capital commitment amount",
+      "headers": [
+        "Investment Details",
+        "Commitment Amount"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_079",
+      "field_name": "political_exposed_person",
+      "context": "Disclosure indicating whether the investor, beneficial owner, or associated individual is or has been a senior government official, political party official, or close family member of such persons, triggering enhanced due diligence under FATF recommendations and global AML regulations.",
+      "section_context": "Compliance and risk \u00e2\u20ac\u201d Politically Exposed Person (PEP) status disclosure",
+      "headers": [
+        "Compliance",
+        "PEP Status"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_080",
+      "field_name": "Currency",
+      "context": "Currency denomination in which the investor's capital commitment and all related fund transactions \u00e2\u20ac\u201d including capital calls, distributions, fee calculations, and NAV reporting \u00e2\u20ac\u201d will be conducted.",
+      "section_context": "Investment subscription details \u00e2\u20ac\u201d commitment and transaction currency denomination",
+      "headers": [
+        "Investment Details",
+        "Currency"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_081",
+      "field_name": "directors_ids",
+      "context": "Complete list of all directors of the investor entity including names, residential addresses, nationalities, and government-issued identification, required to identify individuals exercising governance and control for KYC/AML entity due diligence.",
+      "section_context": "Entity governance \u00e2\u20ac\u201d list of board directors with identification details",
+      "headers": [
+        "Entity Information",
+        "List of Directors"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_082",
+      "field_name": "joint_owner_ids",
+      "context": "Details of all joint owners of the subscribing account including names, addresses, percentage ownership interests, and tax identification, required for joint tenancy and co-ownership subscription structures.",
+      "section_context": "Ownership structure \u00e2\u20ac\u201d list of joint owners with identification details",
+      "headers": [
+        "Entity Information",
+        "List of Joint Owners"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_083",
+      "field_name": "managing_partners_id",
+      "context": "Names, addresses, and identification of all managing partners of a partnership investor who exercise operational control and decision-making authority, required as part of KYC entity control person disclosure.",
+      "section_context": "Partnership entity \u00e2\u20ac\u201d list of managing partners with identification details",
+      "headers": [
+        "Entity Information",
+        "List of Managing Partners"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_084",
+      "field_name": "managing_director_id",
+      "context": "Names, contact details, and identification of managing directors who hold legal authority over investment decisions and can bind the entity, required for KYC control person disclosure for corporations and managed entities.",
+      "section_context": "Entity management \u00e2\u20ac\u201d list of managing directors with identification details",
+      "headers": [
+        "Entity Information",
+        "List of Managing Directors"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_085",
+      "field_name": "trustees_id",
+      "context": "Complete identification details for all trustees of a trust investor including legal names, residential addresses, nationalities, and government IDs \u00e2\u20ac\u201d trustees hold legal title to trust assets and must be KYC-cleared as control persons.",
+      "section_context": "Trust entity \u00e2\u20ac\u201d list of trustees and fiduciaries with identification details",
+      "headers": [
+        "Entity Information",
+        "List of Trustees"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_086",
+      "field_name": "beneficial_owners_ids",
+      "context": "Identification of all natural persons who ultimately own or control the investor entity with a direct or indirect stake of 25% or more, including name, address, nationality, date of birth, government ID, and ownership percentage \u00e2\u20ac\u201d mandatory under FinCEN CDD Rule, FATF Recommendation 10, and applicable AML regulations.",
+      "section_context": "AML/KYC compliance \u00e2\u20ac\u201d beneficial ownership disclosure at 25% threshold",
+      "headers": [
+        "Compliance",
+        "List of Beneficial Owners"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_087",
+      "field_name": "share_class_ordinary_common",
+      "context": "Checkbox to select Ordinary or Common shares, which typically carry voting rights and participate in residual fund economics after preferred distributions \u00e2\u20ac\u201d the standard share class for most general investors.",
+      "section_context": "Investment share class selection \u00e2\u20ac\u201d Ordinary / Common shares",
+      "headers": [
+        "Investment Details",
+        "Share Class",
+        "Ordinary / Common"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_088",
+      "field_name": "share_class_preferred",
+      "context": "Checkbox to select Preferred shares carrying priority rights over common shareholders in distributions and liquidation proceeds, often with fixed dividend rights and used for institutional or early-stage investors.",
+      "section_context": "Investment share class selection \u00e2\u20ac\u201d Preferred shares",
+      "headers": [
+        "Investment Details",
+        "Share Class",
+        "Preferred"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_089",
+      "field_name": "share_class_A",
+      "context": "Checkbox to select Class A shares, typically the standard institutional investor share class with management fee and carried interest economics as specified in the fund's offering memorandum.",
+      "section_context": "Investment share class selection \u00e2\u20ac\u201d Class A shares",
+      "headers": [
+        "Investment Details",
+        "Share Class",
+        "Class A"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_090",
+      "field_name": "share_class_B",
+      "context": "Checkbox to select Class B shares, which may represent a secondary investor tier with different fee structures, liquidity terms, or economic rights as defined in the fund's private placement memorandum.",
+      "section_context": "Investment share class selection \u00e2\u20ac\u201d Class B shares",
+      "headers": [
+        "Investment Details",
+        "Share Class",
+        "Class B"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_091",
+      "field_name": "share_class_C",
+      "context": "Checkbox to select Class C shares with specific economic rights, fee structures, and investor terms as defined in the fund's offering documents.",
+      "section_context": "Investment share class selection \u00e2\u20ac\u201d Class C shares",
+      "headers": [
+        "Investment Details",
+        "Share Class",
+        "Class C"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_092",
+      "field_name": "share_class_D",
+      "context": "Checkbox to select Class D shares with specific economic rights, fee structures, and investor terms as defined in the fund's offering documents.",
+      "section_context": "Investment share class selection \u00e2\u20ac\u201d Class D shares",
+      "headers": [
+        "Investment Details",
+        "Share Class",
+        "Class D"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_093",
+      "field_name": "share_class_E",
+      "context": "Checkbox to select Class E shares with specific economic rights, fee structures, and investor terms as defined in the fund's offering documents.",
+      "section_context": "Investment share class selection \u00e2\u20ac\u201d Class E shares",
+      "headers": [
+        "Investment Details",
+        "Share Class",
+        "Class E"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_094",
+      "field_name": "share_class_F",
+      "context": "Checkbox to select Class F shares, often designated for founders or strategic investors with preferential economic terms and as specified in the fund's formation documents.",
+      "section_context": "Investment share class selection \u00e2\u20ac\u201d Class F shares",
+      "headers": [
+        "Investment Details",
+        "Share Class",
+        "Class F"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_095",
+      "field_name": "share_class_non_voting",
+      "context": "Checkbox to select Non-voting shares, which carry full economic rights such as dividends and distributions but do not confer voting rights on fund governance matters \u00e2\u20ac\u201d commonly used for passive investors.",
+      "section_context": "Investment share class selection \u00e2\u20ac\u201d Non-voting shares",
+      "headers": [
+        "Investment Details",
+        "Share Class",
+        "Non-Voting"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_096",
+      "field_name": "share_class_founders",
+      "context": "Checkbox to select Founders shares, typically issued at nominal or discounted prices to founding investors or management who assume earliest-stage risk, often carrying enhanced voting rights or conversion features.",
+      "section_context": "Investment share class selection \u00e2\u20ac\u201d Founders shares",
+      "headers": [
+        "Investment Details",
+        "Share Class",
+        "Founders"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_097",
+      "field_name": "share_class_employee_esop",
+      "context": "Checkbox to select Employee Share Ownership Plan (ESOP) shares allocated to employees as equity compensation, subject to vesting schedules and plan governance rules.",
+      "section_context": "Investment share class selection \u00e2\u20ac\u201d Employee / ESOP shares",
+      "headers": [
+        "Investment Details",
+        "Share Class",
+        "Employee (ESOP)"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_098",
+      "field_name": "share_class_deferred",
+      "context": "Checkbox to select Deferred shares with restricted or delayed rights to dividends and returns compared to other share classes, commonly used in management compensation structures or to separate economic and control interests.",
+      "section_context": "Investment share class selection \u00e2\u20ac\u201d Deferred shares",
+      "headers": [
+        "Investment Details",
+        "Share Class",
+        "Deferred"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_099",
+      "field_name": "share_class_growth",
+      "context": "Checkbox to select Growth shares designed to capture future value appreciation above a defined hurdle rate, commonly used in management incentive plans and growth equity fund structures.",
+      "section_context": "Investment share class selection \u00e2\u20ac\u201d Growth shares",
+      "headers": [
+        "Investment Details",
+        "Share Class",
+        "Growth"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_100",
+      "field_name": "eligibility_us_person",
+      "context": "Certification confirming whether the investor qualifies as a U.S. Person under IRS Regulations and SEC Regulation S, determining W-9 versus W-8 certification requirements and applicable withholding tax obligations.",
+      "section_context": "Investor eligibility certification \u00e2\u20ac\u201d U.S. Person status",
+      "headers": [
+        "Eligibility",
+        "U.S. Person"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_101",
+      "field_name": "eligibility_accredited_investor",
+      "context": "Certification confirming the investor meets Accredited Investor criteria under SEC Rule 501 of Regulation D \u00e2\u20ac\u201d for individuals: net worth over $1M excluding primary residence or $200K annual income ($300K joint); for entities: $5M+ in assets \u00e2\u20ac\u201d required to qualify for private placement exemption.",
+      "section_context": "Investor eligibility certification \u00e2\u20ac\u201d Accredited Investor status under Regulation D",
+      "headers": [
+        "Eligibility",
+        "Accredited Investor Status"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_102",
+      "field_name": "eligibility_qualified_client",
+      "context": "Certification confirming the investor qualifies as a Qualified Client under SEC Rule 205-3 of the Investment Advisers Act (currently $2.2M+ net worth or $1.1M+ AUM with the adviser), required for registered advisers to charge performance-based fees.",
+      "section_context": "Investor eligibility certification \u00e2\u20ac\u201d Qualified Client status under Advisers Act Rule 205-3",
+      "headers": [
+        "Eligibility",
+        "Qualified Client Status"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_103",
+      "field_name": "eligibility_erisa",
+      "context": "Indication of whether the investor is subject to ERISA, including pension funds, profit-sharing plans, and 401(k) plans \u00e2\u20ac\u201d significant ERISA participation may cause fund assets to be classified as plan assets and impose fiduciary duties on the fund manager.",
+      "section_context": "Investor eligibility \u00e2\u20ac\u201d ERISA subject entity classification",
+      "headers": [
+        "Eligibility",
+        "ERISA"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_104",
+      "field_name": "eligibility_qualified_purchaser",
+      "context": "Certification confirming the investor meets Qualified Purchaser criteria under Section 2(a)(51) of the Investment Company Act of 1940 \u00e2\u20ac\u201d individuals with $5M+ in investments and entities with $25M+ \u00e2\u20ac\u201d enabling the fund to rely on the 3(c)(7) exemption from investment company registration.",
+      "section_context": "Investor eligibility certification \u00e2\u20ac\u201d Qualified Purchaser status under 1940 Act Section 3(c)(7)",
+      "headers": [
+        "Eligibility",
+        "Qualified Purchaser Status"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_105",
+      "field_name": "eligibility_restricted_status",
+      "context": "Indication of whether the investor has any restricted status limiting fund participation, including OFAC/SDN sanctions, restricted jurisdiction domicile, FINRA restricted person status, or existing contractual investment restrictions.",
+      "section_context": "Investor eligibility \u00e2\u20ac\u201d restricted person or restricted status check",
+      "headers": [
+        "Eligibility",
+        "Restricted Status"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_106",
+      "field_name": "eligibility_new_issue_finra",
+      "context": "Certification confirming the investor's eligibility to receive allocations of new issue securities under FINRA Rules 5130 and 5131, which restrict broker-dealer personnel, portfolio managers, and their family members from receiving IPO allocation profits.",
+      "section_context": "Investor eligibility \u00e2\u20ac\u201d FINRA new issue eligibility under Rules 5130 and 5131",
+      "headers": [
+        "Eligibility",
+        "New Issue Eligibility / FINRA"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_107",
+      "field_name": "custodian_name",
+      "context": "Full legal name of the custodian \u00e2\u20ac\u201d bank, trust company, or broker-dealer \u00e2\u20ac\u201d holding the investor's account or assets related to this investment and providing safekeeping, settlement, and account administration services.",
+      "section_context": "Custodian information \u00e2\u20ac\u201d name of custodian or prime broker",
+      "headers": [
+        "Custodian Details",
+        "Custodian Name"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_108",
+      "field_name": "custodian_account_number",
+      "context": "Account number held at the custodian for this investor's investment, used for trade settlement, asset transfers, and reconciliation between the fund administrator and the custodian.",
+      "section_context": "Custodian information \u00e2\u20ac\u201d custodian account number",
+      "headers": [
+        "Custodian Details",
+        "Custodian Account Number"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_109",
+      "field_name": "custodian_email",
+      "context": "Email address for the custodian contact, used for sending trade confirmations, account statements, KYC document requests, and capital activity notifications.",
+      "section_context": "Custodian information \u00e2\u20ac\u201d custodian contact email address",
+      "headers": [
+        "Custodian Details",
+        "Custodian Email"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_110",
+      "field_name": "custodian_phone",
+      "context": "Telephone number for the custodian operations desk, used for real-time coordination on trade settlement, capital call funding confirmation, and other time-sensitive operational matters.",
+      "section_context": "Custodian information \u00e2\u20ac\u201d custodian telephone number",
+      "headers": [
+        "Custodian Details",
+        "Custodian Phone"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_111",
+      "field_name": "custodian_swift_code",
+      "context": "SWIFT/BIC code of the custodian's bank used for international fund transfers and cross-border settlement instructions related to the investor's custodied assets.",
+      "section_context": "Custodian information \u00e2\u20ac\u201d custodian SWIFT/BIC code for international transfers",
+      "headers": [
+        "Custodian Details",
+        "Custodian SWIFT Code"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_112",
+      "field_name": "self_certification_check",
+      "context": "Confirmation of the investor's completion of the CRS self-certification form, identifying the investor's tax residency to enable the fund to fulfill OECD Automatic Exchange of Information (AEOI) reporting obligations to relevant tax authorities.",
+      "section_context": "Tax compliance \u00e2\u20ac\u201d CRS self-certification for AEOI reporting",
+      "headers": [
+        "Compliance",
+        "Common Reporting Standard & Self-Certification"
+      ],
+      "confidence": 0.75
+    },
+    {
+      "vector_id": "vec_113",
+      "field_name": "additional_subs_check",
+      "context": "Flag indicating that any accompanying additional subscription or redemption forms are excluded from the automated field mapping process and must be handled through a separate manual processing workflow.",
+      "section_context": "Processing control \u00e2\u20ac\u201d additional subscription and redemption form exclusion flag",
+      "headers": [
+        "Processing Control",
+        "Additional Subscription / Redemption Forms"
+      ],
+      "confidence": 0.75
+    }
+  ]
+}

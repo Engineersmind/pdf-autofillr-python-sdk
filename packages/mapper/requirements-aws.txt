@@ -1,0 +1,4 @@
+# AWS requirements
+# pip install pdf-autofillr-mapper[aws]
+boto3>=1.34.34
+botocore>=1.34.34

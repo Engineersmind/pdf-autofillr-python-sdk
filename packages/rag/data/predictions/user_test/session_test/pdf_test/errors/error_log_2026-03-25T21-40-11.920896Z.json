@@ -1,0 +1,42 @@
+{
+  "user_id": "user_test",
+  "session_id": "session_test",
+  "pdf_id": "pdf_test",
+  "pdf_hash": "testpdf_abc123",
+  "timestamp": "2026-03-25T21:40:11.920896Z",
+  "errors": [
+    {
+      "error_type": "wrong_field_name",
+      "field_name": "tax_identification_number",
+      "field_type": "text",
+      "value": "123-45-6789",
+      "feedback": "This field is the combined SSN/EIN field, not just tax ID",
+      "page_number": 3,
+      "corners": [
+        [
+          120,
+          340
+        ],
+        [
+          480,
+          340
+        ],
+        [
+          480,
+          360
+        ],
+        [
+          120,
+          360
+        ]
+      ],
+      "timestamp": "2026-03-25T21:40:11.920896Z",
+      "user_id": "user_test",
+      "session_id": "session_test",
+      "pdf_id": "pdf_test",
+      "corrected_field_name": "tax_identification_number",
+      "gpt4_confidence": 0.6,
+      "gpt4_reasoning": "NoOpCorrector: original name cleaned to snake_case"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "user_id": "user_test",
+  "session_id": "session_test",
+  "pdf_id": "pdf_test",
+  "model": "rag",
+  "timestamp": "2026-03-25T21:37:43.962697Z",
+  "pdf_hash": "testpdf_abc123",
+  "predictions": {
+    "f001": null,
+    "f002": null,
+    "f003": null,
+    "f004": null,
+    "f005": null,
+    "f006": null,
+    "f007": null,
+    "f008": null,
+    "f009": null,
+    "f010": null,
+    "f011": null,
+    "f012": null
+  },
+  "summary": {
+    "total_fields": 12,
+    "predicted_fields": 0,
+    "unpredicted_fields": 12,
+    "avg_confidence": 0.0
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "user_id": "test_u",
+  "session_id": "test_s",
+  "pdf_id": "test_p",
+  "timestamp": "2026-03-26T09:28:00.615784Z",
+  "total_fields": 5,
+  "case_breakdown": {
+    "CASE_A": {
+      "count": 5,
+      "field_ids": [
+        "tf_001",
+        "tf_002",
+        "tf_003",
+        "tf_004",
+        "tf_005"
+      ],
+      "description": "Both RAG and LLM predicted same field"
+    },
+    "CASE_B": {
+      "count": 0,
+      "field_ids": [],
+      "description": "Both predicted different fields",
+      "selections": {
+        "rag_selected": 0,
+        "llm_selected": 0
+      }
+    },
+    "CASE_C": {
+      "count": 0,
+      "field_ids": [],
+      "description": "LLM predicted, RAG did not"
+    },
+    "CASE_D": {
+      "count": 0,
+      "field_ids": [],
+      "description": "RAG predicted, LLM did not"
+    },
+    "CASE_E": {
+      "count": 0,
+      "field_ids": [],
+      "description": "Neither predicted (below threshold)"
+    }
+  }
+}

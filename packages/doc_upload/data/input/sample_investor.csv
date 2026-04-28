@@ -1,0 +1,33 @@
+Field,Value
+Investor Full Legal Name,Robert C. Johnson
+Date of Birth,10/22/1975
+Social Security Number,456-78-9012
+Email Address,robert.johnson@example.com
+Telephone Number,+44-2079460958
+Occupation,Fund Manager
+Registered Address Line 1,"88 Wood Street, Floor 3"
+Registered Address Line 2,City of London
+Registered City,London
+Registered State,
+Registered Country,United Kingdom
+Registered Zip,EC2V 7RS
+Bank Name,HSBC UK Bank plc
+Bank Account Name,RCJ Capital Management
+Bank Account Number,40229744
+ABA CHIPS Number,MIDLGB22
+IBAN,GB15 MIDL 4025 3152 1902 53
+SWIFT Code,MIDLGB22
+Further Credit Instructions,None
+Bank Address Line 1,"8 Canada Square, Canary Wharf"
+Bank City,London
+Bank Country,United Kingdom
+Bank Zip,E14 5HQ
+FATF Compliant,Yes
+Authorized Signatory,Robert C. Johnson
+Commitment Amount,1000000
+Currency,GBP
+Accredited Investor,Yes
+Qualified Purchaser,Yes
+US Person,No
+Politically Exposed Person,No
+Share Class,Class B shares

@@ -1,0 +1,87 @@
+# docker-compose.yml
+# Brings up the full local dev stack.
+#
+# Quick start:
+#   docker compose up server          # just the FastAPI server
+#   docker compose run --rm test      # run the full test suite
+#   docker compose run --rm test pytest tests/unit/ -v   # unit tests only
+#   docker compose up server chroma   # server + ChromaDB vector store
+#   docker compose up server weaviate # server + Weaviate vector store
+
+services:
+
+  # ── FastAPI server (main entrypoint) ────────────────────────────────────────
+  server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: runtime
+    ports:
+      - "8000:8000"
+    volumes:
+      - ragpdf_data:/data
+    env_file:
+      - ../.env
+    environment:
+      RAGPDF_DATA_PATH: /data/ragpdf_data
+      RAGPDF_CHROMA_PATH: /data/chroma_data
+      RAGPDF_SERVER_HOST: 0.0.0.0
+      RAGPDF_SERVER_PORT: "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+  # ── Test runner ─────────────────────────────────────────────────────────────
+  test:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.test
+    volumes:
+      - ../src:/app/src
+      - ../tests:/app/tests
+    environment:
+      RAGPDF_STORAGE: local
+      RAGPDF_DATA_PATH: /tmp/ragpdf_test
+      RAGPDF_VECTOR_STORE: local
+      RAGPDF_EMBEDDING_BACKEND: noop
+      RAGPDF_CORRECTOR_BACKEND: noop
+      PYTHONPATH: /app/src
+    # Run unit tests by default; override on the CLI for integration tests
+    command: ["pytest", "tests/unit/", "-v", "--tb=short"]
+
+  # ── ChromaDB (optional — used when RAGPDF_VECTOR_STORE=chroma) ──────────────
+  chroma:
+    image: ghcr.io/chroma-core/chroma:0.5.0
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      IS_PERSISTENT: "TRUE"
+      ANONYMIZED_TELEMETRY: "FALSE"
+    profiles:
+      - chroma
+
+  # ── Weaviate (optional — used when RAGPDF_VECTOR_STORE=weaviate) ─────────────
+  weaviate:
+    image: semitechnologies/weaviate:1.24.1
+    ports:
+      - "8080:8080"
+    environment:
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: /var/lib/weaviate
+      DEFAULT_VECTORIZER_MODULE: none
+      CLUSTER_HOSTNAME: node1
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    profiles:
+      - weaviate
+
+volumes:
+  ragpdf_data:
+  chroma_data:
+  weaviate_data:
