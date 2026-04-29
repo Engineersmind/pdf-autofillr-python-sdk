@@ -144,7 +144,11 @@ class TestInterfaceDelegation:
         f, mock_impl = inprocess_filler
         mock_impl.prepare_document.return_value = "/tmp/embedded.pdf"
         result = f.prepare_document("/tmp/blank.pdf", "Trust")
-        mock_impl.prepare_document.assert_called_once_with("/tmp/blank.pdf", "Trust")
+        # mock_impl.prepare_document.assert_called_once_with("/tmp/blank.pdf", "Trust")
+        mock_impl.prepare_document.assert_called_once()
+        args, kwargs = mock_impl.prepare_document.call_args
+        assert args[0] == "/tmp/blank.pdf"
+        assert args[1] == "Trust"
         assert result == "/tmp/embedded.pdf"
 
 

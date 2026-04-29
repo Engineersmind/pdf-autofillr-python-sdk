@@ -1,5 +1,11 @@
 # Changelog — pdf-autofillr-mapper
 
+## [1.0.8] - 2026-04-28
+
+### Fixed
+- `semantic_mapper.py`: nested f-string quote syntax incompatible with Python 3.11 (pre-compute list before f-string)
+- `tests/test_make_embed.py`, `tests/test_make_embed_integration.py`: corrupted `\r\r\n` line endings causing `SyntaxError` on collection
+
 ## [1.0.7] — 2026-04-22
 
 ### Added

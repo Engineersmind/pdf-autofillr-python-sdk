@@ -13,7 +13,7 @@ Versioning: [Semantic Versioning](https://semver.org/)
 | Package | Latest | Changelog |
 |---------|--------|-----------|
 | pdf-autofillr (umbrella) | 1.1.2 | [packages/pdf_autofillr/CHANGELOG.md](packages/pdf_autofillr/CHANGELOG.md) |
-| pdf-autofillr-mapper | 1.0.7 | [packages/mapper/CHANGELOG.md](packages/mapper/CHANGELOG.md) |
+| pdf-autofillr-mapper | 1.0.8 | [packages/mapper/CHANGELOG.md](packages/mapper/CHANGELOG.md) |
 | pdf-autofillr-chatbot | 0.2.8 | [packages/chatbot/CHANGELOG.md](packages/chatbot/CHANGELOG.md) |
 | pdf-autofillr-doc-upload | 0.1.4 | [packages/doc_upload/CHANGELOG.md](packages/doc_upload/CHANGELOG.md) |
 | pdf-autofillr-rag | 0.2.3 | [packages/rag/CHANGELOG.md](packages/rag/CHANGELOG.md) |

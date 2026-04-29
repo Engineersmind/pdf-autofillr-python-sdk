@@ -678,13 +678,15 @@ class SemanticMapper:
 
                         
 
+                        removed_desc = [f"Row {occ['row']} (FID {occ['fid']})" for occ in duplicates_to_remove]
+
                         logger.warning(
 
                             f"⚠️  Duplicate key '{key}' found in Table {tid}, Column {col} "
 
                             f"across {len(occurrences)} rows. Keeping Row {first_occurrence['row']} (FID {first_occurrence['fid']}), "
 
-                            f"removing {len(duplicates_to_remove)} duplicate(s): {[f'Row {occ['row']} (FID {occ['fid']})' for occ in duplicates_to_remove]}"
+                            f"removing {len(duplicates_to_remove)} duplicate(s): {removed_desc}"
 
                         )
 

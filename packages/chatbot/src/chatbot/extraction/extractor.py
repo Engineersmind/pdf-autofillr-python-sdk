@@ -33,7 +33,9 @@ class Extractor:
         api_key: Optional[str] = None,
         prompt_builder=None,
         model: Optional[str] = None,
+        openai_api_key: Optional[str] = None,
     ):
+        api_key = api_key or openai_api_key
         self.llm = LLMExtractor(
             api_key=api_key,
             prompt_builder=prompt_builder,

@@ -1,0 +1,25 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-04-29T06:18:13Z",
+  "total_entries": 1,
+  "entries": {
+    "test_hash_123": {
+      "pdf_hash": "test_hash_123",
+      "created_at": "2026-04-29T06:08:36Z",
+      "last_used_at": "2026-04-29T06:18:13Z",
+      "usage_count": 26,
+      "reference_files": {
+        "embedded_pdf": "C:\\Users\\DEEWAN~1\\AppData\\Local\\Temp\\tmpw4o92wng\\embedded.pdf",
+        "mapping_json": "C:\\Users\\DEEWAN~1\\AppData\\Local\\Temp\\tmpw4o92wng\\cached_mapped.json",
+        "radio_groups": "C:\\Users\\DEEWAN~1\\AppData\\Local\\Temp\\tmpw4o92wng\\radio.json",
+        "headers_with_fields": "C:\\Users\\DEEWAN~1\\AppData\\Local\\Temp\\tmpkiukzdzt\\headers_with_fields.json",
+        "final_form_fields": "C:\\Users\\DEEWAN~1\\AppData\\Local\\Temp\\tmpkiukzdzt\\final_form_fields.json"
+      },
+      "original_context": {
+        "user_id": 12345,
+        "pdf_doc_id": 111
+      },
+      "pdf_category": "financial"
+    }
+  }
+}

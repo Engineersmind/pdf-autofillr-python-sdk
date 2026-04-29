@@ -52,8 +52,8 @@ cd packages/rag       && python run_all_tests.py
 
 | Tag | PyPI package |
 |-----|-------------|
-| `mapper-v1.0.7` | pdf-autofillr-mapper |
-| `chatbot-v0.2.8` | pdf-autofillr-chatbot |
+| `mapper-v1.0.8` | pdf-autofillr-mapper |
+| `chatbot-v0.2.9` | pdf-autofillr-chatbot |
 | `doc-upload-v0.1.4` | pdf-autofillr-doc-upload |
 | `rag-v0.2.3` | pdf-autofillr-rag |
 | `umbrella-v1.1.2` | pdf-autofillr (umbrella) |

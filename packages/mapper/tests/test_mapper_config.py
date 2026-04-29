@@ -100,4 +100,4 @@ class TestMapperConfigDirect:
     def test_import_does_not_crash_without_ini(self):
         """Importing pdf_autofillr_mapper must never crash even without config.ini."""
         import pdf_autofillr_mapper  # noqa: F401 — should not raise
-        assert pdf_autofillr_mapper.__version__ == "1.0.7"
+        assert pdf_autofillr_mapper.__version__ == "1.0.8"

@@ -35,15 +35,17 @@ class ConversationEngine:
         self,
         storage: StorageBackend,
         form_config: FormConfig,
-        api_key: Optional[str],
-        pdf_filler: Optional[PDFFillerInterface],
-        telemetry: TelemetryCollector,
+        api_key: Optional[str] = None,
+        pdf_filler: Optional[PDFFillerInterface] = None,
+        telemetry: TelemetryCollector = None,
         prompt_builder=None,
         settings: Optional[Settings] = None,
+        openai_api_key: Optional[str] = None,
     ):
         self.storage = storage
         self.form_config = form_config
-        self.api_key = api_key
+        # self.api_key = api_key
+        self.api_key = api_key or openai_api_key
         self.telemetry = telemetry
         self.settings = settings or Settings()
 

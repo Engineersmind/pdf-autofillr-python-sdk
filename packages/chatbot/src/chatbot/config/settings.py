@@ -89,6 +89,9 @@ class Settings:
         if self.pdf_filler_mode not in ("none", "") and not self.pdf_path:
             errors.append("chatbot_PDF_FILLER is set but chatbot_PDF_PATH is missing.")
 
+        if self.pdf_filler_mode == "mapper" and self.mapper_api_url and not self.mapper_api_key:
+            warns.append("MAPPER_API_KEY is not set but MAPPER_API_URL is configured.")
+
         if self.telemetry_enabled and not self.telemetry_endpoint:
             warns.append("chatbot_TELEMETRY=true but chatbot_TELEMETRY_ENDPOINT is not set.")
 

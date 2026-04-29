@@ -285,7 +285,7 @@ curl http://localhost:8001/health
 ```json
 {
   "status": "ok",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "storage": "local",
   "pdf_filler": "none"
 }

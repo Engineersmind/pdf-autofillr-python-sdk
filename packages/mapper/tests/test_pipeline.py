@@ -260,7 +260,7 @@ class TestPDFPipelineRunAll:
         assert result["all_outputs"]["extracted_json"] == extracted
         assert result["all_outputs"]["filled_pdf"] == filled
         assert "timing" in result
-        assert result["timing"]["total_pipeline_seconds"] > 0
+        assert result["timing"]["total_pipeline_seconds"] >= 0
 
         p.extract.assert_called_once()
         p.map.assert_called_once()

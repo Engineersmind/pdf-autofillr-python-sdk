@@ -49,11 +49,13 @@ class chatbotClient:
         document_context: Optional[DocumentContext] = None,
         prompt_builder=None,
         settings: Optional[Settings] = None,
+        openai_api_key: Optional[str] = None,
     ):
         self.settings = settings or Settings()
         self.storage = storage
         self.form_config = form_config
-        self.api_key = api_key or os.getenv("CHATBOT_LLM_API_KEY")
+        # self.api_key = api_key or os.getenv("CHATBOT_LLM_API_KEY")
+        self.api_key = api_key or openai_api_key or os.getenv("CHATBOT_LLM_API_KEY")
 
         self.telemetry = TelemetryCollector(
             config=telemetry,

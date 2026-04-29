@@ -64,7 +64,7 @@ app = FastAPI(
 
     description="API for PDF form field extraction, mapping, embedding, and filling",
 
-    version="1.0.7"
+    version="1.0.8"
 
 )
 
@@ -228,7 +228,7 @@ async def root():
 
         "name": "PDF Autofiller Mapper API",
 
-        "version": "1.0.7",
+        "version": "1.0.8",
 
         "status": "running",
 

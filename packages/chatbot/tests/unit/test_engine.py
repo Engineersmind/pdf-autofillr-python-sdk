@@ -27,7 +27,7 @@ def engine(local_storage, form_config):
         )
         yield engine
 
-
+# @pytest.mark.skip(reason="test predates API signature change - openai_api_key param removed")
 def test_process_message_returns_string_and_bool(engine, user_id, session_id):
     with patch(
         "chatbot.extraction.llm_extractor.LLMExtractor.extract",
@@ -37,7 +37,7 @@ def test_process_message_returns_string_and_bool(engine, user_id, session_id):
     assert isinstance(response, str)
     assert isinstance(complete, bool)
 
-
+# @pytest.mark.skip(reason="test predates API signature change - openai_api_key param removed")
 def test_process_message_saves_session_state(engine, local_storage, user_id, session_id):
     with patch(
         "chatbot.extraction.llm_extractor.LLMExtractor.extract",
@@ -48,7 +48,7 @@ def test_process_message_saves_session_state(engine, local_storage, user_id, ses
     assert state is not None
     assert "state" in state
 
-
+# @pytest.mark.skip(reason="test predates API signature change - openai_api_key param removed")
 def test_process_message_saves_conversation_log(engine, local_storage, user_id, session_id):
     """
     FIX Issue 8: conversation_log.json must be written independently of
@@ -71,7 +71,7 @@ def test_process_message_saves_conversation_log(engine, local_storage, user_id, 
         "is still not being called in engine.process_message()"
     )
 
-
+# @pytest.mark.skip(reason="test predates API signature change - openai_api_key param removed")
 def test_multiple_turns_accumulate_log(engine, local_storage, user_id, session_id):
     with patch(
         "chatbot.extraction.llm_extractor.LLMExtractor.extract",
@@ -83,7 +83,7 @@ def test_multiple_turns_accumulate_log(engine, local_storage, user_id, session_i
     state = local_storage.get_session_state(user_id, session_id)
     assert len(state.get("conversation_log", [])) >= 1
 
-
+# @pytest.mark.skip(reason="test predates API signature change - openai_api_key param removed")
 def test_state_transitions_on_each_turn(engine, local_storage, user_id, session_id):
     from chatbot.core.states import State
     with patch(

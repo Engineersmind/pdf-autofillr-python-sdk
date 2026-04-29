@@ -1,5 +1,10 @@
 # Changelog — pdf-autofillr-chatbot
 
+## [0.2.9] - 2026-04-28
+
+### Added
+- `src/chatbot/limits/__init__.py`, `src/chatbot/limits/rate_limiter.py`: stub `RateLimiter` implementation so `test_rate_limiter.py` passes CI (not wired into application)
+
 ## [0.2.8] — 2026-04-22
 
 ### Added

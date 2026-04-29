@@ -46,8 +46,8 @@ Blank PDF form + your data
 | Package | PyPI | Version | Description |
 |---------|------|---------|-------------|
 | **pdf-autofillr** | umbrella | 1.1.2 | Install any combination via extras |
-| **pdf-autofillr-mapper** | `pip install pdf-autofillr-mapper` | 1.0.7 | Core engine: extract · map · embed · fill |
-| **pdf-autofillr-chatbot** | `pip install "pdf-autofillr[chatbot]"` | 0.2.8 | LLM conversation → PDF fill |
+| **pdf-autofillr-mapper** | `pip install pdf-autofillr-mapper` | 1.0.8 | Core engine: extract · map · embed · fill |
+| **pdf-autofillr-chatbot** | `pip install "pdf-autofillr[chatbot]"` | 0.2.9 | LLM conversation → PDF fill |
 | **pdf-autofillr-doc-upload** | `pip install "pdf-autofillr[doc-upload]"` | 0.1.4 | Document extraction → PDF fill |
 | **pdf-autofillr-rag** | `pip install "pdf-autofillr[rag]"` | 0.2.3 | Self-learning field prediction |
 

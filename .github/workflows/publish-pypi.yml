@@ -1,8 +1,8 @@
 name: Publish to PyPI
 
 # Tag format → Package:
-#   mapper-v1.0.7       → pdf-autofillr-mapper      (packages/mapper/)
-#   chatbot-v0.2.8      → pdf-autofillr-chatbot      (packages/chatbot/)
+#   mapper-v1.0.8       → pdf-autofillr-mapper      (packages/mapper/)
+#   chatbot-v0.2.9      → pdf-autofillr-chatbot      (packages/chatbot/)
 #   doc-upload-v0.1.4   → pdf-autofillr-doc-upload   (packages/doc_upload/)
 #   rag-v0.2.3          → pdf-autofillr-rag           (packages/rag/)
 #   umbrella-v1.1.2     → pdf-autofillr               (packages/pdf_autofillr/)

@@ -27,7 +27,7 @@ from __future__ import annotations
 from pdf_autofillr_mapper.orchestrator import PDFPipeline
 from pdf_autofillr_mapper.config.mapper_config import MapperConfig
 
-__version__ = "1.0.7"
+__version__ = "1.0.8"
 __all__ = ["PDFPipeline", "MapperConfig", "copy_sample_configs"]
 
 

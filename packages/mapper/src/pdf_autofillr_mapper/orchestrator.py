@@ -559,7 +559,7 @@ class PDFPipeline:
             }
             
             stage_percentages = {
-                stage: round((time_val / total_duration) * 100, 1)
+                stage: round((time_val / total_duration) * 100, 1) if total_duration > 0 else 0.0
                 for stage, time_val in stage_times.items()
             }
             
