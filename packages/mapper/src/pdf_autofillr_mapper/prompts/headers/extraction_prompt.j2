@@ -1,0 +1,362 @@
+<# ═══════════════════════════════════════════════════════════════
+   STATIC INSTRUCTION BLOCK
+   Identical for every non-first chunk. First-chunk differs only
+   in the title instruction and classification section — still
+   benefits from caching the large H2/H3/H4 rules.
+═══════════════════════════════════════════════════════════════ #>
+You are analyzing structured JSON extracted from a PDF. Each line may contain:
+- Plain text
+- One or more form field placeholders:
+  [TEXT_FIELD:<id>], [CHECKBOX_FIELD:<id>], [RADIOBUTTON_FIELD:<id>], [TABLE_CELL_FIELD:<id>]
+
+The numeric id inside each placeholder is the UNIQUE form field id we must tag.
+
+You must output a clean hierarchy of headings and field labels:
+
+  - title: Document-level title (only once, first chunk only)
+  - h1: Page-level main heading (ONE per page)
+  - h2: Section headings on the page
+  - h3: Field labels (questions / prompts / column headers)
+  - h4: Options / table cells belonging to an h3
+
+══════════════════════════════════════════════
+PLACEHOLDER SYNTAX (VERY IMPORTANT)
+══════════════════════════════════════════════
+
+The text can contain any of these placeholders:
+
+- [TEXT_FIELD:123]
+- [RADIOBUTTON_FIELD:90]
+- [CHECKBOX_FIELD:7]
+- [TABLE_CELL_FIELD:50]
+
+Rules:
+
+1. The number after colon is the form field id.
+   Example: [TEXT_FIELD:1] → form_field_id = 1
+
+2. One line may contain MULTIPLE placeholders.
+   Example:
+   "City [TEXT_FIELD:10] State [TEXT_FIELD:11] Zip [TEXT_FIELD:12]"
+   This means there are THREE distinct fields on the same line.
+   You MUST treat each as a separate h3 (separate labels), not one combined heading.
+
+3. [TABLE_CELL_FIELD:id] appears inside table cells.
+   You must infer the table structure from context:
+   - The column header text (top row) is an h3.
+   - Each cell under that column with a [TABLE_CELL_FIELD:id] is an h4 belonging to that h3.
+
+4. [CHECKBOX_FIELD:id] and [RADIOBUTTON_FIELD:id] are choice fields.
+   - The question or group label above or on the same line is h3.
+   - Each individual choice (often on the same line as the placeholder) is h4.
+
+══════════════════════════════════════════════
+HIERARCHY DEFINITIONS
+══════════════════════════════════════════════
+
+<% if is_first_chunk %>- title: Document name/title. Extract ONLY from first chunk.<% else %>- title: SKIP extracting title in this chunk.<% endif %>
+
+**H1 (Page Title):**
+- ONE per page.
+- Largest font_size on the page OR bold and near top.
+- Represents overall topic of the page.
+- Example: "Investor Profile", "Subscription Agreement".
+
+**H2 (Section Heading):**
+- Larger or bolder than normal text (font_size ~10–12, is_bold = true).
+- Groups a set of fields below it.
+- **CRITICAL: H2 SEPARATION RULES**:
+  1. **VISUAL SEPARATION**: Look for whitespace gaps, horizontal lines, or clear visual breaks to identify separate H2 sections.
+  2. **SEMANTIC GROUPING**: Fields that serve different purposes should be in separate H2 sections:
+     - Basic identity fields (Name, SSN, Address) → One H2 (e.g., "Basic Information")
+     - Classification/type selection (checkboxes for investor type, entity type) → Different H2 (e.g., "Investor Classification")
+     - Contact details → Different H2 (e.g., "Contact Information")
+  3. **FIELD TYPE CLUSTERING**: Don't mix simple text fields at the top with choice fields (checkboxes/radios) in the middle under the same H2.
+     They likely belong to different sections.
+  4. **VERTICAL SPACING**: If there's >100 pixels vertical gap between field groups, they likely belong to different H2 sections.
+
+  **Example from Investor Form**:
+  ```
+  [Top of page]
+  Name of Investor: [TEXT_FIELD:1]
+  Social Security Number: [TEXT_FIELD:2]
+  Amount of Subscription: [TEXT_FIELD:3]
+  → H2: "Basic Investor Information"
+
+  [After whitespace gap]
+  Type of Investor—Please check one:
+  ☐ Individual [CHECKBOX:7]
+  ☐ Partnership [CHECKBOX:8]
+  ☐ Corporation [CHECKBOX:9]
+  → H2: "Investor Classification" (SEPARATE H2)
+
+  Form PF Investor Type:
+  (A) Is the Investor acting as agent... [CHECKBOX:20]
+  → H3: "Form PF Investor Type" (under same H2="Investor Classification")
+  ```
+
+- **SPATIAL RULE**: H2 must appear BELOW its parent H1 on the same page (bbox.top of H2 > bbox.top of H1).
+  If text appears ABOVE H1, it CANNOT be H2 for that H1.
+- Examples: "Contact Information", "Tax Status", "Form PF Investor Type".
+- **VALIDATION RULE FOR TEXT FIELDS**: If the H2 section contains primarily blank/text fields (TEXT_FIELD),
+  the H2 should be DESCRIPTIVE and NOT phrased as a question asking for a choice.
+  Examples:
+    BAD: H2="Select Your Tax Status" for section with [TEXT_FIELD:5] Name _______
+    GOOD: H2="Tax Information" for section with text fields
+    BAD: H2="Choose Your Department" for section with [TEXT_FIELD:10] Title _______
+    GOOD: H2="Department Information" for section with text fields
+  Choice-like H2 is ONLY appropriate when the section contains CHECKBOX_FIELD or RADIOBUTTON_FIELD.
+- **CRITICAL: section_context MUST MATCH FIELD TYPES IN THE SECTION**:
+  - For TEXT_FIELD sections (Name, SSN, Address, Amount): Use DESCRIPTIVE context about what information is collected
+    Examples: "Investor identity and contact details", "Subscription amount and interests", "Basic personal information"
+    **WRONG**: "Investor type and entity classification" (this is for checkboxes!)
+    **WRONG**: "Investor classification selection" (this is for choice fields!)
+  - For CHECKBOX/RADIO sections: Use context describing the CHOICE/SELECTION being made
+    Examples: "Investor entity type selection", "Investor classification choice", "Marital status selection"
+    **WRONG**: "Investor name and contact details" (this is for text fields!)
+  - **KEY RULE**: section_context should describe WHAT TYPE OF INTERACTION the fields require:
+    - TEXT fields → "information", "details", "data", "identification"
+    - CHECKBOX/RADIO → "selection", "choice", "classification", "type", "category"
+- **NEW REQUIREMENT**: For each H2, you MUST generate a "section_context" field (max 10 words)
+  that summarizes what this section is about in simple, clear terms.
+  **IMPORTANT**: Include key entity/role from H1 (e.g., "investor", "entity", "co-investor", "patient", "doctor", "parent", "spouse", "guarantor")
+  to identify WHO this section is about, combined with WHAT the H2 is about.
+  Example:
+    H1="Investor Profile Form", H2="Basic Information" (with TEXT fields Name, SSN, Amount)
+      → section_context="Investor identity and subscription details"
+    H1="Investor Profile Form", H2="Investor Classification" (with CHECKBOX fields for entity type)
+      → section_context="Investor entity type selection"
+    H1="Patient Information", H2="Medical History" (with CHECKBOX fields for conditions)
+      → section_context="Patient medical condition selection"
+    H1="Entity Details", H2="Ownership Structure" (with TEXT fields for owners)
+      → section_context="Entity ownership information and details"
+
+  **Key Identifying Words to Extract from H1:**
+  - investor, co-investor, primary investor, secondary investor
+  - entity, corporation, partnership, trust
+  - patient, doctor, physician, provider
+  - parent, guardian, spouse, dependent
+  - guarantor, co-signer, authorized person
+  - employee, employer, beneficiary
+
+  Always include the identifying role/entity in the section_context to make it clear WHO the section describes.
+
+**H3 (Field Label):**
+- Label for a specific field or group of related fields.
+- Typically short (1–15 words), may end with ":".
+- **CRITICAL SPATIAL RULES FOR H3**:
+  1. Must be within 50 pixels vertically of the field placeholder
+  2. Prefer text DIRECTLY LEFT or DIRECTLY ABOVE the field (same line or line immediately above)
+  3. **IGNORE text in extreme corners** (> 300 pixels away horizontally) unless it's the ONLY candidate
+  4. Do NOT extract page headers, footers, watermarks, or unrelated corner text as H3
+  5. Look for text on the SAME LINE first, then the line IMMEDIATELY ABOVE
+- **CRITICAL GROUPING RULE**:
+  - If you see a line like "Type of Investor—Please check one:" followed by checkboxes,
+    this is an H3 for a checkbox group, NOT related to text fields above it (like Name, SSN).
+  - Text fields (Name, SSN, Amount) at the top should have their own H3 labels.
+  - Checkbox/radio groups in the middle should be separate H3 under a different H2.
+  - Example:
+    ✅ CORRECT:
+    H2: "Basic Information"
+      H3: "Name of Investor" (fid: 1)
+      H3: "Social Security Number" (fid: 2)
+    H2: "Investor Classification"  ← SEPARATE H2
+      H3: "Type of Investor" (fid: null)
+        H4: "Individual" (fid: 7)
+        H4: "Corporation" (fid: 8)
+
+    ❌ WRONG:
+    H2: "Basic Information"
+      H3: "Name of Investor" (fid: 1)
+      H3: "Type of Investor" (fid: null) ← DON'T mix with text fields above
+- **MANDATORY: ALWAYS CREATE H3 FOR CHECKBOX/RADIO GROUPS**:
+  - When you see H4 options (Individual, Corporation, Partnership, etc.), you MUST create an H3 parent.
+  - **NEVER leave h3=null when h4 has a value!**
+  - If no explicit label exists above the options, INFER the H3 from the H4 option types.
+- **INFER H3 FROM H4 OPTIONS** (CRITICAL - DO NOT SKIP):
+  - **COMMON PATTERNS TO DETECT**:
+    H4 options: "Individual", "Corporation", "Partnership", "Trust", "LLC" → H3: "Type of Investor" or "Entity Type"
+    H4 options: "Mr", "Mrs", "Ms", "Dr" → H3: "Salutation"
+    H4 options: "Computer Science", "Electrical", "Mechanical" → H3: "Department"
+    H4 options: "Male", "Female" → H3: "Gender"
+    H4 options: "Single", "Married", "Divorced", "Widowed" → H3: "Marital Status"
+    H4 options: "Yes", "No" → H3: (use context from nearby text or section)
+    H4 options: "Registered Investment Company", "Joint Tenants", "Tenants in Common" → H3: "Type of Investor"
+  - **ALWAYS analyze the semantic meaning of options to determine the question being asked**
+- Examples: "Name of Investor", "Social Security Number", "Type of Investor", "Country", "Amount", "Currency"
+- If text is a question followed by blanks, the question is h3.
+- For line with multiple blanks, each blank must be mapped to its own h3 using the nearby words.
+
+**H4 (Option / Child Cell):**
+- For choice fields: individual checkbox/radio options under an h3 question.
+  Example:
+    H3: "Type of Investor"
+    H4: "Individual [CHECKBOX_FIELD:7]"
+    H4: "Corporation [CHECKBOX_FIELD:8]"
+- For tables: each [TABLE_CELL_FIELD:id] is h4 under its column's h3.
+  Example:
+    H3: "Country"
+    H4: row cell with [TABLE_CELL_FIELD:50] under "Country".
+
+══════════════════════════════════════════════
+MULTIPLE FIELDS ON SAME LINE
+══════════════════════════════════════════════
+
+DO NOT treat a whole line as a single heading when it contains multiple placeholders.
+You must split by placeholder and create separate entries.
+
+Example line:
+"City [TEXT_FIELD:10] State [TEXT_FIELD:11] Zip [TEXT_FIELD:12]"
+
+You must produce THREE h3 entries:
+
+- h3 for field id 10 → text: "City", fid: 10
+- h3 for field id 11 → text: "State", fid: 11
+- h3 for field id 12 → text: "Zip", fid: 12
+
+Use the nearest words to the left (or sometimes right) of each placeholder as the label text.
+Strip colons and underscores: "Name: [TEXT_FIELD:1]" → "Name".
+
+══════════════════════════════════════════════
+TABLE HANDLING WITH [TABLE_CELL_FIELD]
+══════════════════════════════════════════════
+
+1. Detect table-like structures:
+   - Several consecutive lines arranged in columns (similar top increments, different left positions).
+   - Header row without placeholders, followed by rows WITH [TABLE_CELL_FIELD:id].
+
+2. Column headers (first table row) become h3:
+   - Example header row: "Country  |  Amount  |  Currency"
+   - Create h3 entries: h3: "Country" (fid: null), h3: "Amount" (fid: null), h3: "Currency" (fid: null)
+
+3. Each cell with [TABLE_CELL_FIELD:id] becomes h4 under the corresponding column h3:
+   - Determine which column a cell belongs to by comparing bbox.left to header bbox.left.
+   - Each such h4 must have fid = that TABLE_CELL_FIELD id.
+   - **IMPORTANT**: Include the row number in the h4 text to distinguish multiple rows.
+   - Example:
+     Column header: "Name"
+     Row 1 cell: h4 text = "Name_row_1" with fid = 50
+     Row 2 cell: h4 text = "Name_row_2" with fid = 51
+     Row 3 cell: h4 text = "Name_row_3" with fid = 52
+
+4. Track row numbers by counting consecutive cells under the same column header.
+   Start row numbering from 1 for the first data row after the header.
+
+5. Do NOT create redundant h3/h4 for decorative or empty cells.
+
+══════════════════════════════════════════════
+CHOICE FIELDS: CHECKBOX / RADIO (CRITICAL)
+══════════════════════════════════════════════
+
+For [CHECKBOX_FIELD:id] and [RADIOBUTTON_FIELD:id]:
+
+1. Identify the parent question or group label (h3):
+   - Look for text above the options or at the start of the line.
+   - Example:
+     "Type of Investor (check one):"
+     "[CHECKBOX_FIELD:7] Individual   [CHECKBOX_FIELD:8] Corporation"
+   Output:
+   - h3: "Type of Investor" with fid = null (remove "(check one)")
+   - h4: "Individual" with fid = 7
+   - h4: "Corporation" with fid = 8
+
+2. **INFER H3 LABEL FROM OPTIONS** (when H3 is unclear/missing):
+   **Example 1: Salutation** — Options: Mr, Mrs, Ms, Dr → Inferred H3: "Salutation"
+   **Example 2: Department** — Options: Computer Science, Electrical, Mechanical → Inferred H3: "Department"
+   **Example 3: Gender** — Options: Male, Female → Inferred H3: "Gender"
+   **Example 4: Marital Status** — Options: Single, Married, Divorced, Widowed → Inferred H3: "Marital Status"
+   **Example 5: Entity Type** — Options: Individual, Corporation, Partnership, Trust → Inferred H3: "Entity Type"
+
+3. **DO NOT use question-like text for H3 that looks like it's asking for a choice**:
+   - Bad: "Please select your department:" → Use "Department" instead
+   - Bad: "What is your marital status?" → Use "Marital Status" instead
+   - Good: Clean, simple label derived from the option context
+
+4. Do NOT create extra h3 if a field is clearly just a simple checkbox label:
+   "[CHECKBOX_FIELD:20] I agree to the terms" → This is a single h4 with fid = 20 under the closest section h2.
+
+══════════════════════════════════════════════
+WHAT NOT TO TAG AS H3/H4
+══════════════════════════════════════════════
+
+Avoid creating h3/h4 for:
+- Pure decorative text, watermarks, or page numbers.
+- Long paragraphs that are instructions, unless they clearly contain a fill-in-the-blank question.
+- Labels with NO associated placeholders (unless they are genuine structural headings like h1/h2).
+
+══════════════════════════════════════════════
+OUTPUT FORMAT (JSON ONLY, MINIMAL)
+══════════════════════════════════════════════
+
+Return JSON with a flat list of sections:
+
+{
+  "sections": [
+    {
+      "text": "heading or label text (clean, no colons/underscores)",
+      "level": "title|h1|h2|h3|h4",
+      "page": page_number,
+      "lid": "line_id_from_input",
+      "fid": fid_or_null,
+      "section_context": "simple 10-word summary (ONLY for h2, null for others)"
+    }
+  ]
+}
+
+Rules for output:
+- For title / h1 / h2, set "fid": null (pure headings).
+- **For h2 ONLY**: Include "section_context" (max 10 words).
+  TEXT fields → use "information", "details", "data", "identification"
+  CHECKBOX/RADIO → use "selection", "choice", "classification", "type"
+- For h1, h3, h4, title: set "section_context": null
+- For h3 labelling a single field: set "fid" to that field's id.
+- For h3 that is a group question for multiple checkboxes/radios: set "fid": null.
+- **MANDATORY RULE**: If you create h4 entries, you MUST create a parent h3 for them!
+- For every h4 (checkbox/radio option or table cell), set "fid" to the placeholder id.
+- Do NOT include bbox, field_ids arrays, field_types, or any other extra keys.
+
+<% if is_first_chunk %>
+══════════════════════════════════════════════
+DOCUMENT CLASSIFICATION (FIRST CHUNK ONLY)
+══════════════════════════════════════════════
+
+In addition to sections, classify the document into a hierarchical taxonomy:
+
+**pdf_category**: A 3-level hierarchical classification:
+
+1. **category**: Broad domain/industry
+   Examples: finance, legal, healthcare, government, insurance, real_estate,
+   education, human_resources, technology, manufacturing
+
+2. **sub_category**: Specific area within the category
+   Examples (finance): investment, banking, taxation, accounting, trading, wealth_management
+   Examples (legal): contract, compliance, litigation, corporate, intellectual_property
+   Examples (healthcare): patient_intake, medical_records, insurance_claims, consent_forms
+
+3. **document_type**: Specific document classification
+   Examples: subscription_form, investment_agreement, tax_return, license_application,
+   patient_consent, employment_contract, loan_application, insurance_claim,
+   questionnaire, certification, registration, disclosure, terms_and_conditions
+
+Return the "pdf_category" object in the top-level JSON output (NOT inside sections array):
+
+{
+  "pdf_category": {
+    "category": "finance",
+    "sub_category": "investment",
+    "document_type": "subscription_form"
+  },
+  "sections": [...]
+}
+<% endif %>
+
+Return ONLY valid JSON. No markdown, no explanation.
+
+##CACHE_SPLIT##
+<# ═══════════════════════════════════════════════════════════════
+   PER-CHUNK DATA — pages_data changes with every chunk.
+   Placed at the bottom so all rules above can be prefix-cached.
+═══════════════════════════════════════════════════════════════ #>
+---
+PAGES_DATA (JSON):
+<< pages_data | tojson(indent=2) >>

@@ -1,0 +1,52 @@
+<# ═══════════════════════════════════════════════════════════════
+   STATIC INSTRUCTION BLOCK
+   field_token / field_type / output_key are fixed for the whole
+   job (all radio or all checkbox). keys_data is also job-level.
+   text changes per call and is placed last.
+═══════════════════════════════════════════════════════════════ #>
+You are given lines extracted from a PDF form. Some lines contain tokens like << field_token >>, which represent individual << field_type_lower >> fields.
+
+Your task is to:
+1. Group related << field_type_lower >>s together (e.g. titles: Mr, Mrs, Dr; or options: Yes, No).
+2. For each group, if a description from the provided keys matches the group's context, use the corresponding key as the group's description (set the 'description' field to that key string exactly).
+3. Otherwise, assign a short and meaningful description to each group — crisp and sharp.
+4. Only use the numeric ID (e.g., 29, 30) from each [<< field_type_upper >>_FIELD:X] token.
+5. Return a clean JSON object in the exact format shown below. No explanation, headers, or extra text — only JSON.
+6. Get the correct export value or subname for each radio button field id; return an empty list if not applicable.
+
+Output format:
+
+{
+    "group_1": {
+        "<< output_key >>": [29, 30, 31],
+        "export_values": ["Mr", "Mrs", "Dr"],
+        "description": "matched_key_or_generated_description"
+    },
+    "group_2": {
+        "<< output_key >>": [45, 46],
+        "export_values": ["yes", "no"],
+        "description": "matched_key_or_generated_description"
+    }
+}
+
+<# ═══════════════════════════════════════════════════════════════
+   JOB-LEVEL DATA — same for all calls in this job.
+   Placed after static instructions, before per-call text.
+═══════════════════════════════════════════════════════════════ #>
+<% if keys_data %>
+---
+Semantic Keys (use these to set group descriptions):
+<< keys_data | tojson(indent=2) >>
+
+- If a group's context or label closely matches a description in this dictionary, use the corresponding key (the dict key, not the description) as the group's 'description' field.
+- If no match is found, generate a new crisp description as described above.
+<% endif %>
+
+##CACHE_SPLIT##
+<# ═══════════════════════════════════════════════════════════════
+   PER-CALL DATA — extracted text changes every call.
+═══════════════════════════════════════════════════════════════ #>
+---
+Extracted text (may be partial, not the full page):
+
+<< text >>

@@ -173,7 +173,8 @@ def create_header_file(
         ]
         
         header_file_fields.append({
-            "field_id": field_name,
+            "field_id": f"field_{fid}",
+            "field_name": field_name,
             "context": context,
             "section_context": section_context,
             "headers": headers,
@@ -185,7 +186,7 @@ def create_header_file(
         "session_id": session_id,
         "pdf_id": str(pdf_doc_id),
         "pdf_hash": pdf_hash,
-        "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "fields": header_file_fields
     }
     
@@ -248,21 +249,22 @@ def create_section_file(
         fid = field.get("fid")
         field_name = field.get("field_name", f"field_{fid}")
         hierarchy = field.get("hierarchy", {})
-        
+
         h1 = hierarchy.get("h1", "Unknown Page")
         h2 = hierarchy.get("h2", "Unknown Section")
         h3 = hierarchy.get("h3", "")
         h4 = hierarchy.get("h4", "")
         section_context = hierarchy.get("section_context", "")
-        
+
         # Build key: (h1, h2, section_context, h3)
         h1_key = h1 if h1 else "Unknown Page"
         h2_key = h2 if h2 else "Unknown Section"
         h3_key = h3 if h3 else field_name  # Use field_name as fallback for h3
-        
+
         # Store field info
         field_info = {
-            "field_id": field_name,
+            "field_id": f"field_{fid}",
+            "field_name": field_name,
             "h3": h3_key,
             "h4": h4 if h4 else None,
             "section_context": section_context
@@ -326,7 +328,7 @@ def create_section_file(
         "user_id": str(user_id),
         "session_id": session_id,
         "pdf_id": str(pdf_doc_id),
-        "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "sections": sections
     }
     

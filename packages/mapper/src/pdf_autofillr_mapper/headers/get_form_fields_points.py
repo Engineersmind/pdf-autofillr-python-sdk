@@ -30,7 +30,7 @@ from pdf_autofillr_mapper.core.config import settings
 
 # S3Client imported conditionally where needed (only for AWS mode)
 
-from pdf_autofillr_mapper.clients.unified_llm_client import UnifiedLLMClient
+from pdf_autofillr_mapper.clients.unified_llm_client import UnifiedLLMClient, build_messages
 
 
 
@@ -180,7 +180,19 @@ async def get_form_fields_points(
 
         duration = round(end_time - start_time, 2)
 
-        
+        # Extract LLM usage and log summary
+        llm_usage = headers_result.get("llm_usage", {})
+
+        logger.info("")
+        logger.info("💰 PHASE 2 (HEADERS EXTRACTION) - LLM USAGE SUMMARY:")
+        logger.info(f"   🤖 Model: {llm_usage.get('model', 'unknown')}")
+        logger.info(f"   📞 Total LLM calls: {llm_usage.get('total_chunks', 0)}")
+        logger.info(f"   📊 Tokens - Prompt: {llm_usage.get('total_prompt_tokens', 0):,}, Completion: {llm_usage.get('total_completion_tokens', 0):,}, Total: {llm_usage.get('total_tokens', 0):,}")
+        logger.info(f"   💵 Total cost: ${llm_usage.get('total_cost_usd', 0):.6f}")
+        if llm_usage.get('total_chunks', 0) > 0:
+            logger.info(f"   💰 Avg cost per call: ${llm_usage.get('avg_cost_per_chunk', 0):.6f}")
+            logger.info(f"   💎 Cost per section: ${llm_usage.get('cost_per_section', 0):.6f}")
+        logger.info("")
 
         result = {
 
@@ -234,11 +246,20 @@ async def get_form_fields_points(
 
             },
 
-            "llm_usage": headers_result.get("llm_usage", {})
+            "llm_usage": {
+                "model": llm_usage.get("model", "unknown"),
+                "total_calls": llm_usage.get("total_chunks", 0),
+                "total_prompt_tokens": llm_usage.get("total_prompt_tokens", 0),
+                "total_completion_tokens": llm_usage.get("total_completion_tokens", 0),
+                "total_tokens": llm_usage.get("total_tokens", 0),
+                "total_cost_usd": round(llm_usage.get("total_cost_usd", 0), 6),
+                "avg_cost_per_call": round(llm_usage.get("avg_cost_per_chunk", 0), 6),
+                "cost_per_section": round(llm_usage.get("cost_per_section", 0), 6)
+            }
 
         }
 
-        
+
 
         logger.info(f"Form fields data points extraction completed in {duration} seconds")
 
@@ -1152,7 +1173,9 @@ async def process_chunk(chunk_pages: List[dict], chunk_num: int, is_first: bool)
 
         timeout=getattr(settings, 'llm_timeout', 120),
 
-        max_retries=getattr(settings, 'llm_max_retries', 3)
+        max_retries=getattr(settings, 'llm_max_retries', 3),
+
+        api_key=getattr(settings, 'mapper_headers_llm_api_key', '') or None,
 
     )
 
@@ -1168,19 +1191,10 @@ async def process_chunk(chunk_pages: List[dict], chunk_num: int, is_first: bool)
 
         try:
 
-            # Prepare messages for LLM
-
+            # Prepare messages with prompt caching for Claude models
             system_message_content = "Expert PDF form analyzer. Extract hierarchy with field placeholders. Split multiple fields on same line. Handle tables (H3 columns, H4 cells) and checkboxes/radios (H3 question, H4 options). For H2 sections, generate section_context (max 10 words) that includes the key entity/role from H1 (investor, patient, entity, co-investor, spouse, etc.) combined with the H2 topic. Return minimal JSON with a single fid per section."
 
-            
-
-            messages = [
-
-                {"role": "system", "content": system_message_content},
-
-                {"role": "user", "content": prompt}
-
-            ]
+            messages = build_messages(model_id, prompt, system=system_message_content)
 
             
 
@@ -1556,7 +1570,7 @@ You must output a clean hierarchy of headings and field labels:
 
   - h4: Options / table cells belonging to an h3
 
-
+##CACHE_SPLIT##
 
 PAGES_DATA (JSON):
 

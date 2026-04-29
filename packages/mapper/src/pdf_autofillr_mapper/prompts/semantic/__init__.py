@@ -1,0 +1,1 @@
+"""Semantic mapping prompt templates."""

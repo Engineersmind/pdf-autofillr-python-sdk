@@ -4,7 +4,7 @@ import configparser
 from pathlib import Path
 from typing import Dict, Any
 from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Load config.ini
 config_ini = configparser.ConfigParser()
@@ -70,6 +70,9 @@ class Settings(BaseSettings):
     llm_max_tokens: int = get_ini_int("mapping", "llm_max_tokens", 4096)
     llm_timeout: int = get_ini_int("mapping", "llm_timeout", 120)
     llm_max_retries: int = get_ini_int("mapping", "llm_max_retries", 3)
+    # Universal API key overrides — provider-specific env vars are also accepted
+    mapper_llm_api_key: str = ""          # MAPPER_LLM_API_KEY
+    mapper_headers_llm_api_key: str = ""  # MAPPER_HEADERS_LLM_API_KEY
     
     # Claude/Bedrock Configuration (Legacy)
     claude_model_id: str = "anthropic.claude-3-sonnet-20240229-v1:0"
@@ -190,12 +193,13 @@ class Settings(BaseSettings):
     rag_api_key: str = ""
     rag_bucket_name: str = "rag-bucket-pdf-filler"  # S3 bucket for RAG predictions
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        env_prefix = ""
-        extra = "allow"  # Allow extra fields from .env that aren't defined in Settings
-        populate_by_name = True  # Allow population by field name or alias
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_prefix="",
+        extra="allow",
+        populate_by_name=True,
+    )
 
 _settings_cache = None
 

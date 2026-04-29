@@ -241,8 +241,31 @@ class FileConfig:
 # Singleton instance
 _file_config = None
 
-def get_file_config(config_path: str = None) -> FileConfig:
-    """Get singleton FileConfig instance."""
+def get_file_config(
+    config_path: str = None,
+    env: str = None,
+    developer_id: str = None,
+    user_id=None,
+    session_id=None,
+    pdf_doc_id=None,
+):
+    """
+    Get a FileConfig instance.
+
+    When env/developer_id are provided (i.e. called from an operation handler),
+    a fresh per-request instance is returned with the appropriate StorageConfig
+    so path resolution uses the correct env folder and user_type.
+
+    When called without those params the global singleton is returned (backwards compat).
+    """
+    if env is not None or developer_id is not None:
+        # Per-request: build a fresh config with the right env/user_type
+        cfg = FileConfig(config_path)
+        # Attach a StorageConfig for PathResolver use
+        from pdf_autofillr_mapper.storage.storage_config import StorageConfig
+        cfg._sc = StorageConfig(env=env, developer_id=developer_id)
+        return cfg
+
     global _file_config
     if _file_config is None:
         _file_config = FileConfig(config_path)

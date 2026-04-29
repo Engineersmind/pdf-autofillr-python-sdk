@@ -31,8 +31,7 @@ def main() -> None:
     from dotenv import load_dotenv
     load_dotenv()
 
-    # Import the FastAPI app (entrypoints/fastapi_app.py already has fixed imports)
-    from entrypoints.fastapi_app import app  # noqa: F401
+    from pdf_autofillr_mapper.entrypoints.fastapi_app import app  # noqa: F401
 
     port      = int(os.getenv("PORT", "8000"))
     host      = os.getenv("HOST", "0.0.0.0")

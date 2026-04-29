@@ -12,21 +12,61 @@ Three ways to build::
     cfg = MapperConfig.from_env()
 
     # Directly (testing / programmatic)
-    cfg = MapperConfig(llm_model="gpt-4o", confidence_threshold=0.8)
+    cfg = MapperConfig(
+        llm_model="anthropic/claude-3-5-sonnet-20241022",
+        llm_api_key="sk-ant-...",
+        headers_llm_model="openai/gpt-4o",
+        headers_llm_api_key="sk-...",
+    )
+
+LLM credentials
+---------------
+Two LLM phases are used internally, each can point to a different model/provider:
+
+  Phase 1 — Mapping:  llm_model        (default: gpt-4o)
+  Phase 2 — Headers:  headers_llm_model (default: gpt-4o)
+
+Keys are resolved in this order for each phase:
+  1. ``llm_api_key`` / ``headers_llm_api_key`` fields (programmatic override)
+  2. ``MAPPER_LLM_API_KEY`` / ``MAPPER_HEADERS_LLM_API_KEY`` env vars
+  3. Provider-specific env vars read automatically by litellm:
+       OPENAI_API_KEY, ANTHROPIC_API_KEY, GROQ_API_KEY,
+       GEMINI_API_KEY, AZURE_API_KEY, AWS_ACCESS_KEY_ID, etc.
+
+Both phases can use the same model or completely different providers.
 """
 from __future__ import annotations
 
 import configparser
 import os
+import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
 
+def _has_key_for_model(model: str, api_key: str) -> bool:
+    """Return True if a usable credential exists for the given litellm model name."""
+    if api_key:
+        return True
+    m = model.lower()
+    return any([
+        os.getenv("OPENAI_API_KEY")     and any(t in m for t in ("openai/", "gpt-", "o1", "o3")),
+        os.getenv("ANTHROPIC_API_KEY")  and any(t in m for t in ("anthropic/", "claude-")),
+        os.getenv("GROQ_API_KEY")       and "groq/" in m,
+        os.getenv("GEMINI_API_KEY")     and "gemini/" in m,
+        os.getenv("AZURE_API_KEY")      and "azure/" in m,
+        os.getenv("GOOGLE_APPLICATION_CREDENTIALS") and "vertex_ai/" in m,
+        os.getenv("AWS_ACCESS_KEY_ID")  and "bedrock/" in m,
+        "ollama/" in m,
+    ])
+
+
 @dataclass
 class MapperConfig:
-    # LLM
+    # ── Mapping LLM (Phase 1) ────────────────────────────────────────────────
     llm_model: str = "gpt-4o"
+    llm_api_key: str = ""        # set MAPPER_LLM_API_KEY or a provider-specific key
     llm_temperature: float = 0.0
     llm_max_tokens: int = 4096
     llm_timeout: int = 120
@@ -75,8 +115,9 @@ class MapperConfig:
     notifications_backend_url: str = ""
     teams_webhook_url: str = ""
 
-    # Headers LLM
+    # ── Headers LLM (Phase 2) ────────────────────────────────────────────────
     headers_llm_model: str = "gpt-4o"
+    headers_llm_api_key: str = ""  # set MAPPER_HEADERS_LLM_API_KEY or provider key
     headers_temperature: float = 0.0
     headers_max_tokens: int = 8192
     headers_chunk_size: int = 5
@@ -86,10 +127,29 @@ class MapperConfig:
     java_jar_dir: Optional[str] = None
 
     def __post_init__(self):
-        # Backward compat: if caller passed use_second_mapper=True but left
-        # rag_enabled at default False, honour use_second_mapper.
         if self.use_second_mapper and not self.rag_enabled:
             self.rag_enabled = True
+        # Resolve api keys from env vars if not set programmatically
+        if not self.llm_api_key:
+            self.llm_api_key = os.getenv("MAPPER_LLM_API_KEY", "")
+        if not self.headers_llm_api_key:
+            self.headers_llm_api_key = os.getenv("MAPPER_HEADERS_LLM_API_KEY", "")
+
+    def validate(self) -> None:
+        """Warn at startup if no credential is found for either LLM phase."""
+        def _warn(phase: str, model: str, key: str, env_var: str) -> None:
+            if not _has_key_for_model(model, key):
+                warnings.warn(
+                    f"[pdf-autofillr-mapper] No API key found for {phase} model {model!r}.\n"
+                    f"  Set {env_var} as a universal override, or the provider-specific key:\n"
+                    f"  OPENAI_API_KEY, ANTHROPIC_API_KEY, GROQ_API_KEY,\n"
+                    f"  AZURE_API_KEY, GEMINI_API_KEY, AWS_ACCESS_KEY_ID.\n"
+                    f"  For Ollama: no key needed.",
+                    stacklevel=3,
+                )
+
+        _warn("mapping", self.llm_model, self.llm_api_key, "MAPPER_LLM_API_KEY")
+        _warn("headers", self.headers_llm_model, self.headers_llm_api_key, "MAPPER_HEADERS_LLM_API_KEY")
 
     @classmethod
     def from_directory(cls, config_dir: str) -> "MapperConfig":
@@ -144,6 +204,8 @@ class MapperConfig:
 
         return cls(
             llm_model=_s("mapping", "llm_model", "gpt-4o"),
+            # API keys always come from env, never from .ini files
+            llm_api_key=os.getenv("MAPPER_LLM_API_KEY", ""),
             llm_temperature=_f("mapping", "llm_temperature", 0.0),
             llm_max_tokens=_i("mapping", "llm_max_tokens", 4096),
             llm_timeout=_i("mapping", "llm_timeout", 120),
@@ -166,6 +228,7 @@ class MapperConfig:
             notifications_enabled=_b("notifications", "teams_notifications_enabled", False),
             teams_webhook_url=_s("notifications", "teams_webhook_url", ""),
             headers_llm_model=_s("headers", "headers_llm_model", "gpt-4o"),
+            headers_llm_api_key=os.getenv("MAPPER_HEADERS_LLM_API_KEY", ""),
             headers_temperature=_f("headers", "headers_temperature", 0.0),
             headers_max_tokens=_i("headers", "headers_max_tokens", 8192),
             headers_chunk_size=_i("headers", "headers_chunk_size", 5),
@@ -184,6 +247,7 @@ class MapperConfig:
 
         return cls(
             llm_model=os.getenv("MAPPER_LLM_MODEL", "gpt-4o"),
+            llm_api_key=os.getenv("MAPPER_LLM_API_KEY", ""),
             llm_temperature=float(os.getenv("MAPPER_LLM_TEMPERATURE", "0.0")),
             llm_max_tokens=int(os.getenv("MAPPER_LLM_MAX_TOKENS", "4096")),
             llm_timeout=int(os.getenv("MAPPER_LLM_TIMEOUT", "120")),
@@ -199,4 +263,6 @@ class MapperConfig:
             rag_mode=os.getenv("RAG_MODE", "inprocess"),
             rag_api_url=os.getenv("RAG_API_URL", ""),
             rag_api_key=os.getenv("RAG_API_KEY", ""),
+            headers_llm_model=os.getenv("MAPPER_HEADERS_LLM_MODEL", "gpt-4o"),
+            headers_llm_api_key=os.getenv("MAPPER_HEADERS_LLM_API_KEY", ""),
         )
