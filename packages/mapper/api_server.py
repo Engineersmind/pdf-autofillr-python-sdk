@@ -39,7 +39,7 @@ from pdf_autofillr_mapper.core.logger import logger
 app = FastAPI(
     title="PDF Autofiller Mapper API",
     description="API for PDF form field extraction, mapping, embedding, and filling",
-    version="1.0.9"
+    version="1.0.10"
 )
 
 
@@ -123,7 +123,7 @@ async def root():
     """API root endpoint"""
     return {
         "name": "PDF Autofiller Mapper API",
-        "version": "1.0.9",
+        "version": "1.0.10",
         "status": "running",
         "endpoints": {
             "extract": "/mapper/extract",

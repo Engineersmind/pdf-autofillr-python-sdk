@@ -706,9 +706,12 @@ Guidelines:
         
         async def process_batch(batch, idx):
             async with semaphore:
-                # loop = asyncio.get_running_loop()
-                # descriptions = await loop.run_in_executor(None, self.generate_key_descriptions_bulk, batch, llm)
-                descriptions = await asyncio.to_thread(self.generate_key_descriptions_bulk, batch, llm)
+                try:
+                    descriptions = await asyncio.to_thread(self.generate_key_descriptions_bulk, batch, llm)
+                except RuntimeError as _e:
+                    if "interpreter shutdown" in str(_e) or "cannot schedule" in str(_e):
+                        return
+                    raise
                 return descriptions
 
         # Launch all batch tasks (they will gate on the semaphore)
@@ -985,7 +988,12 @@ Guidelines:
                 
                 if self.include_description == 1:
                     logger.info("🔧 Preparing & Including key descriptions in the prompt...")
-                    enriched_data = await self.enrich_input_data_llm(input_data, llm=self.llm)
+                    try:
+                        enriched_data = await self.enrich_input_data_llm(input_data, llm=self.llm)
+                    except RuntimeError as _e:
+                        if "interpreter shutdown" in str(_e) or "cannot schedule" in str(_e):
+                            return
+                        raise
                     keys_data = self.prepare_updated_input_data_with_description(enriched_data)
                 
                 enrich_time = time.time() - enrich_start

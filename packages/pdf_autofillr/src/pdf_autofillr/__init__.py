@@ -22,4 +22,4 @@ pdf-autofillr setup    # writes .env.example, configs/, data/ for your combinati
 pdf-autofillr status   # shows what is installed and configured
 """
 
-__version__ = "1.1.3"
+__version__ = "1.1.4"

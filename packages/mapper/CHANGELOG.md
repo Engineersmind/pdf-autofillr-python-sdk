@@ -1,5 +1,10 @@
 # Changelog — pdf-autofillr-mapper
 
+## [1.0.10] - 2026-05-16
+
+### Fixed
+- Catch interpreter shutdown RuntimeError in `semantic_mapper.py` `process_batch()` and `process_and_save()` to suppress noisy shutdown errors
+
 ## [1.0.9] - 2026-05-16
 
 ### Fixed

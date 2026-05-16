@@ -1,9 +1,14 @@
 # Changelog — pdf-autofillr (umbrella)
 
+## [1.1.4] - 2026-05-16
+
+### Fixed
+- Bumped mapper to 1.0.10 — catch interpreter shutdown in semantic_mapper.py
+
 ## [1.1.3] - 2026-05-16
 
 ### Fixed
-- Bumped all sub-package minimums: chatbot 0.3.0, doc-upload 0.1.5, mapper 1.0.9, rag 0.2.4
+- Bumped all sub-package minimums: chatbot 0.3.0, doc-upload 0.1.5, mapper 1.0.10, rag 0.2.4
 - Suppressed PyMuPDF layout warning globally
 - Resolved interpreter shutdown noise after chatbot/doc-upload sessions
 - Fixed OpenAI 400 empty string error on repeated RAG predictions calls
