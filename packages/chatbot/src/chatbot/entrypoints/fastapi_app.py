@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="pdf-autofillr-chatbot API",
     description="Conversational investor onboarding — collects data and fills PDF forms.",
-    version="0.2.9",
+    version="0.3.0",
 )
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
@@ -86,7 +86,7 @@ class SessionDataResponse(BaseModel):
 
 @app.get("/")
 def root():
-    return {"name": "pdf-autofillr-chatbot", "version": "0.2.9", "docs": "/docs"}
+    return {"name": "pdf-autofillr-chatbot", "version": "0.3.0", "docs": "/docs"}
 
 
 @app.post("/chatbot/chat", response_model=ChatResponse)
@@ -143,7 +143,7 @@ def delete_session(user_id: str, session_id: str):
 def health():
     return {
         "status": "ok",
-        "version": "0.2.9",
+        "version": "0.3.0",
         "storage": os.getenv("chatbot_STORAGE", "local"),
         "pdf_filler": os.getenv("chatbot_PDF_FILLER", "none"),
     }

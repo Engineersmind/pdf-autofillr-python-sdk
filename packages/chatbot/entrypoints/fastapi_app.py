@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="chatbot (bare routes)",
     description="chatbot sub-app — /chat instead of /chatbot/chat.",
-    version="0.2.9",
+    version="0.3.0",
 )
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 

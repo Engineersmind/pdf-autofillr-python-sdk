@@ -26,7 +26,7 @@ from pdf_autofillr_doc_upload.pdf.interface import PDFFillerInterface
 from pdf_autofillr_doc_upload.pdf.mapper_filler import MapperPDFFiller
 from pdf_autofillr_doc_upload.pdf.inprocess_filler import InProcessMapperFiller
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 
 
 def copy_sample_configs(destination: str = ".") -> None:

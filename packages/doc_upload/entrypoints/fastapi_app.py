@@ -36,7 +36,7 @@ except ImportError:
 
 app = FastAPI(
     title="pdf-autofillr-doc-upload",
-    version="0.1.4",
+    version="0.1.5",
     description="Document extraction + PDF filling API",
 )
 

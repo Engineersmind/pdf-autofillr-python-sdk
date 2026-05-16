@@ -38,7 +38,7 @@ from ragpdf.correctors.anthropic_corrector import AnthropicCorrectorBackend
 from ragpdf.correctors.litellm_corrector   import LiteLLMCorrectorBackend
 from ragpdf.correctors.noop_corrector      import NoOpCorrectorBackend
 
-__version__ = "0.2.3"
+__version__ = "0.2.4"
 __all__ = [
     "RAGPDFClient",
     "LocalStorage", "S3Storage", "AzureStorage", "GCSStorage",

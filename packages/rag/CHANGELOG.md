@@ -6,6 +6,11 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [0.2.4] - 2026-05-16
+
+### Fixed
+- No changes in this package — version bump to stay in sync with mapper 1.0.9 release
+
 ## [0.2.3] — 2026-04-28
 
 ### Added

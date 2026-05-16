@@ -105,7 +105,7 @@ else:
     app = FastAPI(
         title="PDF Mapper API",
         description="Platform-agnostic PDF field extraction, mapping, embedding, and filling API",
-        version="1.0.8",
+        version="1.0.9",
         docs_url="/docs",
         redoc_url="/redoc",
     )
@@ -148,7 +148,7 @@ else:
         """Root endpoint."""
         return {
             "service": "PDF Mapper API",
-            "version": "1.0.8",
+            "version": "1.0.9",
             "docs": "/docs",
         }
 

@@ -12,4 +12,4 @@ All entrypoints are THIN wrappers that parse platform-specific events
 and call the platform-agnostic handlers in src/handlers/operations.py
 """
 
-__version__ = "1.0.8"
+__version__ = "1.0.9"

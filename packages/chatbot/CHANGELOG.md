@@ -1,5 +1,12 @@
 # Changelog — pdf-autofillr-chatbot
 
+## [0.3.0] - 2026-05-16
+
+### Fixed
+- Suppress interpreter shutdown errors from background PDF fill thread
+- Silent catch for `cannot schedule new futures after interpreter shutdown` in mapper headers
+- Demote shutdown-phase RAG API errors to debug level
+
 ## [0.2.9] - 2026-04-28
 
 ### Added

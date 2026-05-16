@@ -1,5 +1,12 @@
 # Changelog — pdf-autofillr-doc-upload
 
+## [0.1.5] - 2026-05-16
+
+### Fixed
+- Suppress interpreter shutdown errors from background PDF fill thread
+- Silent catch for `cannot schedule new futures after interpreter shutdown` in mapper headers
+- Demote shutdown-phase RAG API errors to debug level
+
 ## [0.1.4] — 2026-04-22
 
 ### Added

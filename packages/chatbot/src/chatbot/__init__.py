@@ -12,7 +12,7 @@ from chatbot.pdf.interface import PDFFillerInterface
 from chatbot.pdf.mapper_filler import MapperPDFFiller
 from chatbot.pdf.fill_report import FillReport
 
-__version__ = "0.2.9"
+__version__ = "0.3.0"
 
 
 def copy_sample_configs(destination: str = ".") -> None:

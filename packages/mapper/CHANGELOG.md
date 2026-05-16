@@ -1,5 +1,14 @@
 # Changelog — pdf-autofillr-mapper
 
+## [1.0.9] - 2026-05-16
+
+### Fixed
+- Suppress `PYMUPDF_SUGGEST_LAYOUT_ANALYZER` warning globally via `os.environ.setdefault` in `detailed_fitz.py`
+- Silent catch for `cannot schedule new futures after interpreter shutdown` in `get_form_fields_points.py`
+- Demote shutdown-phase RAG API errors to debug level in `operations.py`
+- Filter empty-context fields before calling `RAGPDFClient.get_predictions()` to prevent OpenAI 400 empty string error on repeated runs
+- Silent catch for shutdown-phase errors in `unified_llm_client.py`
+
 ## [1.0.8] - 2026-04-28
 
 ### Fixed
