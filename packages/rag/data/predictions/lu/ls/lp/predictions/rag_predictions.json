@@ -1,0 +1,49 @@
+{
+  "user_id": "lu",
+  "session_id": "ls",
+  "pdf_id": "lp",
+  "model": "rag",
+  "timestamp": "2026-03-26T09:30:47.062487Z",
+  "pdf_hash": "lhash001",
+  "predictions": {
+    "lf001": {
+      "predicted_field_name": "investor_type",
+      "confidence": 0.983211839698828,
+      "vector_id": "vec_001",
+      "top_k": [
+        {
+          "field_name": "investor_type",
+          "confidence": 0.983211839698828,
+          "vector_id": "vec_001"
+        },
+        {
+          "field_name": "investor_type",
+          "confidence": 0.7583345381955191,
+          "vector_id": "vec_130"
+        },
+        {
+          "field_name": "investor_type",
+          "confidence": 0.7583338065155828,
+          "vector_id": "vec_118"
+        },
+        {
+          "field_name": "investorFullLegalName_ID",
+          "confidence": 0.6776314759897493,
+          "vector_id": "vec_002"
+        },
+        {
+          "field_name": "BenefitPlanInvestorcheck_ID",
+          "confidence": 0.6637769802212642,
+          "vector_id": "vec_013"
+        }
+      ],
+      "similarity_margin": 0.22487730150330887
+    }
+  },
+  "summary": {
+    "total_fields": 1,
+    "predicted_fields": 1,
+    "unpredicted_fields": 0,
+    "avg_confidence": 0.9832
+  }
+}

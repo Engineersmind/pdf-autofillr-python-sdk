@@ -1,0 +1,171 @@
+name: Update Changelog
+
+# Runs when a release tag is pushed.
+# Extracts the version entry from the package's own CHANGELOG.md and
+# prepends it to the root CHANGELOG.md, then commits back to main.
+#
+# FAILS if the package CHANGELOG.md does not contain an entry for
+# the version being released — the developer must update it first.
+#
+# Triggered by the same tags as publish-pypi.yml:
+#   mapper-v1.0.10, chatbot-v0.3.0, doc-upload-v0.1.5, etc.
+#
+# Requirements:
+#   - Package CHANGELOG.md must have an entry for the version being tagged.
+#   - Uses GITHUB_TOKEN — no extra secrets needed.
+
+on:
+  push:
+    tags:
+      - 'mapper-v*'
+      - 'chatbot-v*'
+      - 'doc-upload-v*'
+      - 'rag-v*'
+      - 'umbrella-v*'
+      - 'core-v*'
+      - 'plugins-v*'
+
+jobs:
+  update-changelog:
+    name: Update root CHANGELOG.md
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve package from tag
+        id: resolve
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if   [[ "$TAG" == mapper-v* ]];     then D=packages/mapper;        PREFIX=mapper;      V=${TAG#mapper-v}
+          elif [[ "$TAG" == chatbot-v* ]];    then D=packages/chatbot;       PREFIX=chatbot;     V=${TAG#chatbot-v}
+          elif [[ "$TAG" == doc-upload-v* ]]; then D=packages/doc_upload;    PREFIX=doc-upload;  V=${TAG#doc-upload-v}
+          elif [[ "$TAG" == rag-v* ]];        then D=packages/rag;           PREFIX=rag;         V=${TAG#rag-v}
+          elif [[ "$TAG" == umbrella-v* ]];   then D=packages/pdf_autofillr; PREFIX=umbrella;    V=${TAG#umbrella-v}
+          elif [[ "$TAG" == core-v* ]];       then D=plugins/core;           PREFIX=core;        V=${TAG#core-v}
+          elif [[ "$TAG" == plugins-v* ]];    then D=plugins/pdf_autofillr;  PREFIX=plugins;     V=${TAG#plugins-v}
+          else echo "Unknown tag: $TAG" && exit 1; fi
+          echo "package_dir=$D"             >> $GITHUB_OUTPUT
+          echo "prefix=$PREFIX"             >> $GITHUB_OUTPUT
+          echo "version=$V"                 >> $GITHUB_OUTPUT
+          echo "tag=$TAG"                   >> $GITHUB_OUTPUT
+          echo "date=$(date +%Y-%m-%d)"     >> $GITHUB_OUTPUT
+
+      - name: Extract entry from package CHANGELOG
+        id: extract
+        run: |
+          PKG_CHANGELOG="${{ steps.resolve.outputs.package_dir }}/CHANGELOG.md"
+          VERSION="${{ steps.resolve.outputs.version }}"
+          PREFIX="${{ steps.resolve.outputs.prefix }}"
+          TAG="${{ steps.resolve.outputs.tag }}"
+
+          # Hard fail if the package CHANGELOG file doesn't exist at all
+          if [[ ! -f "$PKG_CHANGELOG" ]]; then
+            echo ""
+            echo "❌ No CHANGELOG.md found at $PKG_CHANGELOG"
+            echo ""
+            echo "Every package must maintain its own CHANGELOG.md."
+            echo "Add $PKG_CHANGELOG with a [${VERSION}] section before pushing tag ${TAG}."
+            exit 1
+          fi
+
+          # Extract the section for this version (between this header and the next)
+          ENTRY=$(awk "/^## \[${VERSION}\]/{found=1; next} found && /^## \[/{exit} found{print}" "$PKG_CHANGELOG")
+
+          # Hard fail if the version entry is missing
+          if [[ -z "$ENTRY" ]]; then
+            echo ""
+            echo "❌ No entry found for version [${VERSION}] in $PKG_CHANGELOG"
+            echo ""
+            echo "Add a changelog entry before tagging:"
+            echo ""
+            echo "  ## [${VERSION}] - $(date +%Y-%m-%d)"
+            echo "  ### Added"
+            echo "  - ..."
+            echo "  ### Changed"
+            echo "  - ..."
+            echo "  ### Fixed"
+            echo "  - ..."
+            echo ""
+            echo "Then push the tag again: git tag ${TAG} && git push origin ${TAG}"
+            exit 1
+          fi
+
+          echo "✅ Found entry for [${VERSION}] in $PKG_CHANGELOG"
+          echo "$ENTRY" > /tmp/pkg_entry.txt
+
+      - name: Update root CHANGELOG.md
+        run: |
+          PREFIX="${{ steps.resolve.outputs.prefix }}"
+          VERSION="${{ steps.resolve.outputs.version }}"
+          DATE="${{ steps.resolve.outputs.date }}"
+          ROOT_CHANGELOG="CHANGELOG.md"
+          HEADER="## [${PREFIX}-${VERSION}] — ${DATE}"
+
+          # Skip if entry already exists
+          if grep -q "## \[${PREFIX}-${VERSION}\]" "$ROOT_CHANGELOG"; then
+            echo "Entry for ${PREFIX}-${VERSION} already exists in root CHANGELOG.md — skipping."
+            exit 0
+          fi
+
+          # Build the new entry block
+          {
+            echo ""
+            echo "$HEADER"
+            echo ""
+            cat /tmp/pkg_entry.txt
+            echo ""
+            echo "---"
+          } > /tmp/new_entry.txt
+
+          # Insert after [Unreleased] section, before first versioned entry
+          INSERT_LINE=$(grep -n "^## \[" "$ROOT_CHANGELOG" | grep -v "Unreleased" | head -1 | cut -d: -f1)
+
+          if [[ -z "$INSERT_LINE" ]]; then
+            cat /tmp/new_entry.txt >> "$ROOT_CHANGELOG"
+          else
+            head -n $((INSERT_LINE - 1)) "$ROOT_CHANGELOG" > /tmp/cl_top.txt
+            tail -n +${INSERT_LINE} "$ROOT_CHANGELOG"      > /tmp/cl_bottom.txt
+            cat /tmp/cl_top.txt /tmp/new_entry.txt /tmp/cl_bottom.txt > "$ROOT_CHANGELOG"
+          fi
+
+          echo "✅ Prepended ${PREFIX}-${VERSION} to root CHANGELOG.md"
+
+      - name: Update packages table in root CHANGELOG
+        run: |
+          PREFIX="${{ steps.resolve.outputs.prefix }}"
+          VERSION="${{ steps.resolve.outputs.version }}"
+
+          case "$PREFIX" in
+            mapper)     PATTERN="pdf-autofillr-mapper"    ;;
+            chatbot)    PATTERN="pdf-autofillr-chatbot"   ;;
+            doc-upload) PATTERN="pdf-autofillr-doc-upload";;
+            rag)        PATTERN="pdf-autofillr-rag"       ;;
+            umbrella)   PATTERN="pdf-autofillr (umbrella)";;
+            core)       PATTERN="pdf-autofiller-core"     ;;
+            plugins)    PATTERN="pdf-autofiller-plugins"  ;;
+          esac
+
+          sed -i "s/| ${PATTERN} | [0-9.]* |/| ${PATTERN} | ${VERSION} |/" CHANGELOG.md
+          echo "✅ Updated packages table: ${PATTERN} → ${VERSION}"
+
+      - name: Commit updated CHANGELOG
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add CHANGELOG.md
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "chore/changelog: update root CHANGELOG for ${{ steps.resolve.outputs.tag }}"
+          git push origin HEAD:main
+          echo "✅ Committed and pushed CHANGELOG update."

@@ -1,0 +1,34 @@
+# Dockerfile.test
+# Runs the full test suite (unit + integration) with no external API keys.
+# No multi-stage needed — this image is only used locally / in CI.
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install the package with dev + transformers extras
+# Context is the project root (passed via docker-compose or -f flag)
+COPY pyproject.toml .
+COPY src/ src/
+RUN pip install --upgrade pip \
+ && pip install -e ".[transformers,dev]"
+
+COPY tests/ tests/
+COPY ragpdf_data/ ragpdf_data/
+
+ENV RAGPDF_STORAGE=local \
+    RAGPDF_DATA_PATH=/tmp/ragpdf_test \
+    RAGPDF_VECTOR_STORE=local \
+    RAGPDF_EMBEDDING_BACKEND=noop \
+    RAGPDF_CORRECTOR_BACKEND=noop \
+    RAGPDF_PREDICTION_THRESHOLD=0.75 \
+    PYTHONPATH=/app/src \
+    PYTHONUNBUFFERED=1
+
+# Default: run all tests with coverage
+# Override CMD to run only unit: docker run ... pytest tests/unit/ -v
+CMD ["pytest", "tests/", "-v", "--cov=ragpdf", "--cov-report=term-missing", "-m", "not slow"]

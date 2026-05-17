@@ -1,0 +1,183 @@
+name: PR Conventions
+
+# Validates:
+#   1. Branch name follows <type>/<module>-<description> format
+#   2. All commit messages follow <type>/<module>: description format
+#   3. PR title follows <type>/<module>: description format
+#   4. At least one CHANGELOG.md was updated in the PR
+#
+# Allowed types: feature, fix, bug, docs, test, chore, perf
+# Blocks merge if any check fails.
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  validate-branch:
+    name: Branch name
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch naming convention
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          PATTERN="^(feature|fix|bug|docs|test|chore|perf)\/[a-z0-9._-]+-[a-z0-9._-]+$"
+
+          echo "Branch: $BRANCH"
+
+          if [[ "$BRANCH" =~ $PATTERN ]]; then
+            echo "✅ Branch name is valid: $BRANCH"
+          else
+            echo ""
+            echo "❌ Invalid branch name: $BRANCH"
+            echo ""
+            echo "Required format:  <type>/<module>-<short-description>"
+            echo "Example:          feature/mapper-semantic-grouping"
+            echo ""
+            echo "Allowed types: feature, fix, bug, docs, test, chore, perf"
+            echo ""
+            echo "See CONTRIBUTING.md for full branch naming rules."
+            exit 1
+          fi
+
+  validate-commits:
+    name: Commit messages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check all commit messages in this PR
+        run: |
+          PATTERN="^(feature|fix|bug|docs|test|chore|perf)\/[a-zA-Z0-9._-]+: .+$"
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+
+          COMMITS=$(git log --format="%H %s" "${BASE}...${HEAD}")
+
+          if [[ -z "$COMMITS" ]]; then
+            echo "No commits found in range."
+            exit 0
+          fi
+
+          FAILED=0
+          while IFS= read -r LINE; do
+            SHA=$(echo "$LINE" | cut -d' ' -f1)
+            MSG=$(echo "$LINE" | cut -d' ' -f2-)
+
+            # Skip merge commits
+            if [[ "$MSG" == Merge* ]]; then
+              echo "⏭️  Skipping merge commit: $MSG"
+              continue
+            fi
+
+            if [[ "$MSG" =~ $PATTERN ]]; then
+              echo "✅ $SHA — $MSG"
+            else
+              echo "❌ $SHA — $MSG"
+              FAILED=1
+            fi
+          done <<< "$COMMITS"
+
+          if [[ "$FAILED" -eq 1 ]]; then
+            echo ""
+            echo "One or more commits have invalid messages."
+            echo ""
+            echo "Required format:  <type>/<module>: short description"
+            echo "Example:          feature/mapper: add semantic grouping support"
+            echo ""
+            echo "Allowed types: feature/, fix/, bug/, docs/, test/, chore/, perf/"
+            echo ""
+            echo "See CONTRIBUTING.md for full commit convention rules."
+            exit 1
+          fi
+
+          echo ""
+          echo "✅ All commit messages are valid."
+
+  validate-pr-title:
+    name: PR title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title follows commit convention
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+          PATTERN="^(feature|fix|bug|docs|test|chore|perf)\/[a-zA-Z0-9._-]+: .+$"
+
+          echo "PR title: $TITLE"
+
+          if [[ "$TITLE" =~ $PATTERN ]]; then
+            echo "✅ PR title is valid."
+          else
+            echo ""
+            echo "❌ Invalid PR title: $TITLE"
+            echo ""
+            echo "Required format:  <type>/<module>: short description"
+            echo "Example:          feature/mapper: add semantic grouping support"
+            echo ""
+            echo "Allowed types: feature/, fix/, bug/, docs/, test/, chore/, perf/"
+            echo ""
+            echo "See CONTRIBUTING.md for full commit convention rules."
+            exit 1
+          fi
+
+  validate-changelog:
+    name: Package CHANGELOG updated
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check at least one CHANGELOG.md was updated
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+
+          CHANGED=$(git diff --name-only "${BASE}...${HEAD}")
+
+          echo "Files changed in this PR:"
+          echo "$CHANGED"
+          echo ""
+
+          # Skip changelog check for chore/repo or docs-only PRs that
+          # don't touch any package source — check branch type first
+          BRANCH="${{ github.head_ref }}"
+          BRANCH_TYPE=$(echo "$BRANCH" | cut -d'/' -f1)
+
+          # chore/repo and docs/* PRs that only touch root files are exempt
+          TOUCHES_PACKAGE=$(echo "$CHANGED" | grep -E "^packages/|^plugins/" || true)
+
+          if [[ -z "$TOUCHES_PACKAGE" && ("$BRANCH_TYPE" == "chore" || "$BRANCH_TYPE" == "docs") ]]; then
+            echo "⏭️  No package files changed and branch type is ${BRANCH_TYPE} — skipping CHANGELOG check."
+            exit 0
+          fi
+
+          # For all other PRs that touch package code, a CHANGELOG.md must be updated
+          CHANGELOG_UPDATED=$(echo "$CHANGED" | grep "CHANGELOG.md" || true)
+
+          if [[ -n "$CHANGELOG_UPDATED" ]]; then
+            echo "✅ CHANGELOG.md updated:"
+            echo "$CHANGELOG_UPDATED"
+          else
+            echo "❌ No CHANGELOG.md was updated in this PR."
+            echo ""
+            echo "Every PR that changes package code must include a CHANGELOG.md entry."
+            echo ""
+            echo "Update the relevant package CHANGELOG:"
+            echo "  packages/mapper/CHANGELOG.md"
+            echo "  packages/chatbot/CHANGELOG.md"
+            echo "  packages/doc_upload/CHANGELOG.md"
+            echo "  packages/rag/CHANGELOG.md"
+            echo "  packages/pdf_autofillr/CHANGELOG.md"
+            echo ""
+            echo "Format:"
+            echo "  ## [x.y.z] - $(date +%Y-%m-%d)"
+            echo "  ### Added / Changed / Fixed"
+            echo "  - your change here"
+            echo ""
+            echo "See CONTRIBUTING_DEV.md for the full release process."
+            exit 1
+          fi

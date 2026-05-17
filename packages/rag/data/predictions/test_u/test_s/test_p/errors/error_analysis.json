@@ -1,0 +1,24 @@
+{
+  "user_id": "test_u",
+  "session_id": "test_s",
+  "pdf_id": "test_p",
+  "timestamp": "2026-03-26T09:28:25.511499Z",
+  "total_errors": 1,
+  "vectors_updated": 1,
+  "errors": [
+    {
+      "field_name": "investor_type",
+      "field_id": "tf_001",
+      "case_type": "CASE_A",
+      "vector_affected": "vec_001",
+      "gpt4_correction": "investor_type"
+    }
+  ],
+  "gpt4_corrections": [
+    {
+      "corrected_field_name": "investor_type",
+      "confidence": 0.6,
+      "reasoning": "NoOpCorrector: original name cleaned to snake_case"
+    }
+  ]
+}

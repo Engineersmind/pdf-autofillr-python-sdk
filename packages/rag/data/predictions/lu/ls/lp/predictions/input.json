@@ -1,0 +1,17 @@
+{
+  "user_id": "lu",
+  "session_id": "ls",
+  "pdf_id": "lp",
+  "fields": [
+    {
+      "field_id": "lf001",
+      "field_name": "investor_type",
+      "context": "Identifies the legal classification of the investor or entity making this subscription, used to determine applicable compliance checks, documentation requirements, and regulatory disclosures.",
+      "section_context": "Investor type classification at the start of the subscription booklet",
+      "headers": [
+        "Investor Information",
+        "Investor Type"
+      ]
+    }
+  ]
+}

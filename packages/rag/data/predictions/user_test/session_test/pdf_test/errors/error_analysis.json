@@ -1,0 +1,24 @@
+{
+  "user_id": "user_test",
+  "session_id": "session_test",
+  "pdf_id": "pdf_test",
+  "timestamp": "2026-03-25T21:40:11.920896Z",
+  "total_errors": 1,
+  "vectors_updated": 1,
+  "errors": [
+    {
+      "field_name": "tax_identification_number",
+      "field_id": "f003",
+      "case_type": "CASE_C",
+      "vector_affected": "vec_003",
+      "gpt4_correction": "tax_identification_number"
+    }
+  ],
+  "gpt4_corrections": [
+    {
+      "corrected_field_name": "tax_identification_number",
+      "confidence": 0.6,
+      "reasoning": "NoOpCorrector: original name cleaned to snake_case"
+    }
+  ]
+}

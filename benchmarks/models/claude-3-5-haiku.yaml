@@ -1,0 +1,12 @@
+name: claude-3-5-haiku
+provider: anthropic
+litellm_model: anthropic/claude-3-5-haiku-20241022
+context_window: 200000
+pricing:
+  input_per_1m_tokens: 0.80
+  output_per_1m_tokens: 4.00
+env_key: ANTHROPIC_API_KEY
+local: false
+notes: >
+  Fast and cheap Anthropic option. Good balance for medium-difficulty categories
+  (medical, government, hr). Compare against gpt-4o-mini.

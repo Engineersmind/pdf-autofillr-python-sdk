@@ -1,0 +1,73 @@
+# chatbot/pyproject.toml
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pdf-autofillr-chatbot"
+version = "0.3.0"
+description = "Conversational investor onboarding chatbot — PDF form-filling via LLM extraction"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+dependencies = [
+    "litellm>=1.30.0",
+    "fuzzywuzzy>=0.18.0",
+    "python-levenshtein>=0.12.0",
+    "python-dotenv>=1.0.0",
+    "aiohttp>=3.8.0",
+    "pdf-autofillr-mapper>=1.0.7",
+    "httpx>=0.24.0",
+]
+
+[project.optional-dependencies]
+server = ["fastapi>=0.100.0", "uvicorn[standard]>=0.20.0", "python-multipart>=0.0.6"]
+s3     = ["boto3>=1.35.0"]
+gcp    = ["google-cloud-storage>=2.14.0"]
+azure  = ["azure-storage-blob>=12.19.0", "azure-identity>=1.15.0"]
+dev    = [
+    "pytest>=7.0", "pytest-asyncio>=0.21", "pytest-cov>=4.0",
+    "black>=24.0", "ruff>=0.4.0", "mypy>=1.8",
+    "httpx>=0.24.0", "fastapi>=0.100.0", "uvicorn[standard]>=0.20.0",
+]
+all = [
+    "fastapi>=0.100.0", "uvicorn[standard]>=0.20.0", "python-multipart>=0.0.6",
+    "boto3>=1.35.0",
+    "google-cloud-storage>=2.14.0",
+    "azure-storage-blob>=12.19.0", "azure-identity>=1.15.0",
+]
+
+[project.scripts]
+chatbot-cli    = "chatbot.entrypoints.cli:main"
+chatbot-server = "chatbot.entrypoints.server:main"
+
+[project.urls]
+Homepage = "https://github.com/yourorg/pdf-autofillr-chatbot"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/chatbot"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"config_samples" = "chatbot/config_samples"
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+    "unit: fast, no I/O, no network",
+    "integration: requires running server or cloud credentials",
+]

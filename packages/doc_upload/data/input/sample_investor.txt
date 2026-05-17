@@ -1,0 +1,45 @@
+Investor Profile — Sample Document
+===================================
+
+Investor Full Legal Name: John A. Doe
+Date of Birth: 02/04/1980
+Social Security Number: 123-45-6789
+Email Address: john.doe@example.com
+Telephone Number: +1-2125551234
+Occupation: Software Engineer
+
+Registered Address:
+  Line 1: 221B Baker Street, Apt 4B
+  Line 2: Marylebone
+  City: London
+  State: (none)
+  Country: United Kingdom
+  Zip: NW1 6XE
+
+Wiring / Banking Details:
+  Bank Name: Barclays Bank PLC
+  Account Name: John A. Doe Investment Account
+  Account Number: 398472910234
+  ABA / CHIPS Number: 026009593
+  IBAN: GB29 BUKB 6016 1331 9268 19
+  SWIFT Code: BARCGB22
+  Further Credit Instructions: None
+  Bank Address: 1 Churchill Place, Canary Wharf, London, E14 5HP, United Kingdom
+  Bank in FATF-Compliant Country: Yes
+
+Authorized Signatory: John A. Doe
+Commitment Amount: $250,000 USD
+
+Investor Eligibility:
+  Accredited Investor: Yes
+  Qualified Purchaser: No
+  US Person: No
+
+Politically Exposed Person (PEP): No
+
+Share Class: Preferred shares
+
+Co-Investor:
+  Name: Jane B. Doe
+  Email: jane.doe@example.com
+  Date of Birth: 15/06/1982

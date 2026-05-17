@@ -1,0 +1,366 @@
+{
+  "aabbcc112233": {
+    "pdf_hash": "aabbcc112233",
+    "pdf_id": "pdf_001",
+    "category": "Private Markets",
+    "sub_category": "Private Equity",
+    "document_type": "LP Subscription Agreement",
+    "pdf_count": 3,
+    "total_submissions": 3,
+    "submissions": [
+      {
+        "submission_id": "user_01_session_01_pdf_001_1_1736496000",
+        "user_id": "user_01",
+        "session_id": "session_01",
+        "pdf_id": "pdf_001",
+        "frequency": 1,
+        "timestamp": "2026-01-10T08:00:00Z",
+        "total_fields": 12,
+        "accuracy_llm": 1.0,
+        "accuracy_rag": 1.0,
+        "accuracy_ensemble": 1.0,
+        "errors_reported": 0
+      },
+      {
+        "submission_id": "user_02_session_03_pdf_001_2_1738694400",
+        "user_id": "user_02",
+        "session_id": "session_03",
+        "pdf_id": "pdf_001",
+        "frequency": 2,
+        "timestamp": "2026-02-04T12:00:00Z",
+        "total_fields": 12,
+        "accuracy_llm": 0.9167,
+        "accuracy_rag": 0.9167,
+        "accuracy_ensemble": 0.9167,
+        "errors_reported": 1
+      },
+      {
+        "submission_id": "user_01_session_05_pdf_001_3_1741132800",
+        "user_id": "user_01",
+        "session_id": "session_05",
+        "pdf_id": "pdf_001",
+        "frequency": 3,
+        "timestamp": "2026-03-05T09:00:00Z",
+        "total_fields": 12,
+        "accuracy_llm": 1.0,
+        "accuracy_rag": 1.0,
+        "accuracy_ensemble": 1.0,
+        "errors_reported": 0
+      }
+    ],
+    "aggregated_stats": {
+      "avg_accuracy_llm": 0.9722,
+      "avg_accuracy_rag": 0.9722,
+      "avg_accuracy_ensemble": 0.9722,
+      "avg_coverage_llm": 0.9167,
+      "avg_coverage_rag": 0.9167,
+      "total_errors": 1,
+      "consistency_score": 0.9444,
+      "improvement_trend": "stable"
+    },
+    "first_seen": "2026-01-10T08:00:00Z",
+    "last_seen": "2026-03-05T09:00:00Z"
+  },
+  "ddeeff445566": {
+    "pdf_hash": "ddeeff445566",
+    "pdf_id": "pdf_002",
+    "category": "Private Markets",
+    "sub_category": "Private Credit",
+    "document_type": "Side Letter Agreement",
+    "pdf_count": 1,
+    "total_submissions": 1,
+    "submissions": [
+      {
+        "submission_id": "user_03_session_02_pdf_002_1_1737964800",
+        "user_id": "user_03",
+        "session_id": "session_02",
+        "pdf_id": "pdf_002",
+        "frequency": 1,
+        "timestamp": "2026-01-27T10:00:00Z",
+        "total_fields": 8,
+        "accuracy_llm": 0.875,
+        "accuracy_rag": 0.75,
+        "accuracy_ensemble": 0.875,
+        "errors_reported": 1
+      }
+    ],
+    "aggregated_stats": {
+      "avg_accuracy_llm": 0.875,
+      "avg_accuracy_rag": 0.75,
+      "avg_accuracy_ensemble": 0.875,
+      "avg_coverage_llm": 0.875,
+      "avg_coverage_rag": 0.75,
+      "total_errors": 1,
+      "consistency_score": 0.8125,
+      "improvement_trend": "new"
+    },
+    "first_seen": "2026-01-27T10:00:00Z",
+    "last_seen": "2026-01-27T10:00:00Z"
+  },
+  "hash_abc123def456": {
+    "pdf_hash": "hash_abc123def456",
+    "pdf_id": "pdf_001",
+    "category": "Private Markets",
+    "sub_category": "Private Equity",
+    "document_type": "LP Subscription Agreement",
+    "pdf_count": 7,
+    "total_submissions": 7,
+    "submissions": [
+      {
+        "submission_id": "user_01_session_01_pdf_001_1_1773728823",
+        "user_id": "user_01",
+        "session_id": "session_01",
+        "pdf_id": "pdf_001",
+        "frequency": 1,
+        "timestamp": "2026-03-17T11:57:03.168075Z",
+        "total_fields": 3
+      },
+      {
+        "submission_id": "user_01_session_01_pdf_cli_test_2_1773728842",
+        "user_id": "user_01",
+        "session_id": "session_01",
+        "pdf_id": "pdf_cli_test",
+        "frequency": 2,
+        "timestamp": "2026-03-17T11:57:22.808404Z",
+        "total_fields": 3
+      },
+      {
+        "submission_id": "user_01_session_01_pdf_lambda_test_3_1773728866",
+        "user_id": "user_01",
+        "session_id": "session_01",
+        "pdf_id": "pdf_lambda_test",
+        "frequency": 3,
+        "timestamp": "2026-03-17T11:57:46.737787Z",
+        "total_fields": 3
+      },
+      {
+        "submission_id": "user_01_session_01_pdf_001_4_1773728969",
+        "user_id": "user_01",
+        "session_id": "session_01",
+        "pdf_id": "pdf_001",
+        "frequency": 4,
+        "timestamp": "2026-03-17T11:59:29.745076Z",
+        "total_fields": 3
+      },
+      {
+        "submission_id": "user_01_session_01_pdf_cli_test_5_1773728990",
+        "user_id": "user_01",
+        "session_id": "session_01",
+        "pdf_id": "pdf_cli_test",
+        "frequency": 5,
+        "timestamp": "2026-03-17T11:59:50.991362Z",
+        "total_fields": 3
+      },
+      {
+        "submission_id": "user_01_session_01_pdf_api_test_6_1773729038",
+        "user_id": "user_01",
+        "session_id": "session_01",
+        "pdf_id": "pdf_api_test",
+        "frequency": 6,
+        "timestamp": "2026-03-17T12:00:38.315429Z",
+        "total_fields": 3
+      },
+      {
+        "submission_id": "user_01_session_01_pdf_lambda_test_7_1773729045",
+        "user_id": "user_01",
+        "session_id": "session_01",
+        "pdf_id": "pdf_lambda_test",
+        "frequency": 7,
+        "timestamp": "2026-03-17T12:00:45.456984Z",
+        "total_fields": 3
+      }
+    ],
+    "first_seen": "2026-03-17T11:57:03.168075Z",
+    "last_seen": "2026-03-17T12:00:45.456984Z"
+  },
+  "testpdf_abc123": {
+    "pdf_hash": "testpdf_abc123",
+    "pdf_id": "pdf_test",
+    "category": "Private Markets",
+    "sub_category": "Private Equity",
+    "document_type": "LP Subscription Agreement",
+    "pdf_count": 3,
+    "total_submissions": 3,
+    "submissions": [
+      {
+        "submission_id": "user_test_session_test_pdf_test_1_1774450151",
+        "user_id": "user_test",
+        "session_id": "session_test",
+        "pdf_id": "pdf_test",
+        "frequency": 1,
+        "timestamp": "2026-03-25T20:19:12.068558Z",
+        "total_fields": 12
+      },
+      {
+        "submission_id": "user_test_session_test_pdf_test_2_1774452397",
+        "user_id": "user_test",
+        "session_id": "session_test",
+        "pdf_id": "pdf_test",
+        "frequency": 2,
+        "timestamp": "2026-03-25T20:56:37.061333Z",
+        "total_fields": 12
+      },
+      {
+        "submission_id": "user_test_session_test_pdf_test_3_1774454863",
+        "user_id": "user_test",
+        "session_id": "session_test",
+        "pdf_id": "pdf_test",
+        "frequency": 3,
+        "timestamp": "2026-03-25T21:37:43.970219Z",
+        "total_fields": 12
+      }
+    ],
+    "first_seen": "2026-03-25T20:19:12.068558Z",
+    "last_seen": "2026-03-25T21:37:43.970219Z"
+  },
+  "curltest123": {
+    "pdf_hash": "curltest123",
+    "pdf_id": "pdf_curl",
+    "category": "Private Markets",
+    "sub_category": "Private Equity",
+    "document_type": "LP Subscription Agreement",
+    "pdf_count": 1,
+    "total_submissions": 1,
+    "submissions": [
+      {
+        "submission_id": "user_curl_session_curl_pdf_curl_1_1774450536",
+        "user_id": "user_curl",
+        "session_id": "session_curl",
+        "pdf_id": "pdf_curl",
+        "frequency": 1,
+        "timestamp": "2026-03-25T20:25:36.085044Z",
+        "total_fields": 1
+      }
+    ],
+    "first_seen": "2026-03-25T20:25:36.085044Z",
+    "last_seen": "2026-03-25T20:25:36.085044Z"
+  },
+  "lh001": {
+    "pdf_hash": "lh001",
+    "pdf_id": "lp",
+    "category": "PM",
+    "sub_category": "PE",
+    "document_type": "LP",
+    "pdf_count": 1,
+    "total_submissions": 1,
+    "submissions": [
+      {
+        "submission_id": "lu_ls_lp_1_1774455379",
+        "user_id": "lu",
+        "session_id": "ls",
+        "pdf_id": "lp",
+        "frequency": 1,
+        "timestamp": "2026-03-25T21:46:20.196685Z",
+        "total_fields": 1
+      }
+    ],
+    "first_seen": "2026-03-25T21:46:20.196685Z",
+    "last_seen": "2026-03-25T21:46:20.196685Z"
+  },
+  "benchfinal002": {
+    "pdf_hash": "benchfinal002",
+    "pdf_id": "bp",
+    "category": "Private Markets",
+    "sub_category": "Private Equity",
+    "document_type": "LP Subscription Agreement",
+    "pdf_count": 1,
+    "total_submissions": 1,
+    "submissions": [
+      {
+        "submission_id": "bu_bs_bp_1_1774455450",
+        "user_id": "bu",
+        "session_id": "bs",
+        "pdf_id": "bp",
+        "frequency": 1,
+        "timestamp": "2026-03-25T21:47:30.871590Z",
+        "total_fields": 12
+      }
+    ],
+    "first_seen": "2026-03-25T21:47:30.871590Z",
+    "last_seen": "2026-03-25T21:47:30.871590Z"
+  },
+  "openai_feedback_test_hash": {
+    "pdf_hash": "openai_feedback_test_hash",
+    "pdf_id": "openai_fb_pdf",
+    "category": "Private Markets",
+    "sub_category": "Private Equity",
+    "document_type": "LP Subscription Agreement",
+    "pdf_count": 1,
+    "total_submissions": 1,
+    "submissions": [
+      {
+        "submission_id": "openai_fb_user_openai_fb_session_openai_fb_pdf_1_1774455795",
+        "user_id": "openai_fb_user",
+        "session_id": "openai_fb_session",
+        "pdf_id": "openai_fb_pdf",
+        "frequency": 1,
+        "timestamp": "2026-03-25T21:53:16.357160Z",
+        "total_fields": 12
+      }
+    ],
+    "first_seen": "2026-03-25T21:53:16.357160Z",
+    "last_seen": "2026-03-25T21:53:16.357160Z"
+  },
+  "testhash001": {
+    "pdf_hash": "testhash001",
+    "pdf_id": "test_p",
+    "category": "Private Markets",
+    "sub_category": "Private Equity",
+    "document_type": "LP Subscription Agreement",
+    "pdf_count": 2,
+    "total_submissions": 2,
+    "submissions": [
+      {
+        "submission_id": "test_u_test_s_test_p_1_1774495645",
+        "user_id": "test_u",
+        "session_id": "test_s",
+        "pdf_id": "test_p",
+        "frequency": 1,
+        "timestamp": "2026-03-26T08:57:33.411760Z",
+        "total_fields": 5
+      },
+      {
+        "submission_id": "test_u_test_s_test_p_2_1774496840",
+        "user_id": "test_u",
+        "session_id": "test_s",
+        "pdf_id": "test_p",
+        "frequency": 2,
+        "timestamp": "2026-03-26T09:21:08.784021Z",
+        "total_fields": 5
+      }
+    ],
+    "first_seen": "2026-03-26T08:57:33.411760Z",
+    "last_seen": "2026-03-26T09:21:08.784021Z"
+  },
+  "lhash001": {
+    "pdf_hash": "lhash001",
+    "pdf_id": "lp",
+    "category": "Private Markets",
+    "sub_category": "Private Equity",
+    "document_type": "LP",
+    "pdf_count": 2,
+    "total_submissions": 2,
+    "submissions": [
+      {
+        "submission_id": "lu_ls_lp_1_1774495805",
+        "user_id": "lu",
+        "session_id": "ls",
+        "pdf_id": "lp",
+        "frequency": 1,
+        "timestamp": "2026-03-26T09:00:16.452570Z",
+        "total_fields": 1
+      },
+      {
+        "submission_id": "lu_ls_lp_2_1774497639",
+        "user_id": "lu",
+        "session_id": "ls",
+        "pdf_id": "lp",
+        "frequency": 2,
+        "timestamp": "2026-03-26T09:30:47.077175Z",
+        "total_fields": 1
+      }
+    ],
+    "first_seen": "2026-03-26T09:00:16.452570Z",
+    "last_seen": "2026-03-26T09:30:47.077175Z"
+  }
+}

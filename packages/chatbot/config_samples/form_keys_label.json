@@ -1,0 +1,173 @@
+{
+  "investor_type_id": "Investor Type",
+  "investor_full_legal_name_id": "Full Legal Name Of Investor",
+  "investor_type": {
+    "_group_label": "Type Of Investor",
+    "individual_check": "Individual Investor",
+    "partnership_check": "Partnership Investor",
+    "corporation_check": "Corporation Investor",
+    "llc_check": "LLC Investor",
+    "trust_check": "Trust Investor",
+    "nonprofit_check": "Nonprofit Investor",
+    "fund_fund_of_funds_check": "Fund Or Fund Of Funds Investor",
+    "ira_check": "IRA Investor",
+    "government_check": "Government Investor",
+    "education_institution_check": "Educational Institution Investor"
+  },
+
+  "address_registered": {
+    "_group_label": "Registered Address",
+    "address_registered_line1_id": "Registered Address Line 1",
+    "address_registered_line2_id": "Registered Address Line 2",
+    "address_registered_city_id": "Registered Address City",
+    "address_registered_state_id": "Registered Address State",
+    "address_registered_country_id": "Registered Address Country",
+    "address_registered_zip_id": "Registered Address Zip Code"
+  },
+
+  "address_mailing": {
+    "_group_label": "Mailing Address",
+    "address_mailing_line1_id": "Mailing Address Line 1",
+    "address_mailing_line2_id": "Mailing Address Line 2",
+    "address_mailing_city_id": "Mailing Address City",
+    "address_mailing_state_id": "Mailing Address State",
+    "address_mailing_country_id": "Mailing Address Country",
+    "address_mailing_zip_id": "Mailing Address Zip Code"
+  },
+
+  "address_jurisdiction": {
+    "_group_label": "Address In Jurisdiction",
+    "address_jurisdiction_line1_id": "Jurisdiction Address Line 1",
+    "address_jurisdiction_line2_id": "Jurisdiction Address Line 2",
+    "address_jurisdiction_city_id": "Jurisdiction Address City",
+    "address_jurisdiction_state_id": "Jurisdiction Address State",
+    "address_jurisdiction_country_id": "Jurisdiction Address Country",
+    "address_jurisdiction_zip_id": "Jurisdiction Address Zip Code"
+  },
+
+  "investor_ein_tax_id": "Employer Identification Number Or Tax Identification Number",
+  "investor_ssn_id": "Social Security Number",
+  "investor_telephone_id": "Telephone Number",
+  "investor_telephone_country_code_id": "Telephone Country Code",
+  "investor_telephone_part_1_id": "Telephone Number Part 1",
+  "investor_telephone_part_2_id": "Telephone Number Part 2",
+  "investor_telephone_part_3_id": "Telephone Number Part 3",
+  "investor_fax_id": "Fax Number",
+  "investor_fax_part_1_id": "Fax Number Part 1",
+  "investor_fax_part_2_id": "Fax Number Part 2",
+  "investor_fax_part_3_id": "Fax Number Part 3",
+  "investor_email_id": "Email Address",
+
+  "form_pf": {
+    "_group_label": "Form PF (Investor Type)",
+    "form_pf_non_individual_investment_company_check": "Non Individual Investment Company",
+    "form_pf_non_individual_private_fund_check": "Non Individual Private Fund",
+    "form_pf_non_individual_banking_or_thrift_institution_check": "Non Individual Banking Or Thrift Institution",
+    "form_pf_non_individual_non_profit_organization_check": "Non Individual Non Profit Organization",
+    "form_pf_non_individual_sovereign_wealth_fund_or_foreign_official_institution_check": "Non Individual Sovereign Wealth Fund Or Foreign Official Institution",
+    "form_pf_non_individual_government_entity_check": "Non Individual Government Entity",
+    "form_pf_non_individual_government_pension_plan_check": "Non Individual Government Pension Plan",
+    "form_pf_non_individual_pension_plan_check": "Non Individual Pension Plan",
+    "form_pf_individual_us_person_check": "Individual United States Person",
+    "form_pf_individual_non_us_person_check": "Individual Not A United States Person"
+  },
+
+  "investor_date_of_birth_id": "Investor Date Of Birth",
+  "inception_date_id": "Inception Date",
+
+  "entity_representative": {
+    "_group_label": "Entity Representative Details",
+    "entity_representative_name_id": "Entity Representative Name",
+    "entity_representative_title_id": "Entity Representative Title",
+    "entity_representative_email_id": "Entity Representative Email Address"
+  },
+
+  "co_investor": {
+    "_group_label": "Co-Investor Details",
+    "co_investor_name_id": "Co Investor Full Name",
+    "co_investor_email_id": "Co Investor Email Address",
+    "co_investor_dob_id": "Co Investor Date Of Birth"
+  },
+
+  "investor_occupation_id": "Investor Occupation",
+  "nature_of_business_id": "Nature Of Business",
+  "principal_place_of_business_id": "Principal Place Of Business",
+  "domicile_or_country_of_incorporation_id": "Country Of Incorporation Or Domicile",
+  "point_of_contact_information_id": "Point Of Contact Information",
+
+  "wiring_details": {
+    "_group_label": "Wiring Details",
+    "wiring_details_bank_name_id": "Bank Name",
+    "wiring_details_account_name_id": "Account Name",
+    "wiring_details_account_number_id": "Account Number",
+    "wiring_details_aba_or_chips_number_id": "ABA Or CHIPS Number",
+    "wiring_details_iban_id": "International Bank Account Number",
+    "wiring_details_swift_code_id": "SWIFT Code",
+    "wiring_details_for_further_credit_id": "For Further Credit",
+    "wiring_details_bank_in_fatf_country_check": "Bank Located In Financial Action Task Force Country",
+
+    "wiring_address": {
+      "_group_label": "Bank Address",
+      "wiring_details_address_line1_id": "Bank Address Line 1",
+      "wiring_details_address_line2_id": "Bank Address Line 2",
+      "wiring_details_address_city_id": "Bank Address City",
+      "wiring_details_address_state_id": "Bank Address State",
+      "wiring_details_address_country_id": "Bank Address Country",
+      "wiring_details_address_zip_id": "Bank Address Zip Code"
+    }
+  },
+
+  "authorized_signatory_id": "Authorized Signatory",
+  "commitment_amount_id": "Commitment Amount",
+  "pep_check": "Is the investor a Politically Exposed Person?",
+  "currency_id": "Currency",
+  "minimum_investment_amount_id": "Minimum Investment Amount",
+  "restricted_domicile_check": "Is the investor's domicile in a restricted jurisdiction?",
+  "aml_kyc_clearance_check": "Anti-Money Laundering / Know Your Customer Clearance",
+
+  "directors_ids": "Directors",
+  "joint_owner_ids": "Joint Owners",
+  "managing_partners_ids": "Managing Partners",
+  "managing_director_ids": "Managing Director",
+  "trustees_ids": "Trustees",
+  "beneficial_owners_ids": "Beneficial Owners",
+
+  "share_class": {
+    "_group_label": "Share Class",
+    "share_class_ordinary_common_check": "Ordinary Or Common Share Class",
+    "share_class_preferred_check": "Preferred Share Class",
+    "share_class_class_a_check": "Class A Share",
+    "share_class_class_b_check": "Class B Share",
+    "share_class_class_c_check": "Class C Share",
+    "share_class_class_d_check": "Class D Share",
+    "share_class_class_e_check": "Class E Share",
+    "share_class_class_f_check": "Class F Share",
+    "share_class_non_voting_check": "Non Voting Share",
+    "share_class_founders_check": "Founders Share",
+    "share_class_employee_esop_check": "Employee Stock Ownership Plan Share",
+    "share_class_deferred_check": "Deferred Share",
+    "share_class_growth_check": "Growth Share"
+  },
+
+  "investor_eligibility": {
+    "_group_label": "Investor Eligibility",
+    "investor_eligibility_us_person_check": "United States Person Eligibility",
+    "investor_eligibility_accredited_investor_check": "Does the investor qualify as an Accredited Investor",
+    "investor_eligibility_qualified_client_check": "Does the investor meet the Qualified Client criteria",
+    "investor_eligibility_erisa_check": "Is the investor subject to ERISA rules",
+    "investor_eligibility_qualified_purchaser_check": "Does the investor meet Qualified Purchaser requirements",
+    "investor_eligibility_restricted_check": "Is the investor considered a Restricted Person",
+    "investor_eligibility_finra_new_issue_eligibility_check": "Does the investor comply with FINRA New Issue Eligibility (Rules 5130/5131)"
+  },
+
+  "custodian_details": {
+    "_group_label": "Custodian Details",
+    "custodian_details_custodian_name_id": "Custodian Name",
+    "custodian_details_account_number_id": "Custodian Account Number",
+    "custodian_details_email_id": "Custodian Email Address",
+    "custodian_details_phone_id": "Custodian Telephone Number",
+    "custodian_details_swift_code_id": "Custodian SWIFT Code"
+  },
+
+  "self_certification_check": "Self Certification"
+}

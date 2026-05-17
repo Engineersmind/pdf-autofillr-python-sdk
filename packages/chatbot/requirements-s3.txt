@@ -1,0 +1,5 @@
+# S3 storage dependencies
+# Only needed when chatbot_STORAGE=s3
+# Install with: pip install -r requirements-s3.txt
+
+boto3>=1.35.0

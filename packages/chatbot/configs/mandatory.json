@@ -1,0 +1,963 @@
+{
+    "Type of Investors": {
+        "Individual": {
+            "investor_full_legal_name_id": "",
+
+            "address_registered": {
+                "address_registered_line1_id": "",
+                "address_registered_line2_id": "",
+                "address_registered_city_id": "",
+                "address_registered_state_id": "",
+                "address_registered_country_id": "",
+                "address_registered_zip_id": ""
+            },
+
+            "investor_telephone_id": "",
+            "investor_email_id": "",
+            "investor_ssn_id": "",
+
+            "investor_date_of_birth_id": "",
+
+            "wiring_details": {
+                "wiring_details_bank_name_id": "",
+                "wiring_details_account_name_id": "",
+                "wiring_details_account_number_id": "",
+                "wiring_details_aba_or_chips_number_id": "",
+                "wiring_details_iban_id": "",
+                "wiring_details_swift_code_id": "",
+                "wiring_details_for_further_credit_id": "",
+                "wiring_details_bank_in_fatf_country_check": null,
+
+                "wiring_address": {
+                    "wiring_details_address_line1_id": "",
+                    "wiring_details_address_line2_id": "",
+                    "wiring_details_address_city_id": "",
+                    "wiring_details_address_state_id": "",
+                    "wiring_details_address_country_id": "",
+                    "wiring_details_address_zip_id": ""
+                }
+            },
+
+            "authorized_signatory_id": "",
+            "commitment_amount_id": "",
+            "pep_check": null,
+
+            "share_class": {
+                "share_class_ordinary_common_check": null,
+                "share_class_preferred_check": null,
+                "share_class_class_a_check": null,
+                "share_class_class_b_check": null,
+                "share_class_class_c_check": null,
+                "share_class_class_d_check": null,
+                "share_class_class_e_check": null,
+                "share_class_class_f_check": null,
+                "share_class_non_voting_check": null,
+                "share_class_founders_check": null,
+                "share_class_employee_esop_check": null,
+                "share_class_deferred_check": null,
+                "share_class_growth_check": null
+            },
+
+            "investor_eligibility": {
+                "investor_eligibility_accredited_investor_check": null
+            }
+        },
+        "Partnership": {
+            "investor_full_legal_name_id": "",
+
+            "address_registered": {
+                "address_registered_line1_id": "",
+                "address_registered_line2_id": "",
+                "address_registered_city_id": "",
+                "address_registered_state_id": "",
+                "address_registered_country_id": "",
+                "address_registered_zip_id": ""
+            },
+
+            "address_mailing": {
+                "address_mailing_line1_id": "",
+                "address_mailing_line2_id": "",
+                "address_mailing_city_id": "",
+                "address_mailing_state_id": "",
+                "address_mailing_country_id": "",
+                "address_mailing_zip_id": ""
+            },
+
+            "investor_ein_tax_id": "",
+            "investor_telephone_id": "",
+            "investor_email_id": "",
+
+            "form_pf": {
+                "form_pf_non_individual_investment_company_check": null,
+                "form_pf_non_individual_private_fund_check": null,
+                "form_pf_non_individual_banking_or_thrift_institution_check": null,
+                "form_pf_non_individual_non_profit_organization_check": null,
+                "form_pf_non_individual_sovereign_wealth_fund_or_foreign_official_institution_check": null,
+                "form_pf_non_individual_government_entity_check": null,
+                "form_pf_non_individual_government_pension_plan_check": null,
+                "form_pf_non_individual_pension_plan_check": null,
+                "form_pf_individual_us_person_check": null,
+                "form_pf_individual_non_us_person_check": null
+            },
+
+            "inception_date_id": "",
+
+            "domicile_or_country_of_incorporation_id": "",
+            "principal_place_of_business_id": "",
+
+            "wiring_details": {
+                "wiring_details_bank_name_id": "",
+                "wiring_details_account_name_id": "",
+                "wiring_details_account_number_id": "",
+                "wiring_details_aba_or_chips_number_id": "",
+                "wiring_details_iban_id": "",
+                "wiring_details_swift_code_id": "",
+                "wiring_details_for_further_credit_id": "",
+                "wiring_details_bank_in_fatf_country_check": null,
+
+                "wiring_address": {
+                    "wiring_details_address_line1_id": "",
+                    "wiring_details_address_line2_id": "",
+                    "wiring_details_address_city_id": "",
+                    "wiring_details_address_state_id": "",
+                    "wiring_details_address_country_id": "",
+                    "wiring_details_address_zip_id": ""
+                }
+            },
+
+            "authorized_signatory_id": "",
+            "commitment_amount_id": "",
+            "pep_check": null,
+
+            "directors_ids": "",
+            "joint_owner_ids": "",
+            "managing_partners_ids": "",
+            "managing_director_ids": "",
+            "trustees_ids": "",
+            "beneficial_owners_ids": "",
+
+            "share_class": {
+                "share_class_ordinary_common_check": null,
+                "share_class_preferred_check": null,
+                "share_class_class_a_check": null,
+                "share_class_class_b_check": null,
+                "share_class_class_c_check": null,
+                "share_class_class_d_check": null,
+                "share_class_class_e_check": null,
+                "share_class_class_f_check": null,
+                "share_class_non_voting_check": null,
+                "share_class_founders_check": null,
+                "share_class_employee_esop_check": null,
+                "share_class_deferred_check": null,
+                "share_class_growth_check": null
+            },
+
+            "investor_eligibility": {
+                "investor_eligibility_accredited_investor_check": null,
+                "investor_eligibility_qualified_purchaser_check": null,
+                "investor_eligibility_qualified_client_check": null,
+                "investor_eligibility_restricted_check": null
+            },
+
+            "custodian_details": {
+                "custodian_details_custodian_name_id": "",
+                "custodian_details_account_number_id": "",
+                "custodian_details_email_id": "",
+                "custodian_details_phone_id": "",
+                "custodian_details_swift_code_id": ""
+            }
+        },
+        "Corporation": {
+            "investor_full_legal_name_id": "",
+
+            "address_registered": {
+                "address_registered_line1_id": "",
+                "address_registered_line2_id": "",
+                "address_registered_city_id": "",
+                "address_registered_state_id": "",
+                "address_registered_country_id": "",
+                "address_registered_zip_id": ""
+            },
+
+            "address_mailing": {
+                "address_mailing_line1_id": "",
+                "address_mailing_line2_id": "",
+                "address_mailing_city_id": "",
+                "address_mailing_state_id": "",
+                "address_mailing_country_id": "",
+                "address_mailing_zip_id": ""
+            },            
+
+            "investor_ein_tax_id": "",
+            "investor_telephone_id": "",
+            "investor_email_id": "",
+
+            "form_pf": {
+                "form_pf_non_individual_investment_company_check": null,
+                "form_pf_non_individual_private_fund_check": null,
+                "form_pf_non_individual_banking_or_thrift_institution_check": null,
+                "form_pf_non_individual_non_profit_organization_check": null,
+                "form_pf_non_individual_sovereign_wealth_fund_or_foreign_official_institution_check": null,
+                "form_pf_non_individual_government_entity_check": null,
+                "form_pf_non_individual_government_pension_plan_check": null,
+                "form_pf_non_individual_pension_plan_check": null,
+                "form_pf_individual_us_person_check": null,
+                "form_pf_individual_non_us_person_check": null
+            },
+
+            "inception_date_id": "",
+
+            "domicile_or_country_of_incorporation_id": "",
+            "principal_place_of_business_id": "",
+
+            "wiring_details": {
+                "wiring_details_bank_name_id": "",
+                "wiring_details_account_name_id": "",
+                "wiring_details_account_number_id": "",
+                "wiring_details_aba_or_chips_number_id": "",
+                "wiring_details_iban_id": "",
+                "wiring_details_swift_code_id": "",
+                "wiring_details_for_further_credit_id": "",
+                "wiring_details_bank_in_fatf_country_check": null,
+
+                "wiring_address": {
+                    "wiring_details_address_line1_id": "",
+                    "wiring_details_address_line2_id": "",
+                    "wiring_details_address_city_id": "",
+                    "wiring_details_address_state_id": "",
+                    "wiring_details_address_country_id": "",
+                    "wiring_details_address_zip_id": ""
+                }
+            },
+
+            "authorized_signatory_id": "",
+            "commitment_amount_id": "",
+            "pep_check": null,
+
+            "directors_ids": "",
+            "joint_owner_ids": "",
+            "managing_partners_ids": "",
+            "managing_director_ids": "",
+            "beneficial_owners_ids": "",
+
+            "share_class": {
+                "share_class_ordinary_common_check": null,
+                "share_class_preferred_check": null,
+                "share_class_class_a_check": null,
+                "share_class_class_b_check": null,
+                "share_class_class_c_check": null,
+                "share_class_class_d_check": null,
+                "share_class_class_e_check": null,
+                "share_class_class_f_check": null,
+                "share_class_non_voting_check": null,
+                "share_class_founders_check": null,
+                "share_class_employee_esop_check": null,
+                "share_class_deferred_check": null,
+                "share_class_growth_check": null
+            },
+
+            "investor_eligibility": {
+                "investor_eligibility_accredited_investor_check": null,
+                "investor_eligibility_qualified_purchaser_check": null,
+                "investor_eligibility_qualified_client_check": null,
+                "investor_eligibility_erisa_check": null,
+                "investor_eligibility_restricted_check": null
+            },
+
+            "custodian_details": {
+                "custodian_details_custodian_name_id": "",
+                "custodian_details_account_number_id": "",
+                "custodian_details_email_id": "",
+                "custodian_details_phone_id": "",
+                "custodian_details_swift_code_id": ""
+            }
+        },
+        "LLC": {
+            "investor_full_legal_name_id": "",
+
+            "address_registered": {
+                "address_registered_line1_id": "",
+                "address_registered_line2_id": "",
+                "address_registered_city_id": "",
+                "address_registered_state_id": "",
+                "address_registered_country_id": "",
+                "address_registered_zip_id": ""
+            },
+
+            "address_mailing": {
+                "address_mailing_line1_id": "",
+                "address_mailing_line2_id": "",
+                "address_mailing_city_id": "",
+                "address_mailing_state_id": "",
+                "address_mailing_country_id": "",
+                "address_mailing_zip_id": ""
+            },            
+
+            "investor_ein_tax_id": "",
+            "investor_telephone_id": "",
+            "investor_email_id": "",
+
+            "form_pf": {
+                "form_pf_non_individual_investment_company_check": null,
+                "form_pf_non_individual_private_fund_check": null,
+                "form_pf_non_individual_banking_or_thrift_institution_check": null,
+                "form_pf_non_individual_non_profit_organization_check": null,
+                "form_pf_non_individual_sovereign_wealth_fund_or_foreign_official_institution_check": null,
+                "form_pf_non_individual_government_entity_check": null,
+                "form_pf_non_individual_government_pension_plan_check": null,
+                "form_pf_non_individual_pension_plan_check": null,
+                "form_pf_individual_us_person_check": null,
+                "form_pf_individual_non_us_person_check": null
+            },
+
+            "inception_date_id": "",
+
+            "domicile_or_country_of_incorporation_id": "",
+            "principal_place_of_business_id": "",
+
+            "wiring_details": {
+                "wiring_details_bank_name_id": "",
+                "wiring_details_account_name_id": "",
+                "wiring_details_account_number_id": "",
+                "wiring_details_aba_or_chips_number_id": "",
+                "wiring_details_iban_id": "",
+                "wiring_details_swift_code_id": "",
+                "wiring_details_for_further_credit_id": "",
+                "wiring_details_bank_in_fatf_country_check": null,
+
+                "wiring_address": {
+                    "wiring_details_address_line1_id": "",
+                    "wiring_details_address_line2_id": "",
+                    "wiring_details_address_city_id": "",
+                    "wiring_details_address_state_id": "",
+                    "wiring_details_address_country_id": "",
+                    "wiring_details_address_zip_id": ""
+                }
+            },
+
+            "authorized_signatory_id": "",
+            "commitment_amount_id": "",
+            "pep_check": null,
+
+            "directors_ids": "",
+            "joint_owner_ids": "",
+            "managing_partners_ids": "",
+            "managing_director_ids": "",
+            "beneficial_owners_ids": "",
+
+            "share_class": {
+                "share_class_ordinary_common_check": null,
+                "share_class_preferred_check": null,
+                "share_class_class_a_check": null,
+                "share_class_class_b_check": null,
+                "share_class_class_c_check": null,
+                "share_class_class_d_check": null,
+                "share_class_class_e_check": null,
+                "share_class_class_f_check": null,
+                "share_class_non_voting_check": null,
+                "share_class_founders_check": null,
+                "share_class_employee_esop_check": null,
+                "share_class_deferred_check": null,
+                "share_class_growth_check": null
+            },
+
+            "investor_eligibility": {
+                "investor_eligibility_accredited_investor_check": null,
+                "investor_eligibility_qualified_purchaser_check": null,
+                "investor_eligibility_qualified_client_check": null,
+                "investor_eligibility_erisa_check": null,
+                "investor_eligibility_restricted_check": null
+            },
+
+            "custodian_details": {
+                "custodian_details_custodian_name_id": "",
+                "custodian_details_account_number_id": "",
+                "custodian_details_email_id": "",
+                "custodian_details_phone_id": "",
+                "custodian_details_swift_code_id": ""
+            }
+        },
+        "Trust": {
+            "investor_full_legal_name_id": "",
+
+            "address_registered": {
+                "address_registered_line1_id": "",
+                "address_registered_line2_id": "",
+                "address_registered_city_id": "",
+                "address_registered_state_id": "",
+                "address_registered_country_id": "",
+                "address_registered_zip_id": ""
+            },
+
+            "address_mailing": {
+                "address_mailing_line1_id": "",
+                "address_mailing_line2_id": "",
+                "address_mailing_city_id": "",
+                "address_mailing_state_id": "",
+                "address_mailing_country_id": "",
+                "address_mailing_zip_id": ""
+            },
+
+            "investor_ein_tax_id": "",
+            "investor_telephone_id": "",
+            "investor_email_id": "",
+
+            "form_pf": {
+                "form_pf_non_individual_investment_company_check": null,
+                "form_pf_non_individual_private_fund_check": null,
+                "form_pf_non_individual_banking_or_thrift_institution_check": null,
+                "form_pf_non_individual_non_profit_organization_check": null,
+                "form_pf_non_individual_sovereign_wealth_fund_or_foreign_official_institution_check": null,
+                "form_pf_non_individual_government_entity_check": null,
+                "form_pf_non_individual_government_pension_plan_check": null,
+                "form_pf_non_individual_pension_plan_check": null,
+                "form_pf_individual_us_person_check": null,
+                "form_pf_individual_non_us_person_check": null
+            },
+
+            "inception_date_id": "",
+
+            "domicile_or_country_of_incorporation_id": "",
+            "principal_place_of_business_id": "",
+
+            "wiring_details": {
+                "wiring_details_bank_name_id": "",
+                "wiring_details_account_name_id": "",
+                "wiring_details_account_number_id": "",
+                "wiring_details_aba_or_chips_number_id": "",
+                "wiring_details_iban_id": "",
+                "wiring_details_swift_code_id": "",
+                "wiring_details_for_further_credit_id": "",
+                "wiring_details_bank_in_fatf_country_check": null,
+
+                "wiring_address": {
+                    "wiring_details_address_line1_id": "",
+                    "wiring_details_address_line2_id": "",
+                    "wiring_details_address_city_id": "",
+                    "wiring_details_address_state_id": "",
+                    "wiring_details_address_country_id": "",
+                    "wiring_details_address_zip_id": ""
+                }
+            },
+
+            "authorized_signatory_id": "",
+            "commitment_amount_id": "",
+            "pep_check": null,
+
+            "trustees_ids": "",
+            "beneficial_owners_ids": "",
+
+            "share_class": {
+                "share_class_ordinary_common_check": null,
+                "share_class_preferred_check": null,
+                "share_class_class_a_check": null,
+                "share_class_class_b_check": null,
+                "share_class_class_c_check": null,
+                "share_class_class_d_check": null,
+                "share_class_class_e_check": null,
+                "share_class_class_f_check": null,
+                "share_class_non_voting_check": null,
+                "share_class_founders_check": null,
+                "share_class_employee_esop_check": null,
+                "share_class_deferred_check": null,
+                "share_class_growth_check": null
+            },
+
+            "investor_eligibility": {
+                "investor_eligibility_accredited_investor_check": null,
+                "investor_eligibility_qualified_purchaser_check": null,
+                "investor_eligibility_qualified_client_check": null,
+                "investor_eligibility_erisa_check": null,
+                "investor_eligibility_restricted_check": null
+            },
+
+            "custodian_details": {
+                "custodian_details_custodian_name_id": "",
+                "custodian_details_account_number_id": "",
+                "custodian_details_email_id": "",
+                "custodian_details_phone_id": "",
+                "custodian_details_swift_code_id": ""
+            }            
+        },
+        "Non-Profit Organisations": {
+            "investor_full_legal_name_id": "",
+
+            "address_registered": {
+                "address_registered_line1_id": "",
+                "address_registered_line2_id": "",
+                "address_registered_city_id": "",
+                "address_registered_state_id": "",
+                "address_registered_country_id": "",
+                "address_registered_zip_id": ""
+            },
+
+            "address_mailing": {
+                "address_mailing_line1_id": "",
+                "address_mailing_line2_id": "",
+                "address_mailing_city_id": "",
+                "address_mailing_state_id": "",
+                "address_mailing_country_id": "",
+                "address_mailing_zip_id": ""
+            },
+
+            "investor_ein_tax_id": "",
+            "investor_telephone_id": "",
+            "investor_email_id": "",
+
+            "form_pf": {
+                "form_pf_non_individual_investment_company_check": null,
+                "form_pf_non_individual_private_fund_check": null,
+                "form_pf_non_individual_banking_or_thrift_institution_check": null,
+                "form_pf_non_individual_non_profit_organization_check": null,
+                "form_pf_non_individual_sovereign_wealth_fund_or_foreign_official_institution_check": null,
+                "form_pf_non_individual_government_entity_check": null,
+                "form_pf_non_individual_government_pension_plan_check": null,
+                "form_pf_non_individual_pension_plan_check": null,
+                "form_pf_individual_us_person_check": null,
+                "form_pf_individual_non_us_person_check": null
+            },
+
+            "inception_date_id": "",
+
+            "domicile_or_country_of_incorporation_id": "",
+            "principal_place_of_business_id": "",
+
+            "wiring_details": {
+                "wiring_details_bank_name_id": "",
+                "wiring_details_account_name_id": "",
+                "wiring_details_account_number_id": "",
+                "wiring_details_aba_or_chips_number_id": "",
+                "wiring_details_iban_id": "",
+                "wiring_details_swift_code_id": "",
+                "wiring_details_for_further_credit_id": "",
+                "wiring_details_bank_in_fatf_country_check": null,
+
+                "wiring_address": {
+                    "wiring_details_address_line1_id": "",
+                    "wiring_details_address_line2_id": "",
+                    "wiring_details_address_city_id": "",
+                    "wiring_details_address_state_id": "",
+                    "wiring_details_address_country_id": "",
+                    "wiring_details_address_zip_id": ""
+                }
+            },
+
+            "authorized_signatory_id": "",
+            "commitment_amount_id": "",
+            "pep_check": null,
+
+            "trustees_ids": "",
+            "beneficial_owners_ids": "",
+
+            "share_class": {
+                "share_class_ordinary_common_check": null,
+                "share_class_preferred_check": null,
+                "share_class_class_a_check": null,
+                "share_class_class_b_check": null,
+                "share_class_class_c_check": null,
+                "share_class_class_d_check": null,
+                "share_class_class_e_check": null,
+                "share_class_class_f_check": null,
+                "share_class_non_voting_check": null,
+                "share_class_founders_check": null,
+                "share_class_employee_esop_check": null,
+                "share_class_deferred_check": null,
+                "share_class_growth_check": null
+            },
+
+            "investor_eligibility": {
+                "investor_eligibility_accredited_investor_check": null,
+                "investor_eligibility_qualified_purchaser_check": null,
+                "investor_eligibility_qualified_client_check": null,
+                "investor_eligibility_erisa_check": null,
+                "investor_eligibility_restricted_check": null
+            },
+
+            "custodian_details": {
+                "custodian_details_custodian_name_id": "",
+                "custodian_details_account_number_id": "",
+                "custodian_details_email_id": "",
+                "custodian_details_phone_id": "",
+                "custodian_details_swift_code_id": ""
+            }
+        },
+        "Fund / Fund of Funds": {
+            "investor_full_legal_name_id": "",
+
+            "address_registered": {
+                "address_registered_line1_id": "",
+                "address_registered_line2_id": "",
+                "address_registered_city_id": "",
+                "address_registered_state_id": "",
+                "address_registered_country_id": "",
+                "address_registered_zip_id": ""
+            },
+
+            "address_mailing": {
+                "address_mailing_line1_id": "",
+                "address_mailing_line2_id": "",
+                "address_mailing_city_id": "",
+                "address_mailing_state_id": "",
+                "address_mailing_country_id": "",
+                "address_mailing_zip_id": ""
+            },
+
+            "investor_ein_tax_id": "",
+            "investor_telephone_id": "",
+            "investor_email_id": "",
+
+            "form_pf": {
+                "form_pf_non_individual_investment_company_check": null,
+                "form_pf_non_individual_private_fund_check": null,
+                "form_pf_non_individual_banking_or_thrift_institution_check": null,
+                "form_pf_non_individual_non_profit_organization_check": null,
+                "form_pf_non_individual_sovereign_wealth_fund_or_foreign_official_institution_check": null,
+                "form_pf_non_individual_government_entity_check": null,
+                "form_pf_non_individual_government_pension_plan_check": null,
+                "form_pf_non_individual_pension_plan_check": null,
+                "form_pf_individual_us_person_check": null,
+                "form_pf_individual_non_us_person_check": null
+            },
+
+            "inception_date_id": "",
+
+            "domicile_or_country_of_incorporation_id": "",
+            "principal_place_of_business_id": "",
+
+            "wiring_details": {
+                "wiring_details_bank_name_id": "",
+                "wiring_details_account_name_id": "",
+                "wiring_details_account_number_id": "",
+                "wiring_details_aba_or_chips_number_id": "",
+                "wiring_details_iban_id": "",
+                "wiring_details_swift_code_id": "",
+                "wiring_details_for_further_credit_id": "",
+                "wiring_details_bank_in_fatf_country_check": null,
+
+                "wiring_address": {
+                    "wiring_details_address_line1_id": "",
+                    "wiring_details_address_line2_id": "",
+                    "wiring_details_address_city_id": "",
+                    "wiring_details_address_state_id": "",
+                    "wiring_details_address_country_id": "",
+                    "wiring_details_address_zip_id": ""
+                }
+            },
+
+            "authorized_signatory_id": "",
+            "commitment_amount_id": "",
+            "pep_check": null,
+
+            "directors_ids": "",
+            "managing_partners_ids": "",
+            "managing_director_ids": "",
+            "beneficial_owners_ids": "",
+
+            "share_class": {
+                "share_class_ordinary_common_check": null,
+                "share_class_preferred_check": null,
+                "share_class_class_a_check": null,
+                "share_class_class_b_check": null,
+                "share_class_class_c_check": null,
+                "share_class_class_d_check": null,
+                "share_class_class_e_check": null,
+                "share_class_class_f_check": null,
+                "share_class_non_voting_check": null,
+                "share_class_founders_check": null,
+                "share_class_employee_esop_check": null,
+                "share_class_deferred_check": null,
+                "share_class_growth_check": null
+            },
+
+            "investor_eligibility": {
+                "investor_eligibility_accredited_investor_check": null,
+                "investor_eligibility_qualified_purchaser_check": null,
+                "investor_eligibility_qualified_client_check": null,
+                "investor_eligibility_erisa_check": null,
+                "investor_eligibility_restricted_check": null
+            },
+
+            "custodian_details": {
+                "custodian_details_custodian_name_id": "",
+                "custodian_details_account_number_id": "",
+                "custodian_details_email_id": "",
+                "custodian_details_phone_id": "",
+                "custodian_details_swift_code_id": ""
+            }
+        },
+        "IRA": {
+            "investor_full_legal_name_id": "",
+
+            "address_registered": {
+                "address_registered_line1_id": "",
+                "address_registered_line2_id": "",
+                "address_registered_city_id": "",
+                "address_registered_state_id": "",
+                "address_registered_country_id": "",
+                "address_registered_zip_id": ""
+            },
+
+            "investor_ssn_id": "",
+            "investor_telephone_id": "",
+            "investor_email_id": "",
+
+            "form_pf": {
+                "form_pf_non_individual_investment_company_check": null,
+                "form_pf_non_individual_private_fund_check": null,
+                "form_pf_non_individual_banking_or_thrift_institution_check": null,
+                "form_pf_non_individual_non_profit_organization_check": null,
+                "form_pf_non_individual_sovereign_wealth_fund_or_foreign_official_institution_check": null,
+                "form_pf_non_individual_government_entity_check": null,
+                "form_pf_non_individual_government_pension_plan_check": null,
+                "form_pf_non_individual_pension_plan_check": null,
+                "form_pf_individual_us_person_check": null,
+                "form_pf_individual_non_us_person_check": null
+            },
+
+            "investor_date_of_birth_id": "",
+
+            "wiring_details": {
+                "wiring_details_bank_name_id": "",
+                "wiring_details_account_name_id": "",
+                "wiring_details_account_number_id": "",
+                "wiring_details_aba_or_chips_number_id": "",
+                "wiring_details_iban_id": "",
+                "wiring_details_swift_code_id": "",
+                "wiring_details_for_further_credit_id": "",
+                "wiring_details_bank_in_fatf_country_check": null,
+
+                "wiring_address": {
+                    "wiring_details_address_line1_id": "",
+                    "wiring_details_address_line2_id": "",
+                    "wiring_details_address_city_id": "",
+                    "wiring_details_address_state_id": "",
+                    "wiring_details_address_country_id": "",
+                    "wiring_details_address_zip_id": ""
+                }
+            },
+
+            "authorized_signatory_id": "",
+            "commitment_amount_id": "",
+            "pep_check": null,
+
+            "share_class": {
+                "share_class_ordinary_common_check": null,
+                "share_class_preferred_check": null,
+                "share_class_class_a_check": null,
+                "share_class_class_b_check": null,
+                "share_class_class_c_check": null,
+                "share_class_class_d_check": null,
+                "share_class_class_e_check": null,
+                "share_class_class_f_check": null,
+                "share_class_non_voting_check": null,
+                "share_class_founders_check": null,
+                "share_class_employee_esop_check": null,
+                "share_class_deferred_check": null,
+                "share_class_growth_check": null
+            },
+
+            "investor_eligibility": {
+                "investor_eligibility_accredited_investor_check": null
+            },
+
+            "custodian_details": {
+                "custodian_details_custodian_name_id": "",
+                "custodian_details_account_number_id": "",
+                "custodian_details_email_id": "",
+                "custodian_details_phone_id": "",
+                "custodian_details_swift_code_id": ""
+            }
+        },
+        "Government Bodies": {
+            "investor_full_legal_name_id": "",
+
+            "address_registered": {
+                "address_registered_line1_id": "",
+                "address_registered_line2_id": "",
+                "address_registered_city_id": "",
+                "address_registered_state_id": "",
+                "address_registered_country_id": "",
+                "address_registered_zip_id": ""
+            },
+
+            "address_mailing": {
+                "address_mailing_line1_id": "",
+                "address_mailing_line2_id": "",
+                "address_mailing_city_id": "",
+                "address_mailing_state_id": "",
+                "address_mailing_country_id": "",
+                "address_mailing_zip_id": ""
+            },
+
+            "investor_ein_tax_id": "",
+            "investor_telephone_id": "",
+            "investor_email_id": "",
+
+            "form_pf": {
+                "form_pf_non_individual_investment_company_check": null,
+                "form_pf_non_individual_private_fund_check": null,
+                "form_pf_non_individual_banking_or_thrift_institution_check": null,
+                "form_pf_non_individual_non_profit_organization_check": null,
+                "form_pf_non_individual_sovereign_wealth_fund_or_foreign_official_institution_check": null,
+                "form_pf_non_individual_government_entity_check": null,
+                "form_pf_non_individual_government_pension_plan_check": null,
+                "form_pf_non_individual_pension_plan_check": null,
+                "form_pf_individual_us_person_check": null,
+                "form_pf_individual_non_us_person_check": null
+            },
+
+            "domicile_or_country_of_incorporation_id": "",
+            "principal_place_of_business_id": "",
+
+            "wiring_details": {
+                "wiring_details_bank_name_id": "",
+                "wiring_details_account_name_id": "",
+                "wiring_details_account_number_id": "",
+                "wiring_details_aba_or_chips_number_id": "",
+                "wiring_details_iban_id": "",
+                "wiring_details_swift_code_id": "",
+                "wiring_details_for_further_credit_id": "",
+                "wiring_details_bank_in_fatf_country_check": null,
+
+                "wiring_address": {
+                    "wiring_details_address_line1_id": "",
+                    "wiring_details_address_line2_id": "",
+                    "wiring_details_address_city_id": "",
+                    "wiring_details_address_state_id": "",
+                    "wiring_details_address_country_id": "",
+                    "wiring_details_address_zip_id": ""
+                }
+            },
+
+            "authorized_signatory_id": "",
+            "commitment_amount_id": "",
+
+            "share_class": {
+                "share_class_ordinary_common_check": null,
+                "share_class_preferred_check": null,
+                "share_class_class_a_check": null,
+                "share_class_class_b_check": null,
+                "share_class_class_c_check": null,
+                "share_class_class_d_check": null,
+                "share_class_class_e_check": null,
+                "share_class_class_f_check": null,
+                "share_class_non_voting_check": null,
+                "share_class_founders_check": null,
+                "share_class_employee_esop_check": null,
+                "share_class_deferred_check": null,
+                "share_class_growth_check": null
+            },
+
+            "custodian_details": {
+                "custodian_details_custodian_name_id": "",
+                "custodian_details_account_number_id": "",
+                "custodian_details_email_id": "",
+                "custodian_details_phone_id": "",
+                "custodian_details_swift_code_id": ""
+            }
+        },
+        "Education Institutions": {
+            "investor_full_legal_name_id": "",
+
+            "address_registered": {
+                "address_registered_line1_id": "",
+                "address_registered_line2_id": "",
+                "address_registered_city_id": "",
+                "address_registered_state_id": "",
+                "address_registered_country_id": "",
+                "address_registered_zip_id": ""
+            },
+
+            "address_mailing": {
+                "address_mailing_line1_id": "",
+                "address_mailing_line2_id": "",
+                "address_mailing_city_id": "",
+                "address_mailing_state_id": "",
+                "address_mailing_country_id": "",
+                "address_mailing_zip_id": ""
+            },
+
+            "investor_ein_tax_id": "",
+            "investor_telephone_id": "",
+            "investor_email_id": "",
+
+            "form_pf": {
+                "form_pf_non_individual_investment_company_check": null,
+                "form_pf_non_individual_private_fund_check": null,
+                "form_pf_non_individual_banking_or_thrift_institution_check": null,
+                "form_pf_non_individual_non_profit_organization_check": null,
+                "form_pf_non_individual_sovereign_wealth_fund_or_foreign_official_institution_check": null,
+                "form_pf_non_individual_government_entity_check": null,
+                "form_pf_non_individual_government_pension_plan_check": null,
+                "form_pf_non_individual_pension_plan_check": null,
+                "form_pf_individual_us_person_check": null,
+                "form_pf_individual_non_us_person_check": null
+            },
+
+            "inception_date_id": "",
+
+            "domicile_or_country_of_incorporation_id": "",
+            "principal_place_of_business_id": "",
+
+            "wiring_details": {
+                "wiring_details_bank_name_id": "",
+                "wiring_details_account_name_id": "",
+                "wiring_details_account_number_id": "",
+                "wiring_details_aba_or_chips_number_id": "",
+                "wiring_details_iban_id": "",
+                "wiring_details_swift_code_id": "",
+                "wiring_details_for_further_credit_id": "",
+                "wiring_details_bank_in_fatf_country_check": null,
+
+                "wiring_address": {
+                    "wiring_details_address_line1_id": "",
+                    "wiring_details_address_line2_id": "",
+                    "wiring_details_address_city_id": "",
+                    "wiring_details_address_state_id": "",
+                    "wiring_details_address_country_id": "",
+                    "wiring_details_address_zip_id": ""
+                }
+            },
+
+            "authorized_signatory_id": "",
+            "commitment_amount_id": "",
+            "pep_check": null,
+
+            "directors_ids": "",
+            "managing_director_ids": "",
+            "beneficial_owners_ids": "",
+
+            "share_class": {
+                "share_class_ordinary_common_check": null,
+                "share_class_preferred_check": null,
+                "share_class_class_a_check": null,
+                "share_class_class_b_check": null,
+                "share_class_class_c_check": null,
+                "share_class_class_d_check": null,
+                "share_class_class_e_check": null,
+                "share_class_class_f_check": null,
+                "share_class_non_voting_check": null,
+                "share_class_founders_check": null,
+                "share_class_employee_esop_check": null,
+                "share_class_deferred_check": null,
+                "share_class_growth_check": null
+            },
+
+            "investor_eligibility": {
+                "investor_eligibility_accredited_investor_check": null,
+                "investor_eligibility_qualified_purchaser_check": null,
+                "investor_eligibility_qualified_client_check": null,
+                "investor_eligibility_erisa_check": null,
+                "investor_eligibility_restricted_check": null
+            },
+
+            "custodian_details": {
+                "custodian_details_custodian_name_id": "",
+                "custodian_details_account_number_id": "",
+                "custodian_details_email_id": "",
+                "custodian_details_phone_id": "",
+                "custodian_details_swift_code_id": ""
+            }
+        }
+    }
+}

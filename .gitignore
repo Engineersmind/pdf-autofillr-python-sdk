@@ -1,0 +1,72 @@
+# ======================
+# Python cache / build
+# ======================
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.Python
+**/*.so
+**/*.egg
+**/*.egg-info/
+build/
+dist/
+**/build/
+**/dist/
+
+# ======================
+# Testing / coverage
+# ======================
+**/.pytest_cache/
+**/.mypy_cache/
+**/.coverage
+htmlcov/
+
+# ======================
+# Virtual environments
+# ======================
+venv/
+env/
+.venv/
+ENV/
+
+# ======================
+# Secrets — never commit .env
+# ======================
+.env
+**/.env
+
+# ======================
+# IDE / Editor
+# ======================
+.vscode/
+.idea/
+
+# ======================
+# OS
+# ======================
+.DS_Store
+Thumbs.db
+
+# ======================
+# Archives / ZIPs
+# ======================
+*.zip
+archives/
+
+# ======================
+# Logs
+# ======================
+*.log
+
+# ======================
+# Misc
+# ======================
+*.tmp
+*.bak
+rough_docs/
+CLAUDE.md
+z_useful_cmds.sh
+TODO.md
+BRANCHING.md
+REFACTORING_SUMMARY.md

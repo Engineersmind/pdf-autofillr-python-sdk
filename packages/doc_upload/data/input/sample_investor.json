@@ -1,0 +1,45 @@
+{
+  "investor_profile": {
+    "full_legal_name": "Jane B. Smith",
+    "date_of_birth": "1985-03-15",
+    "ssn": "987-65-4321",
+    "email": "jane.smith@example.com",
+    "telephone": "+1-4155559876",
+    "occupation": "Portfolio Manager"
+  },
+  "registered_address": {
+    "line1": "500 Market Street, Suite 200",
+    "line2": "Financial District",
+    "city": "San Francisco",
+    "state": "CA",
+    "country": "USA",
+    "zip": "94105"
+  },
+  "wiring_details": {
+    "bank_name": "Wells Fargo Bank NA",
+    "account_name": "Jane B. Smith",
+    "account_number": "1234567890",
+    "aba_chips": "121000248",
+    "iban": "",
+    "swift": "WFBIUS6S",
+    "further_credit": "None",
+    "bank_address": {
+      "line1": "420 Montgomery Street",
+      "city": "San Francisco",
+      "state": "CA",
+      "country": "USA",
+      "zip": "94104"
+    },
+    "fatf_compliant": true
+  },
+  "authorized_signatory": "Jane B. Smith",
+  "commitment_amount": 500000,
+  "currency": "USD",
+  "investor_eligibility": {
+    "accredited_investor": true,
+    "qualified_purchaser": true,
+    "us_person": true
+  },
+  "pep": false,
+  "share_class": ["Ordinary/Common shares", "Class A shares"]
+}

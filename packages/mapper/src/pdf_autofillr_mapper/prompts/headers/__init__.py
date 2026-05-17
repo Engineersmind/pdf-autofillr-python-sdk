@@ -1,0 +1,1 @@
+"""Header extraction prompt templates."""

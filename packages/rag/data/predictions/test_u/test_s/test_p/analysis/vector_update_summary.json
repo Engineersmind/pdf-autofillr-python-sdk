@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-03-26T09:28:01.803483Z",
+  "summary": {
+    "vectors_updated": 5,
+    "vectors_created": 0,
+    "total": 137
+  },
+  "updates": [
+    {
+      "field_id": "tf_001",
+      "action": "boosted",
+      "reason": "CASE_A"
+    },
+    {
+      "field_id": "tf_002",
+      "action": "boosted",
+      "reason": "CASE_A"
+    },
+    {
+      "field_id": "tf_003",
+      "action": "boosted",
+      "reason": "CASE_A"
+    },
+    {
+      "field_id": "tf_004",
+      "action": "boosted",
+      "reason": "CASE_A"
+    },
+    {
+      "field_id": "tf_005",
+      "action": "boosted",
+      "reason": "CASE_A"
+    }
+  ]
+}

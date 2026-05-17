@@ -1,0 +1,67 @@
+version: 2
+updates:
+
+  # ── Python dependencies ───────────────────────────────────────────
+  - package-ecosystem: "pip"
+    directory: "/packages/mapper"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels: ["dependencies", "mapper"]
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        versions: ["*"]
+
+  - package-ecosystem: "pip"
+    directory: "/packages/chatbot"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels: ["dependencies", "chatbot"]
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        versions: ["*"]
+
+  - package-ecosystem: "pip"
+    directory: "/packages/doc_upload"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels: ["dependencies", "doc-upload"]
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        versions: ["*"]
+
+  - package-ecosystem: "pip"
+    directory: "/packages/rag"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels: ["dependencies", "rag"]
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        versions: ["*"]
+
+  - package-ecosystem: "pip"
+    directory: "/packages/pdf_autofillr"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels: ["dependencies", "umbrella"]
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        versions: ["*"]
+
+  # ── GitHub Actions ────────────────────────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels: ["dependencies", "github-actions"]
+    open-pull-requests-limit: 5
