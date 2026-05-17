@@ -16,7 +16,7 @@
 
 ---
 
-## Process Overview
+## How it works
 
 ```
 Blank PDF form + your data
