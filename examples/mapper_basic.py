@@ -64,23 +64,24 @@ cfg.validate()  # warns if no API key is found for either LLM phase
 # B2. Load purely from environment variables (Lambda / Docker)
 # Set: MAPPER_LLM_MODEL, MAPPER_LLM_API_KEY, MAPPER_HEADERS_LLM_MODEL, etc.
 # Or provider-specific: OPENAI_API_KEY, ANTHROPIC_API_KEY (litellm auto-routes)
-cfg = MapperConfig.from_env()
+
+# cfg = MapperConfig.from_env()
 
 # B3. Programmatic — hardcode model + key (no config files needed)
-cfg = MapperConfig(
-    llm_model="openai/gpt-4o",
-    llm_api_key="sk-your-openai-key",         # Phase 1 — semantic mapping
-    headers_llm_model="openai/gpt-4o",
-    headers_llm_api_key="sk-your-openai-key",  # Phase 2 — headers detection
-)
+# cfg = MapperConfig(
+#     llm_model="openai/gpt-4o",
+#     llm_api_key="sk-your-openai-key",         # Phase 1 — semantic mapping
+#     headers_llm_model="openai/gpt-4o",
+#     headers_llm_api_key="sk-your-openai-key",  # Phase 2 — headers detection
+# )
 
 # B4. Mix providers — Anthropic for mapping, OpenAI for headers
-cfg = MapperConfig(
-    llm_model="anthropic/claude-3-5-sonnet-20241022",
-    llm_api_key=os.getenv("ANTHROPIC_API_KEY", ""),
-    headers_llm_model="openai/gpt-4o",
-    headers_llm_api_key=os.getenv("OPENAI_API_KEY", ""),
-)
+# cfg = MapperConfig(
+#     llm_model="anthropic/claude-3-5-sonnet-20241022",
+#     llm_api_key=os.getenv("ANTHROPIC_API_KEY", ""),
+#     headers_llm_model="openai/gpt-4o",
+#     headers_llm_api_key=os.getenv("OPENAI_API_KEY", ""),
+# )
 
 # Other supported providers:
 #   Groq:    llm_model="groq/llama-3.3-70b-versatile",  llm_api_key=os.getenv("GROQ_API_KEY")

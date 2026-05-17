@@ -1,4 +1,4 @@
-# chatbot/entrypoints/gcp_function.py
+# src/chatbot/entrypoints/gcp_function.py
 """
 Google Cloud Functions HTTP trigger entrypoint for the chatbot module.
 
@@ -143,6 +143,7 @@ def main(request: Any) -> Any:
     except (KeyError, ValueError) as e:
         logger.warning("Bad request: %s", e)
         return _make_response(400, {"error": str(e)})
-    except Exception as e:
+    except Exception:
+        # Log full exception server-side only — never expose stack trace to caller
         logger.exception("Unhandled GCP Function error")
-        return _make_response(500, {"error": "Internal server error", "detail": str(e)})
+        return _make_response(500, {"error": "Internal server error"})

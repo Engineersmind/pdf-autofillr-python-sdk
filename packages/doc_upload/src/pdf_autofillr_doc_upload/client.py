@@ -59,6 +59,15 @@ from pdf_autofillr_doc_upload.storage.factory import StorageFactory
 from pdf_autofillr_doc_upload.telemetry.collector import TelemetryCollector
 from pdf_autofillr_doc_upload.telemetry.config import TelemetryConfig
 
+# Allowed extensions for post-download rename.
+# Used only to restore the correct extension on the temp file so the
+# extractor can detect the format — user input never reaches NamedTemporaryFile (CWE-22).
+_ALLOWED_EXTENSIONS = {
+    ".pdf", ".docx", ".doc", ".pptx", ".ppt",
+    ".xlsx", ".xls", ".csv", ".tsv",
+    ".json", ".txt", ".md", ".markdown", ".html", ".htm", ".xml",
+}
+
 
 class DocUploadClient:
     """
@@ -194,12 +203,18 @@ class DocUploadClient:
 
         # ── Step 2: Download / locate document ──────────────────────
         logger.log("\n── Step 2: Locate document ──")
-        # Use a fixed suffix for the temp file — the actual file format is
-        # determined by the storage backend during download, not by this name.
-        # This eliminates any path expression taint from user-supplied document_path (CWE-22).
+        # Create temp file with neutral suffix — user input never touches
+        # NamedTemporaryFile directly (CWE-22). After download, rename using
+        # a sanitized copy of the original extension (basename only, whitelist-
+        # checked) so the extractor can detect the file format correctly.
         with tempfile.NamedTemporaryFile(delete=False, suffix=".tmp") as tmp:
-            local_doc = tmp.name
-        local_doc = self.storage.download_document(document_path, local_doc)
+            tmp_path = tmp.name
+        local_doc = self.storage.download_document(document_path, tmp_path)
+        raw_ext = Path(os.path.basename(document_path)).suffix.lower()
+        if raw_ext in _ALLOWED_EXTENSIONS:
+            renamed = tmp_path[:-4] + raw_ext  # replace .tmp with correct ext
+            os.rename(local_doc, renamed)
+            local_doc = renamed
         logger.log(f"✅ Document ready at: {local_doc}")
 
         # ── Steps 3–6: Parallel threads ──────────────────────────────
