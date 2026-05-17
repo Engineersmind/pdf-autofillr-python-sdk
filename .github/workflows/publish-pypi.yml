@@ -1,11 +1,11 @@
 name: Publish to PyPI
 
 # Tag format → Package:
-#   mapper-v1.0.8       → pdf-autofillr-mapper      (packages/mapper/)
-#   chatbot-v0.2.9      → pdf-autofillr-chatbot      (packages/chatbot/)
-#   doc-upload-v0.1.4   → pdf-autofillr-doc-upload   (packages/doc_upload/)
-#   rag-v0.2.3          → pdf-autofillr-rag           (packages/rag/)
-#   umbrella-v1.1.2     → pdf-autofillr               (packages/pdf_autofillr/)
+#   mapper-v1.0.10       → pdf-autofillr-mapper      (packages/mapper/)
+#   chatbot-v0.3.0      → pdf-autofillr-chatbot      (packages/chatbot/)
+#   doc-upload-v0.1.5   → pdf-autofillr-doc-upload   (packages/doc_upload/)
+#   rag-v0.2.4          → pdf-autofillr-rag           (packages/rag/)
+#   umbrella-v1.1.4     → pdf-autofillr               (packages/pdf_autofillr/)
 #   core-v1.0.0         → pdf-autofiller-core         (plugins/core/)
 #   plugins-v0.1.0      → pdf-autofiller-plugins      (plugins/pdf_autofillr/)
 #
@@ -13,7 +13,7 @@ name: Publish to PyPI
 #   1. Bump version in pyproject.toml
 #   2. Update CHANGELOG.md
 #   3. Merge to main
-#   4. git tag mapper-v1.0.8 && git push origin mapper-v1.0.8
+#   4. git tag mapper-v1.0.10 && git push origin mapper-v1.0.10
 #
 # Uses PyPI Trusted Publishing (OIDC) — no token needed.
 # Set up at https://pypi.org/manage/account/publishing/

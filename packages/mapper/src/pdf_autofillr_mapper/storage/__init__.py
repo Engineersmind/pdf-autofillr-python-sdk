@@ -1,0 +1,1 @@
+"""Storage layer for the PDF autofillr mapper."""

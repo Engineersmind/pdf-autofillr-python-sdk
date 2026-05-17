@@ -8,15 +8,16 @@
 
 1. [PyPI Install — Quick Start (for Users)](#1-pypi-install--quick-start-for-users)
 2. [Python Library Usage](#2-python-library-usage)
-3. [CLI Usage](#3-cli-usage)
-4. [API Server](#4-api-server)
-5. [API Endpoint Reference & Testing](#5-api-endpoint-reference--testing)
-6. [FastAPI — Mount in Existing App](#6-fastapi--mount-in-existing-app)
-7. [Cloud Entrypoints](#7-cloud-entrypoints)
-8. [From Source — Dev Mode](#8-from-source--dev-mode)
-9. [Run Tests](#9-run-tests)
-10. [Docker](#10-docker)
-11. [Configuration Reference](#11-configuration-reference)
+3. [LLM Credentials](#3-llm-credentials)
+4. [CLI Usage](#4-cli-usage)
+5. [API Server](#5-api-server)
+6. [API Endpoint Reference & Testing](#6-api-endpoint-reference--testing)
+7. [FastAPI — Mount in Existing App](#7-fastapi--mount-in-existing-app)
+8. [Cloud Entrypoints](#8-cloud-entrypoints)
+9. [From Source — Dev Mode](#9-from-source--dev-mode)
+10. [Run Tests](#10-run-tests)
+11. [Docker](#11-docker)
+12. [Configuration Reference](#12-configuration-reference)
 
 ---
 
@@ -54,6 +55,7 @@ python -c "import pdf_autofillr_mapper; pdf_autofillr_mapper.copy_sample_configs
 # 2. Create your .env file
 cp configs/.env.mapper.example .env
 # Edit .env: set OPENAI_API_KEY=sk-your-key-here
+# (see Section 3 — LLM Credentials for all providers and two-phase key setup)
 
 # 3. Edit configs/mapper_config.ini
 # Set your storage paths, LLM model, and options
@@ -156,40 +158,133 @@ pipeline = PDFPipeline(mapper_config=cfg)
 
 ---
 
-## 3. CLI Usage
+## 3. LLM Credentials
+
+The mapper uses two LLM phases internally. Each can use a different model and provider.
+
+| Phase | Purpose | Model setting | Key env var |
+|---|---|---|---|
+| Phase 1 — Mapping | Semantic field mapping | `[mapping] llm_model` | `MAPPER_LLM_API_KEY` |
+| Phase 2 — Headers | Section header detection | `[headers] headers_llm_model` | `MAPPER_HEADERS_LLM_API_KEY` |
+
+### Option A — Universal key overrides (simplest)
 
 ```bash
-# Extract form fields from a PDF
-pdf-mapper extract --pdf ./data/input/blank_form.pdf --user-id u1 --pdf-doc-id d1
+# .env or shell
+MAPPER_LLM_API_KEY=sk-your-key           # Phase 1
+MAPPER_HEADERS_LLM_API_KEY=sk-your-key  # Phase 2 — leave blank to reuse above
+```
 
-# Map extracted fields to schema using LLM
-pdf-mapper map --user-id u1 --pdf-doc-id d1
+### Option B — Provider-specific keys (litellm auto-routes by model name prefix)
 
-# Embed mapping metadata into the PDF
-pdf-mapper embed --pdf ./data/input/blank_form.pdf --user-id u1 --pdf-doc-id d1
+```bash
+OPENAI_API_KEY=sk-...               # model prefix: openai/ or gpt-
+ANTHROPIC_API_KEY=sk-ant-...        # model prefix: anthropic/ or claude-
+GROQ_API_KEY=gsk_...                # model prefix: groq/
+GEMINI_API_KEY=...                  # model prefix: gemini/
+AZURE_API_KEY=...                   # model prefix: azure/
+AZURE_API_BASE=https://...          # required alongside AZURE_API_KEY
+AWS_ACCESS_KEY_ID=...               # model prefix: bedrock/
+AWS_SECRET_ACCESS_KEY=...
+# Ollama — no key needed             # model prefix: ollama/
+```
 
-# Fill the embedded PDF with data
-pdf-mapper fill \
-  --pdf ./data/output/u1/d1/blank_form_embedded.pdf \
-  --user-id u1 --pdf-doc-id d1 \
-  --data ./data/input/form_data.json
+### Programmatic config (two phases, different providers)
 
-# One-step: extract + map + embed (make-embed)
-pdf-mapper make-embed --pdf ./data/input/blank_form.pdf --user-id u1 --pdf-doc-id d1
+```python
+from pdf_autofillr_mapper import MapperConfig
 
-# Full pipeline: extract + map + embed + fill
-pdf-mapper run-all \
-  --pdf ./data/input/blank_form.pdf \
-  --data ./data/input/form_keys.json \
-  --user-id u1 --pdf-doc-id d1
+# Same provider for both phases
+cfg = MapperConfig(
+    llm_model="openai/gpt-4o",
+    llm_api_key="sk-...",
+    headers_llm_model="openai/gpt-4o",
+    headers_llm_api_key="sk-...",
+)
 
-# Refresh (re-embed) an existing embedded PDF
-pdf-mapper refresh --pdf ./data/output/u1/d1/blank_form_embedded.pdf
+# Different providers — Anthropic for mapping, OpenAI for headers
+cfg = MapperConfig(
+    llm_model="anthropic/claude-3-5-sonnet-20241022",
+    llm_api_key="sk-ant-...",
+    headers_llm_model="openai/gpt-4o",
+    headers_llm_api_key="sk-...",
+)
+
+# Groq (fast, cheap)
+cfg = MapperConfig(
+    llm_model="groq/llama-3.3-70b-versatile",
+    llm_api_key="gsk_...",
+    headers_llm_model="groq/llama-3.3-70b-versatile",
+)
+
+# Local Ollama — no API key
+cfg = MapperConfig(
+    llm_model="ollama/llama3.2",
+    headers_llm_model="ollama/llama3.2",
+)
+```
+
+### Validate credentials at startup
+
+```python
+cfg = MapperConfig.from_directory("./configs")
+cfg.validate()  # prints a warning if no key is found for either phase
+```
+
+---
+
+## 4. CLI Usage
+
+```bash
+# Extract raw form fields from a PDF (no LLM)
+pdf-mapper extract blank_form.pdf
+pdf-mapper extract blank_form.pdf -o fields.json
+
+# Map fields to your target schema via LLM
+pdf-mapper map blank_form.pdf --mapper-type ensemble
+pdf-mapper map blank_form.pdf --mapper-type semantic -o mapped.json
+
+# Create an embedded template (extract + map + embed in one step)
+# Run once per blank PDF template — result is reused for all fills
+pdf-mapper make-embed-file blank_form.pdf -o embedded_form.pdf
+
+# Check if a PDF already has embedded metadata
+pdf-mapper check-embed-file blank_form.pdf
+
+# Fill with data from a JSON file
+pdf-mapper fill blank_form.pdf -d investor_data.json -o filled_form.pdf
+
+# Full pipeline — extract → map → embed → fill
+pdf-mapper run-all blank_form.pdf -o final_form.pdf
+
+# Control log verbosity
+pdf-mapper --log-level DEBUG run-all blank_form.pdf -o final_form.pdf
 
 # View help
 pdf-mapper --help
 pdf-mapper run-all --help
 ```
+
+### CLI subcommands
+
+| Command | Description |
+|---|---|
+| `extract <pdf>` | Extract raw PDF form fields (no LLM) |
+| `map <pdf>` | Map fields to target schema via LLM |
+| `make-embed-file <pdf> -o <out>` | Extract + Map + Embed in one step |
+| `check-embed-file <pdf>` | Check whether PDF has embedded metadata |
+| `fill <pdf> -d <data.json> -o <out>` | Fill form with data from JSON file |
+| `run-all <pdf> -o <out>` | Full pipeline: extract → map → embed → fill |
+
+### Common flags
+
+| Flag | Description |
+|---|---|
+| `-o / --output` | Output file path |
+| `-d / --data-file` | JSON file with field data (for `fill`) |
+| `--mapper-type` | `semantic`, `headers`, `rag`, `ensemble` (default: `ensemble`) |
+| `--session-id` | Session ID for tracking/caching |
+| `--log-level` | `DEBUG`, `INFO`, `WARNING`, `ERROR` |
 
 ---
 
@@ -198,18 +293,34 @@ pdf-mapper run-all --help
 ### Start the server
 
 ```bash
-# Via installed command
+# Via installed command (default port 8000)
 pdf-mapper-server
 
-# Via uvicorn directly (auto-reload for dev)
-uvicorn entrypoints.fastapi_app:app --reload --port 8000
+# Via Python directly
+python -m pdf_autofillr_mapper.entrypoints.server
+
+# Via uvicorn (dev mode with auto-reload)
+uvicorn pdf_autofillr_mapper.entrypoints.fastapi_app:app --reload --port 8000
 
 # Custom port
 PORT=9000 pdf-mapper-server
 
 # Production (multi-worker)
-uvicorn entrypoints.fastapi_app:app --host 0.0.0.0 --port 8000 --workers 4
+uvicorn pdf_autofillr_mapper.entrypoints.fastapi_app:app --host 0.0.0.0 --port 8000 --workers 4
 ```
+
+Server starts at: **http://localhost:8000**
+Interactive API docs: **http://localhost:8000/docs**
+
+### Authentication
+
+If `MAPPER_API_KEY` is set in the environment, every request must include:
+
+```
+X-API-Key: your-api-key
+```
+
+Leave `MAPPER_API_KEY` blank to disable authentication (development).
 
 Server starts at: **http://localhost:8000**
 Interactive API docs: **http://localhost:8000/docs**
@@ -375,20 +486,20 @@ curl -s -X POST http://localhost:8000/mapper/extract \
 
 ---
 
-## 6. FastAPI — Mount in Existing App
+## 7. FastAPI — Mount in Existing App
 
 ```python
 from fastapi import FastAPI
-from entrypoints.fastapi_app import app as mapper_app
+from pdf_autofillr_mapper.entrypoints.fastapi_app import app as mapper_app
 
 main_app = FastAPI()
 main_app.mount("/mapper", mapper_app)
-# Routes now at: POST /mapper/extract, POST /mapper/run-all, etc.
+# Routes now at: POST /mapper/extract, POST /mapper/fill-pdf, etc.
 ```
 
 ---
 
-## 7. Cloud Entrypoints
+## 8. Cloud Entrypoints
 
 ### AWS Lambda
 
@@ -435,7 +546,7 @@ gcloud functions deploy mapper \
 
 ---
 
-## 8. From Source — Dev Mode
+## 9. From Source — Dev Mode
 
 ```bash
 git clone https://github.com/yourorg/pdf-autofillr-mapper.git
@@ -445,7 +556,7 @@ python3 -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 
 # Install with API server + dev deps
-pip install -e ".[api,dev]"
+pip install -e ".[server,dev]"
 
 # Copy sample configs
 python -c "import pdf_autofillr_mapper; pdf_autofillr_mapper.copy_sample_configs('.')"
@@ -456,18 +567,15 @@ cp configs/.env.mapper.example .env
 # Edit configs/mapper_config.ini: set paths
 
 # Run API server with auto-reload
-uvicorn entrypoints.fastapi_app:app --reload --port 8000
+uvicorn pdf_autofillr_mapper.entrypoints.fastapi_app:app --reload --port 8000
 
 # Or use the CLI
-pdf-mapper run-all \
-  --pdf data/input/blank_form.pdf \
-  --data configs/form_keys.json \
-  --user-id u1 --pdf-doc-id d1
+pdf-mapper run-all blank_form.pdf -o filled_form.pdf
 ```
 
 ---
 
-## 9. Run Tests
+## 10. Run Tests
 
 ```bash
 pip install "pdf-autofillr-mapper[dev]"
@@ -492,7 +600,7 @@ pytest tests/ -v -x
 
 ---
 
-## 10. Docker
+## 11. Docker
 
 ```bash
 # Build
@@ -546,21 +654,43 @@ services:
 
 ---
 
-## 11. Configuration Reference
+## 12. Configuration Reference
 
 Configuration lives in two places: `.env` (secrets) and `configs/mapper_config.ini` (settings).
 
 ### `.env` — API keys and credentials
 
+**LLM — Phase 1 (Mapping)**
+
 | Variable | Description |
 |---|---|
-| `OPENAI_API_KEY` | OpenAI key (for `gpt-4o` etc.) |
-| `ANTHROPIC_API_KEY` | Anthropic key (for Claude models) |
-| `AZURE_API_KEY` | Azure OpenAI key |
-| `AZURE_API_BASE` | Azure OpenAI endpoint URL |
+| `MAPPER_LLM_API_KEY` | Universal key for Phase 1 (overrides provider-specific keys) |
+| `MAPPER_LLM_MODEL` | LiteLLM model string for semantic mapping (default: `gpt-4o`) |
+
+**LLM — Phase 2 (Headers)**
+
+| Variable | Description |
+|---|---|
+| `MAPPER_HEADERS_LLM_API_KEY` | Universal key for Phase 2 (blank = reuse `MAPPER_LLM_API_KEY`) |
+| `MAPPER_HEADERS_LLM_MODEL` | LiteLLM model string for header detection (default: `gpt-4o`) |
+
+**Provider-specific keys (auto-detected by litellm)**
+
+| Variable | Provider | Model prefix |
+|---|---|---|
+| `OPENAI_API_KEY` | OpenAI | `openai/`, `gpt-`, `o1`, `o3` |
+| `ANTHROPIC_API_KEY` | Anthropic | `anthropic/`, `claude-` |
+| `GROQ_API_KEY` | Groq | `groq/` |
+| `GEMINI_API_KEY` | Google Gemini | `gemini/` |
+| `AZURE_API_KEY` + `AZURE_API_BASE` | Azure OpenAI | `azure/` |
+| `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY` | AWS Bedrock | `bedrock/` |
+| _(none)_ | Ollama (local) | `ollama/` |
+
+**Server & storage**
+
+| Variable | Description |
+|---|---|
 | `MAPPER_API_KEY` | When set, all API endpoints require `X-API-Key` header |
-| `AWS_ACCESS_KEY_ID` | AWS credentials (or use IAM role) |
-| `AWS_SECRET_ACCESS_KEY` | AWS credentials |
 | `AWS_REGION_NAME` | AWS region (default: `us-east-1`) |
 
 ### `configs/mapper_config.ini` — Main configuration
@@ -606,9 +736,20 @@ api_key =                    # only when mode=http
 pip install "pdf-autofillr-mapper[api]"
 ```
 
-**`No API key found` / LLM errors**
+**`UserWarning: No API key found for mapping model 'gpt-4o'`**
 ```bash
-export OPENAI_API_KEY=sk-your-actual-key
+# Option A — universal override
+export MAPPER_LLM_API_KEY=sk-your-key
+
+# Option B — provider-specific
+export OPENAI_API_KEY=sk-your-key
+```
+
+**`UserWarning: No API key found for headers model 'gpt-4o'`**
+```bash
+# Leave MAPPER_HEADERS_LLM_API_KEY blank to reuse MAPPER_LLM_API_KEY
+# Or set it explicitly:
+export MAPPER_HEADERS_LLM_API_KEY=sk-your-key
 ```
 
 **`config_samples not found`**
