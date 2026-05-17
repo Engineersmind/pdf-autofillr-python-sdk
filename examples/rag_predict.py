@@ -23,6 +23,6 @@ client.submit_feedback(
     user_id="user_001",
     session_id="session_abc",
     pdf_id="lp_form_q2",
-    corrections={"commitment_usd": "investment_amount"},
+    errors={"commitment_usd": "investment_amount"},
 )
 print("Feedback submitted — vector store updated")

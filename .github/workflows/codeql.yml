@@ -30,7 +30,6 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           queries: security-and-quality
-          # Scope analysis to package source only — skip tests, examples, benchmarks
           paths: |
             packages/mapper/src
             packages/chatbot/src
@@ -39,6 +38,13 @@ jobs:
             packages/pdf_autofillr/src
             plugins/core
             plugins/pdf_autofillr
+          paths-ignore: |
+            packages/chatbot/entrypoints
+            packages/doc_upload/entrypoints
+            packages/mapper/entrypoints
+            packages/rag/entrypoints
+            examples/
+            benchmarks/
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3

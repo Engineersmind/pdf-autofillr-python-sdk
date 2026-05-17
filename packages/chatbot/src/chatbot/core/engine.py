@@ -8,11 +8,10 @@ and coordinates extraction, storage, telemetry, and PDF workflow.
 from __future__ import annotations
 
 import time
-from typing import Optional, Tuple
+from typing import TYPE_CHECKING, Optional, Tuple
 
 from chatbot.config.form_config import FormConfig
 from chatbot.config.settings import Settings
-from chatbot.core.router import StateRouter
 from chatbot.core.session import SessionManager
 from chatbot.core.states import State
 from chatbot.extraction.extractor import Extractor
@@ -22,6 +21,9 @@ from chatbot.pdf.workflow import PDFWorkflowManager
 from chatbot.storage.base import StorageBackend
 from chatbot.telemetry.collector import TelemetryCollector
 from chatbot.utils.dict_utils import unflatten_dict
+
+if TYPE_CHECKING:
+    from chatbot.core.router import StateRouter
 
 
 class ConversationEngine:
@@ -62,11 +64,12 @@ class ConversationEngine:
             else None
         )
 
-        self._router: Optional[StateRouter] = None
+        self._router: Optional["StateRouter"] = None
 
     @property
-    def router(self) -> StateRouter:
+    def router(self) -> "StateRouter":
         if self._router is None:
+            from chatbot.core.router import StateRouter
             self._router = StateRouter.build(self)
         return self._router
 
