@@ -53,3 +53,5 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{ matrix.language }}"
+          # Only fail on errors — warnings and notes are informational only
+          fail-on: error
