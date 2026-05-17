@@ -60,6 +60,16 @@ from pdf_autofillr_doc_upload.telemetry.collector import TelemetryCollector
 from pdf_autofillr_doc_upload.telemetry.config import TelemetryConfig
 
 
+# Whitelist of file extensions accepted as document input.
+# Only these suffixes are allowed through to tempfile — anything else
+# falls back to .tmp to prevent path expression injection (CWE-22).
+_ALLOWED_SUFFIXES = {
+    ".pdf", ".docx", ".doc", ".pptx", ".ppt",
+    ".xlsx", ".xls", ".csv", ".tsv",
+    ".json", ".txt", ".md", ".html", ".xml",
+}
+
+
 class DocUploadClient:
     """
     High-level client for document extraction + optional PDF filling.
@@ -194,7 +204,11 @@ class DocUploadClient:
 
         # ── Step 2: Download / locate document ──────────────────────
         logger.log("\n── Step 2: Locate document ──")
-        suffix = Path(document_path).suffix or ".tmp"
+        # Sanitize suffix — only allow whitelisted extensions.
+        # Prevents uncontrolled data from user-supplied document_path
+        # influencing the temp file path expression (CWE-22).
+        raw_suffix = Path(document_path).suffix.lower()
+        suffix = raw_suffix if raw_suffix in _ALLOWED_SUFFIXES else ".tmp"
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
             local_doc = tmp.name
         local_doc = self.storage.download_document(document_path, local_doc)
