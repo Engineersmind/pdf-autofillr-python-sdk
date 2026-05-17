@@ -1,2 +1,56 @@
-# Default reviewers for all files
-* @EM-ShreyashGondane @EM-RaghavaMahanthi
+# CODEOWNERS — pdf-autofillr-python-sdk
+#
+# Each line defines who must review changes to that path.
+# Rules are evaluated top to bottom — last match wins.
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Global fallback — all changes require review from at least one maintainer
+# ──────────────────────────────────────────────────────────────────────────────
+* @Engineersmind @EM-ShreyashGondane @EM-RaghavaMahanthi @EM-DewaangMathur
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Packages — core engine and all sub-packages
+# ──────────────────────────────────────────────────────────────────────────────
+/packages/mapper/          @Engineersmind @EM-ShreyashGondane @EM-RaghavaMahanthi @EM-DewaangMathur
+/packages/chatbot/         @Engineersmind @EM-ShreyashGondane @EM-RaghavaMahanthi @EM-DewaangMathur
+/packages/doc_upload/      @Engineersmind @EM-ShreyashGondane @EM-RaghavaMahanthi @EM-DewaangMathur
+/packages/rag/             @Engineersmind @EM-ShreyashGondane @EM-RaghavaMahanthi @EM-DewaangMathur
+/packages/pdf_autofillr/   @Engineersmind @EM-ShreyashGondane @EM-RaghavaMahanthi @EM-DewaangMathur
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Plugins
+# ──────────────────────────────────────────────────────────────────────────────
+/plugins/                  @Engineersmind @EM-ShreyashGondane @EM-RaghavaMahanthi @EM-DewaangMathur
+
+# ──────────────────────────────────────────────────────────────────────────────
+# CI/CD and workflows — changes here affect every release and deployment
+# ──────────────────────────────────────────────────────────────────────────────
+/.github/workflows/        @Engineersmind @EM-DewaangMathur @EM-ShreyashGondane
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Security-sensitive files — require org owner sign-off
+# ──────────────────────────────────────────────────────────────────────────────
+SECURITY.md                @Engineersmind
+/.github/CODEOWNERS        @Engineersmind
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Repo health and governance
+# ──────────────────────────────────────────────────────────────────────────────
+CONTRIBUTING.md            @Engineersmind @EM-ShreyashGondane
+CONTRIBUTING_DEV.md        @Engineersmind @EM-ShreyashGondane @EM-DewaangMathur
+CHANGELOG.md               @Engineersmind @EM-ShreyashGondane @EM-RaghavaMahanthi @EM-DewaangMathur
+LICENSE                    @Engineersmind
+README.md                  @Engineersmind @EM-ShreyashGondane @EM-RaghavaMahanthi @EM-DewaangMathur
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Deployment and Docker
+# ──────────────────────────────────────────────────────────────────────────────
+/deployment/               @Engineersmind @EM-DewaangMathur @EM-ShreyashGondane
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Docs and examples — any maintainer can approve
+# ──────────────────────────────────────────────────────────────────────────────
+/docs/                     @EM-ShreyashGondane @EM-RaghavaMahanthi @EM-DewaangMathur
+/examples/                 @EM-ShreyashGondane @EM-RaghavaMahanthi @EM-DewaangMathur
+/benchmarks/               @EM-ShreyashGondane @EM-RaghavaMahanthi @EM-DewaangMathur
