@@ -1,4 +1,4 @@
-# extractor/entrypoints/gcp_function.py
+# src/pdf_autofillr_doc_upload/entrypoints/gcp_function.py
 """
 GCP Cloud Functions entrypoint.
 
@@ -74,7 +74,8 @@ def handler(request):
                             "fields": len(result["output_flat"])}, default=str),
                 200, {"Content-Type": "application/json"})
 
-    except Exception as e:
+    except Exception:
+        # Log full exception server-side only — never expose stack trace to caller
         logger.exception("GCP handler error")
-        return (json.dumps({"status": "failed", "error": str(e)}),
+        return (json.dumps({"status": "failed", "error": "Internal server error"}),
                 500, {"Content-Type": "application/json"})

@@ -62,11 +62,12 @@ from pdf_autofillr_doc_upload.telemetry.config import TelemetryConfig
 # Allowed extensions for post-download rename.
 # Used only to restore the correct extension on the temp file so the
 # extractor can detect the format — user input never reaches NamedTemporaryFile (CWE-22).
-_ALLOWED_EXTENSIONS = {
-    ".pdf", ".docx", ".doc", ".pptx", ".ppt",
-    ".xlsx", ".xls", ".csv", ".tsv",
-    ".json", ".txt", ".md", ".markdown", ".html", ".htm", ".xml",
-}
+
+# _ALLOWED_EXTENSIONS = {
+#     ".pdf", ".docx", ".doc", ".pptx", ".ppt",
+#     ".xlsx", ".xls", ".csv", ".tsv",
+#     ".json", ".txt", ".md", ".markdown", ".html", ".htm", ".xml",
+# }
 
 
 class DocUploadClient:
@@ -201,18 +202,51 @@ class DocUploadClient:
         schema = self.storage.load_schema(schema_path)
         logger.log(f"✅ Schema loaded ({len(schema)} top-level keys)")
 
+        # CHANGED: Updated Step 2 to use a whitelist dict for extension mapping instead of direct user input, to further reduce any risk of CWE-22. The user-supplied extension is only used as a key to look up a hardcoded safe extension value from the dict, which is what gets written to disk.
+
+        # ── Step 2: Download / locate document ──────────────────────
+        # logger.log("\n── Step 2: Locate document ──")
+        # # Create temp file with neutral suffix — user input never touches
+        # # NamedTemporaryFile directly (CWE-22). After download, rename using
+        # # a sanitized copy of the original extension (basename only, whitelist-
+        # # checked) so the extractor can detect the file format correctly.
+        # with tempfile.NamedTemporaryFile(delete=False, suffix=".tmp") as tmp:
+        #     tmp_path = tmp.name
+        # local_doc = self.storage.download_document(document_path, tmp_path)
+        # raw_ext = Path(os.path.basename(document_path)).suffix.lower()
+        # if raw_ext in _ALLOWED_EXTENSIONS:
+        #     renamed = tmp_path[:-4] + raw_ext  # replace .tmp with correct ext
+        #     os.rename(local_doc, renamed)
+        #     local_doc = renamed
+        # logger.log(f"✅ Document ready at: {local_doc}")
+
+        # CHANGED: Updated Step 2 to use a whitelist dict for extension mapping instead of direct user input, to further reduce any risk of CWE-22. The user-supplied extension is only used as a key to look up a hardcoded safe extension value from the dict, which is what gets written to disk.
+
         # ── Step 2: Download / locate document ──────────────────────
         logger.log("\n── Step 2: Locate document ──")
         # Create temp file with neutral suffix — user input never touches
-        # NamedTemporaryFile directly (CWE-22). After download, rename using
-        # a sanitized copy of the original extension (basename only, whitelist-
-        # checked) so the extractor can detect the file format correctly.
+        # NamedTemporaryFile or any rename path (CWE-22).
+        # Extension is looked up from a hardcoded whitelist using the
+        # user-supplied value only as a key — the value written to disk
+        # comes from the whitelist dict, not from user input.
+        _EXT_MAP = {
+            ".pdf": ".pdf", ".docx": ".docx", ".doc": ".doc",
+            ".pptx": ".pptx", ".ppt": ".ppt",
+            ".xlsx": ".xlsx", ".xls": ".xls",
+            ".csv": ".csv", ".tsv": ".tsv",
+            ".json": ".json", ".txt": ".txt",
+            ".md": ".md", ".markdown": ".markdown",
+            ".html": ".html", ".htm": ".htm", ".xml": ".xml",
+        }
         with tempfile.NamedTemporaryFile(delete=False, suffix=".tmp") as tmp:
             tmp_path = tmp.name
         local_doc = self.storage.download_document(document_path, tmp_path)
-        raw_ext = Path(os.path.basename(document_path)).suffix.lower()
-        if raw_ext in _ALLOWED_EXTENSIONS:
-            renamed = tmp_path[:-4] + raw_ext  # replace .tmp with correct ext
+        # Look up extension from whitelist — value is always a hardcoded
+        # string literal from the dict, never the user-supplied input itself.
+        key = Path(os.path.basename(document_path)).suffix.lower()
+        safe_ext = _EXT_MAP.get(key)  # None if not in whitelist
+        if safe_ext is not None:
+            renamed = tmp_path[:-4] + safe_ext
             os.rename(local_doc, renamed)
             local_doc = renamed
         logger.log(f"✅ Document ready at: {local_doc}")
