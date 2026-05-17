@@ -83,7 +83,13 @@ def _make_response(status: int, body: dict):
     proper Flask Response via flask.make_response.
     In tests / local: no app context exists, so we return a plain dict.
     """
-    payload = json.dumps(body, default=str)
+    # Serialise body — if serialisation fails, fall back to generic error.
+    # No exception detail from caller should reach the response body.
+    try:
+        payload = json.dumps(body, default=str)
+    except Exception:
+        payload = '{"error": "Internal server error"}'
+        status = 500
     try:
         from flask import make_response as flask_make_response
         resp = flask_make_response(payload, status)
@@ -142,7 +148,7 @@ def main(request: Any) -> Any:
 
     except (KeyError, ValueError) as e:
         logger.warning("Bad request: %s", e)
-        return _make_response(400, {"error": str(e)})
+        return _make_response(400, {"error": "Bad request"})
     except Exception:
         # Log full exception server-side only — never expose stack trace to caller
         logger.exception("Unhandled GCP Function error")
