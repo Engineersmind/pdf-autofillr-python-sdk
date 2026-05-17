@@ -1,18 +1,15 @@
-# chatbot/handlers/base_handler.py
+# chatbot/src/chatbot/handlers/base_handler.py
 """
 BaseHandler — abstract class all state handlers extend.
 """
-
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import Optional, Tuple
 
 from chatbot.core.states import State
+from chatbot.core.protocols import EngineProtocol
 from chatbot.logging.debug_logger import DebugLogger
-
-if TYPE_CHECKING:
-    from chatbot.core.engine import ConversationEngine
 
 
 class BaseHandler(ABC):
@@ -23,7 +20,7 @@ class BaseHandler(ABC):
     and returns (response_text, next_state).
     """
 
-    def __init__(self, engine: "ConversationEngine"):
+    def __init__(self, engine: EngineProtocol):
         self.engine = engine
         self.storage = engine.storage
         self.form_config = engine.form_config
