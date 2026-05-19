@@ -88,3 +88,8 @@ packages/rag/data/vectors/vector_database.json
 # ======================
 packages/*/.github/
 packages/rag/.github/
+
+# ======================
+# Local secrets — never commit
+# ======================
+pat.txt
