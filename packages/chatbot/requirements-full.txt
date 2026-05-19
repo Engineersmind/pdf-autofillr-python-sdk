@@ -1,7 +1,7 @@
 # Full dependency set — used by Docker image
 # Installs everything: core + API server + S3 + mapper
 
-langchain-openai>=0.2.0
+langchain-openai>=1.2.1
 langchain-core>=0.3.0
 fuzzywuzzy>=0.18.0
 python-levenshtein>=0.12.0
