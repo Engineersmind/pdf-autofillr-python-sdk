@@ -28,7 +28,7 @@ jobs:
           java-version: "17"
       - run: pip install -e ".[dev]"
       - run: pytest tests/ --tb=short --cov=src/pdf_autofillr_mapper --cov-report=xml -q
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: mapper-coverage-py${{ matrix.python-version }}
@@ -51,7 +51,7 @@ jobs:
           cache: pip
       - run: pip install -e ".[dev]"
       - run: pytest tests/ --tb=short --cov=src/chatbot --cov-report=xml -q
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: chatbot-coverage-py${{ matrix.python-version }}
@@ -74,7 +74,7 @@ jobs:
           cache: pip
       - run: pip install -e ".[dev]"
       - run: pytest tests/ --tb=short --cov=src/pdf_autofillr_doc_upload --cov-report=xml -q
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: doc-upload-coverage-py${{ matrix.python-version }}
@@ -97,7 +97,7 @@ jobs:
           cache: pip
       - run: pip install -e ".[dev]"
       - run: pytest tests/unit/ --tb=short --cov=src/ragpdf --cov-report=xml -q
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: rag-coverage-py${{ matrix.python-version }}
