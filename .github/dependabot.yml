@@ -2,6 +2,9 @@ version: 2
 updates:
 
   # ── Python dependencies ───────────────────────────────────────────
+  # Minor and patch bumps held back until compatibility reviewed.
+  # Security patches (major vulnerability fixes) are allowed through.
+
   - package-ecosystem: "pip"
     directory: "/packages/mapper"
     schedule:
@@ -11,7 +14,7 @@ updates:
     open-pull-requests-limit: 5
     ignore:
       - dependency-name: "*"
-        versions: ["*"]
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
 
   - package-ecosystem: "pip"
     directory: "/packages/chatbot"
@@ -22,7 +25,7 @@ updates:
     open-pull-requests-limit: 5
     ignore:
       - dependency-name: "*"
-        versions: ["*"]
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
 
   - package-ecosystem: "pip"
     directory: "/packages/doc_upload"
@@ -33,7 +36,7 @@ updates:
     open-pull-requests-limit: 5
     ignore:
       - dependency-name: "*"
-        versions: ["*"]
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
 
   - package-ecosystem: "pip"
     directory: "/packages/rag"
@@ -44,7 +47,7 @@ updates:
     open-pull-requests-limit: 5
     ignore:
       - dependency-name: "*"
-        versions: ["*"]
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
 
   - package-ecosystem: "pip"
     directory: "/packages/pdf_autofillr"
@@ -55,7 +58,7 @@ updates:
     open-pull-requests-limit: 5
     ignore:
       - dependency-name: "*"
-        versions: ["*"]
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
 
   # ── GitHub Actions ────────────────────────────────────────────────
   - package-ecosystem: "github-actions"

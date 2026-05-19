@@ -167,5 +167,5 @@ jobs:
           fi
 
           git commit -m "chore/changelog: update root CHANGELOG for ${{ steps.resolve.outputs.tag }}"
-          git push origin HEAD:main
+          git push https://x-access-token:${{ secrets.CHANGELOG_BOT_TOKEN }}@github.com/${{ github.repository }} HEAD:main
           echo "✅ Committed and pushed CHANGELOG update."

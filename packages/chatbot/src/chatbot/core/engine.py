@@ -116,14 +116,24 @@ class ConversationEngine:
 
         session_complete = session["state"] == State.COMPLETE.value
 
-        self.telemetry.track_state_transition(
-            from_state=state.value,
-            to_state=session["state"],
-            turn_number=len(session.get("conversation_log", [])),
-            latency=time.time() - start,
-            user_id=user_id,
-            session_id=session_id,
-        )
+        # self.telemetry.track_state_transition(
+        #     from_state=state.value,
+        #     to_state=session["state"],
+        #     turn_number=len(session.get("conversation_log", [])),
+        #     latency=time.time() - start,
+        #     user_id=user_id,
+        #     session_id=session_id,
+        # )
+
+        if self.telemetry:
+            self.telemetry.track_state_transition(
+                from_state=state.value,
+                to_state=session["state"],
+                turn_number=len(session.get("conversation_log", [])),
+                latency=time.time() - start,
+                user_id=user_id,
+                session_id=session_id,
+            )
 
         if session_complete:
             self._finalise_session(user_id, session_id, session, debug)

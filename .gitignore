@@ -70,3 +70,21 @@ z_useful_cmds.sh
 TODO.md
 BRANCHING.md
 REFACTORING_SUMMARY.md
+
+
+# ======================
+# Claude Code workspace — never commit
+# ======================
+.claude/
+
+# ======================
+# RAG runtime artifacts — produced by live inference, not fixtures
+# ======================
+packages/rag/data/predictions/
+packages/rag/data/vectors/vector_database.json
+
+# ======================
+# Nested .github inside packages — GitHub ignores these anyway
+# ======================
+packages/*/.github/
+packages/rag/.github/
