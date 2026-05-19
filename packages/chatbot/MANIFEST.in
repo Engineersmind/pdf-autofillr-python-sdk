@@ -1,0 +1,5 @@
+recursive-include config_samples *.json *.md
+include .env.example
+include README.md
+include LICENSE
+include USAGE.md

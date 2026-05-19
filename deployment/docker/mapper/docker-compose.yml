@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  mapper:
+    build:
+      context: ../../..
+      dockerfile: deployment/docker/mapper/Dockerfile
+    container_name: pdf-autofillr-mapper
+    ports:
+      - "8000:8000"
+    env_file: .env
+    volumes:
+      - ./data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped

@@ -1,0 +1,173 @@
+{
+  "investor_type_id": "text",
+  "investor_full_legal_name_id": "text",
+    "investor_type": {
+    "_type": "group",
+    "individual_check": "boolean",
+    "partnership_check": "boolean",
+    "corporation_check": "boolean",
+    "llc_check": "boolean",
+    "trust_check": "boolean",
+    "nonprofit_check": "boolean",
+    "fund_fund_of_funds_check": "boolean",
+    "ira_check": "boolean",
+    "government_check": "boolean",
+    "education_institution_check": "boolean"
+  },
+
+  "address_registered": {
+    "_type": "group",
+    "address_registered_line1_id": "text",
+    "address_registered_line2_id": "text",
+    "address_registered_city_id": "text",
+    "address_registered_state_id": "text",
+    "address_registered_country_id": "text",
+    "address_registered_zip_id": "text"
+  },
+
+  "address_mailing": {
+    "_type": "group",
+    "address_mailing_line1_id": "text",
+    "address_mailing_line2_id": "text",
+    "address_mailing_city_id": "text",
+    "address_mailing_state_id": "text",
+    "address_mailing_country_id": "text",
+    "address_mailing_zip_id": "text"
+  },
+
+  "address_jurisdiction": {
+    "_type": "group",
+      "address_jurisdiction_line1_id": "text",
+      "address_jurisdiction_line2_id": "text",
+      "address_jurisdiction_city_id": "text",
+      "address_jurisdiction_state_id": "text",
+      "address_jurisdiction_country_id": "text",
+      "address_jurisdiction_zip_id": "text"
+  },
+
+  "investor_ein_tax_id": "text",
+  "investor_ssn_id": "text",
+  "investor_telephone_id": "text",
+  "investor_telephone_country_code_id": "text",
+  "investor_telephone_part_1_id": "text",
+  "investor_telephone_part_2_id": "text",
+  "investor_telephone_part_3_id": "text",
+  "investor_fax_id": "text",
+  "investor_fax_part_1_id": "text",
+  "investor_fax_part_2_id": "text",
+  "investor_fax_part_3_id": "text",
+  "investor_email_id": "text",
+
+  "form_pf": {
+    "_type": "group",
+    "form_pf_non_individual_investment_company_check": "boolean",
+    "form_pf_non_individual_private_fund_check": "boolean",
+    "form_pf_non_individual_banking_or_thrift_institution_check": "boolean",
+    "form_pf_non_individual_non_profit_organization_check": "boolean",
+    "form_pf_non_individual_sovereign_wealth_fund_or_foreign_official_institution_check": "boolean",
+    "form_pf_non_individual_government_entity_check": "boolean",
+    "form_pf_non_individual_government_pension_plan_check": "boolean",
+    "form_pf_non_individual_pension_plan_check": "boolean",
+    "form_pf_individual_us_person_check": "boolean",
+    "form_pf_individual_non_us_person_check": "boolean"
+  },
+
+  "investor_date_of_birth_id": "date",
+  "inception_date_id": "date",
+
+  "entity_representative": {
+    "_type": "group",
+    "entity_representative_name_id": "text",
+    "entity_representative_title_id": "text",
+    "entity_representative_email_id": "text"
+  },
+
+  "co_investor": {
+    "_type": "group",
+    "co_investor_name_id": "text",
+    "co_investor_email_id": "text",
+    "co_investor_dob_id": "date"
+  },
+
+  "investor_occupation_id": "text",
+  "nature_of_business_id": "text",
+  "principal_place_of_business_id": "text",
+  "domicile_or_country_of_incorporation_id": "text",
+  "point_of_contact_information_id": "text",
+
+  "wiring_details": {
+    "_type": "group",
+    "wiring_details_bank_name_id": "text",
+    "wiring_details_account_name_id": "text",
+    "wiring_details_account_number_id": "text",
+    "wiring_details_aba_or_chips_number_id": "text",
+    "wiring_details_iban_id": "text",
+    "wiring_details_swift_code_id": "text",
+    "wiring_details_for_further_credit_id": "text",
+    "wiring_details_bank_in_fatf_country_check": "boolean",
+
+    "wiring_address": {
+      "_type": "group",
+      "wiring_details_address_line1_id": "text",
+      "wiring_details_address_line2_id": "text",
+      "wiring_details_address_city_id": "text",
+      "wiring_details_address_state_id": "text",
+      "wiring_details_address_country_id": "text",
+      "wiring_details_address_zip_id": "text"
+    }
+  },
+
+  "authorized_signatory_id": "text",
+  "commitment_amount_id": "text",
+  "pep_check": "boolean",
+  "currency_id": "text",
+  "minimum_investment_amount_id": "text",
+  "restricted_domicile_check": "boolean",
+  "aml_kyc_clearance_check": "boolean",
+
+  "directors_ids": "text",
+  "joint_owner_ids": "text",
+  "managing_partners_ids": "text",
+  "managing_director_ids": "text",
+  "trustees_ids": "text",
+  "beneficial_owners_ids": "text",
+
+  "share_class": {
+    "_type": "group",
+    "share_class_ordinary_common_check": "boolean",
+    "share_class_preferred_check": "boolean",
+    "share_class_class_a_check": "boolean",
+    "share_class_class_b_check": "boolean",
+    "share_class_class_c_check": "boolean",
+    "share_class_class_d_check": "boolean",
+    "share_class_class_e_check": "boolean",
+    "share_class_class_f_check": "boolean",
+    "share_class_non_voting_check": "boolean",
+    "share_class_founders_check": "boolean",
+    "share_class_employee_esop_check": "boolean",
+    "share_class_deferred_check": "boolean",
+    "share_class_growth_check": "boolean"
+  },
+
+  "investor_eligibility": {
+    "_type": "group",
+    "investor_eligibility_us_person_check": "boolean",
+    "investor_eligibility_accredited_investor_check": "boolean",
+    "investor_eligibility_qualified_client_check": "boolean",
+    "investor_eligibility_erisa_check": "boolean",
+    "investor_eligibility_qualified_purchaser_check": "boolean",
+    "investor_eligibility_restricted_check": "boolean",
+    "investor_eligibility_finra_new_issue_eligibility_check": "boolean"
+  },
+
+  "custodian_details": {
+    "_type": "group",
+    "custodian_details_custodian_name_id": "text",
+    "custodian_details_account_number_id": "text",
+    "custodian_details_email_id": "text",
+    "custodian_details_phone_id": "text",
+    "custodian_details_swift_code_id": "text"
+  },
+
+  "self_certification_check": "boolean"
+}

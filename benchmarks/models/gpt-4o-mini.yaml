@@ -1,0 +1,12 @@
+name: gpt-4o-mini
+provider: openai
+litellm_model: gpt-4o-mini
+context_window: 128000
+pricing:
+  input_per_1m_tokens: 0.15
+  output_per_1m_tokens: 0.60
+env_key: OPENAI_API_KEY
+local: false
+notes: >
+  Best cost/accuracy tradeoff for OpenAI. Recommended default for benchmarking
+  when budget is a concern.

@@ -1,0 +1,12 @@
+name: gpt-4o
+provider: openai
+litellm_model: gpt-4o
+context_window: 128000
+pricing:
+  input_per_1m_tokens: 2.50
+  output_per_1m_tokens: 10.00
+env_key: OPENAI_API_KEY
+local: false
+notes: >
+  Highest accuracy. Best for complex, dense forms (financial, legal).
+  Use gpt-4o-mini for cost-sensitive benchmarks.

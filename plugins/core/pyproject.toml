@@ -1,0 +1,81 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pdf-autofiller-core"
+version = "1.0.0"
+description = "Core shared interfaces and utilities for PDF Autofiller modules"
+readme = "README.md"
+authors = [
+    {name = "Engineersmind", email = "team@engineersmind.com"}
+]
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries",
+]
+keywords = ["pdf", "autofiller", "core", "interfaces", "utilities"]
+requires-python = ">=3.9"
+
+# NO dependencies - only abstract interfaces!
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.12.0",
+    "flake8>=7.0.0",
+    "mypy>=1.8.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Engineersmind/pdf-autofillr"
+Repository = "https://github.com/Engineersmind/pdf-autofillr"
+Documentation = "https://github.com/Engineersmind/pdf-autofillr/tree/main/docs"
+Issues = "https://github.com/Engineersmind/pdf-autofillr/issues"
+
+[tool.setuptools]
+packages = ["pdf_autofiller_core"]
+
+[tool.setuptools.packages.find]
+include = ["pdf_autofiller_core*"]
+
+# =============================================================================
+# Black - Code Formatter
+# =============================================================================
+[tool.black]
+line-length = 100
+target-version = ['py39', 'py310', 'py311']
+
+# =============================================================================
+# isort - Import Sorter
+# =============================================================================
+[tool.isort]
+profile = "black"
+line_length = 100
+
+# =============================================================================
+# pytest - Testing Framework
+# =============================================================================
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = ["-v", "--strict-markers"]
+
+# =============================================================================
+# mypy - Static Type Checker
+# =============================================================================
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true

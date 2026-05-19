@@ -1,0 +1,69 @@
+{
+  "level": "pdf_hash",
+  "identifier": "openai_feedback_test_hash",
+  "entries": [
+    {
+      "timestamp": "2026-03-25T21:53:16.450558Z",
+      "submission_id": "openai_fb_user_openai_fb_session_openai_fb_pdf_1_1774455795",
+      "user_id": "openai_fb_user",
+      "session_id": "openai_fb_session",
+      "pdf_id": "openai_fb_pdf",
+      "metrics": {
+        "total_fields": 12,
+        "predicted_llm": 12,
+        "predicted_rag": 12,
+        "predicted_ensemble": 12,
+        "coverage_llm": 1.0,
+        "coverage_rag": 1.0,
+        "coverage_ensemble": 1.0,
+        "accuracy_llm": 1.0,
+        "accuracy_rag": 1.0,
+        "accuracy_ensemble": 1.0,
+        "avg_conf_llm": 0.8908,
+        "avg_conf_rag": 1.0,
+        "avg_conf_ensemble": 0.9175,
+        "agreement_rate": 1.0,
+        "conflict_rate": 0.0,
+        "rag_recovery": 0.0,
+        "llm_recovery": 0.0,
+        "errors_llm": 0,
+        "errors_rag": 0,
+        "errors_ensemble": 0
+      }
+    },
+    {
+      "timestamp": "2026-03-25T21:53:27.895683Z",
+      "submission_id": "openai_fb_user_openai_fb_session_openai_fb_pdf_1_1774455795",
+      "user_id": "openai_fb_user",
+      "session_id": "openai_fb_session",
+      "pdf_id": "openai_fb_pdf",
+      "metrics": {
+        "total_fields": 12,
+        "predicted_llm": 12,
+        "predicted_rag": 12,
+        "predicted_ensemble": 12,
+        "coverage_llm": 1.0,
+        "coverage_rag": 1.0,
+        "coverage_ensemble": 1.0,
+        "accuracy_llm": 0.9167,
+        "accuracy_rag": 0.9167,
+        "accuracy_ensemble": 0.8333,
+        "avg_conf_llm": 0.8908,
+        "avg_conf_rag": 1.0,
+        "avg_conf_ensemble": 0.9175,
+        "agreement_rate": 1.0,
+        "conflict_rate": 0.0,
+        "rag_recovery": 0.0,
+        "llm_recovery": 0.0,
+        "errors_llm": 1,
+        "errors_rag": 1,
+        "errors_ensemble": 2
+      }
+    }
+  ],
+  "metadata": {
+    "total_entries": 2,
+    "first_entry": "2026-03-25T21:53:16.450558Z",
+    "last_entry": "2026-03-25T21:53:27.895683Z"
+  }
+}

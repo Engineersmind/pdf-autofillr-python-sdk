@@ -1,0 +1,34 @@
+# Dockerfile.lambda
+# Builds an AWS Lambda container image.
+# Push to ECR and set handler: ragpdf.entrypoints.aws_lambda.lambda_handler
+
+FROM public.ecr.aws/lambda/python:3.11
+
+WORKDIR ${LAMBDA_TASK_ROOT}
+
+# Install build deps (Lambda base is Amazon Linux 2)
+RUN yum install -y gcc gcc-c++ && yum clean all
+
+# Copy and install the package
+# Context is the project root (passed via docker build -f docker/Dockerfile.lambda .)
+COPY pyproject.toml .
+COPY src/ src/
+
+# Lambda needs flat install into task root — no editable install
+RUN pip install --upgrade pip \
+ && pip install ".[transformers]" --target "${LAMBDA_TASK_ROOT}"
+
+# The source package itself
+COPY src/ragpdf/ ${LAMBDA_TASK_ROOT}/ragpdf/
+
+# Lambda env vars — override all of these in the Lambda console or SAM/CDK config
+ENV RAGPDF_STORAGE=s3 \
+    RAGPDF_VECTOR_STORE=s3 \
+    RAGPDF_EMBEDDING_BACKEND=sentence_transformer \
+    RAGPDF_ST_MODEL=all-MiniLM-L6-v2 \
+    RAGPDF_CORRECTOR_BACKEND=noop \
+    RAGPDF_LOG_LEVEL=INFO \
+    PYTHONUNBUFFERED=1
+
+# Handler: module.function
+CMD ["ragpdf.entrypoints.aws_lambda.lambda_handler"]

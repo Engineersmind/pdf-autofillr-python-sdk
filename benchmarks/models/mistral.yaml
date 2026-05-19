@@ -1,0 +1,15 @@
+name: mistral
+provider: Mistral AI (via Ollama)
+litellm_model: ollama/mistral
+context_window: 32000
+pricing:
+  input_per_1m_tokens: 0.0
+  output_per_1m_tokens: 0.0
+env_key: null
+local: true
+setup: >
+  Install Ollama: https://ollama.ai/download
+  Pull model: ollama pull mistral
+notes: >
+  Free, runs locally. Smaller context window than llama3.1 — may struggle with
+  very long forms. Good baseline for local model comparison.

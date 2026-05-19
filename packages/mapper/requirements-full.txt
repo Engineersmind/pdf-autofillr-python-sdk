@@ -1,0 +1,11 @@
+# All optional extras
+# pip install pdf-autofillr-mapper[all]
+-r requirements.txt
+-r requirements-api.txt
+-r requirements-aws.txt
+boto3>=1.34.34
+botocore>=1.34.34
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+black>=23.12.0

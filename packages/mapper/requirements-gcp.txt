@@ -1,0 +1,4 @@
+# GCP requirements
+# pip install pdf-autofillr-mapper[gcp]
+google-cloud-storage>=2.14.0
+functions-framework>=3.5.0

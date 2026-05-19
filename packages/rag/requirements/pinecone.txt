@@ -1,0 +1,2 @@
+-r base.txt
+pinecone-client>=3.0.0
