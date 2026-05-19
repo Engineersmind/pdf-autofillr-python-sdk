@@ -55,9 +55,12 @@ jobs:
           echo "version=$V"      >> $GITHUB_OUTPUT
 
   test:
-    name: Test ${{ needs.resolve.outputs.package_name }}
+    name: Test ${{ needs.resolve.outputs.package_name }} / Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     needs: resolve
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
     defaults:
       run:
         working-directory: ${{ needs.resolve.outputs.package_dir }}
@@ -65,7 +68,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
           cache: pip
       - name: Java (mapper only)
         if: startsWith(github.ref_name, 'mapper-v')
