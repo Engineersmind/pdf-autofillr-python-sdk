@@ -8,6 +8,7 @@ name: PR Conventions
 #
 # Allowed types: feature, fix, bug, docs, test, chore, perf
 # Blocks merge if any check fails.
+# Dependabot PRs are exempt — all 4 jobs are skipped automatically.
 
 on:
   pull_request:
@@ -18,6 +19,7 @@ jobs:
   validate-branch:
     name: Branch name
     runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
     steps:
       - name: Check branch naming convention
         run: |
@@ -44,6 +46,7 @@ jobs:
   validate-commits:
     name: Commit messages
     runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -100,6 +103,7 @@ jobs:
   validate-pr-title:
     name: PR title
     runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
     steps:
       - name: Check PR title follows commit convention
         run: |
@@ -126,6 +130,7 @@ jobs:
   validate-changelog:
     name: Package CHANGELOG updated
     runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
     steps:
       - uses: actions/checkout@v4
         with:

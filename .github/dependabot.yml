@@ -12,6 +12,10 @@ updates:
       day: "monday"
     labels: ["dependencies", "mapper"]
     open-pull-requests-limit: 5
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-minor", "version-update:semver-patch"]
@@ -23,6 +27,10 @@ updates:
       day: "monday"
     labels: ["dependencies", "chatbot"]
     open-pull-requests-limit: 5
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-minor", "version-update:semver-patch"]
@@ -34,6 +42,10 @@ updates:
       day: "monday"
     labels: ["dependencies", "doc-upload"]
     open-pull-requests-limit: 5
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-minor", "version-update:semver-patch"]
@@ -45,6 +57,10 @@ updates:
       day: "monday"
     labels: ["dependencies", "rag"]
     open-pull-requests-limit: 5
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-minor", "version-update:semver-patch"]
@@ -56,6 +72,10 @@ updates:
       day: "monday"
     labels: ["dependencies", "umbrella"]
     open-pull-requests-limit: 5
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-minor", "version-update:semver-patch"]
@@ -68,3 +88,7 @@ updates:
       day: "monday"
     labels: ["dependencies", "github-actions"]
     open-pull-requests-limit: 5
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
