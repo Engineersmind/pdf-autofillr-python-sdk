@@ -170,3 +170,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide and release process.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Testing Demo
+
+Contribution walkthrough demo added by [@dewaangmathur](https://github.com/dewaangmathur) — see [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide.
