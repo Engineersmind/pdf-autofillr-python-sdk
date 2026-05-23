@@ -1,5 +1,10 @@
 # Changelog — pdf-autofillr-mapper
 
+## [1.0.10] - 2026-05-23
+
+### Changed
+- Remove commented-out legacy `UnifiedLLMClient` implementation from `unified_llm_client.py`
+
 ## [1.0.10] - 2026-05-16
 
 ### Fixed
