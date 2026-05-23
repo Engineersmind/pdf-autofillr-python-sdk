@@ -8,7 +8,8 @@
 [![PyPI](https://img.shields.io/pypi/v/pdf-autofillr)](https://pypi.org/project/pdf-autofillr/)
 [![Python](https://img.shields.io/pypi/pyversions/pdf-autofillr)](https://pypi.org/project/pdf-autofillr/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://github.com/Engineersmind/pdf-autofillr/actions/workflows/tests.yml/badge.svg)](https://github.com/Engineersmind/pdf-autofillr/actions/workflows/tests.yml)
+[![Tests](https://github.com/EngineersMind/pdf-autofillr-python-sdk/actions/workflows/tests.yml/badge.svg)](https://github.com/EngineersMind/pdf-autofillr-python-sdk/actions/workflows/tests.yml)
+[![Platform](https://img.shields.io/badge/platform-pdffillr.ai-blue)](https://pdffillr.ai)
 
 [**Quick Start**](#quick-start) · [**Packages**](#packages) · [**Docs**](docs/) · [**Plugins**](plugins/) · [**Benchmarks**](benchmarks/)
 
