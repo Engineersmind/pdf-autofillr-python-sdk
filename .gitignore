@@ -93,3 +93,8 @@ packages/rag/.github/
 # Local secrets — never commit
 # ======================
 pat.txt
+
+# ======================
+# OLD LEGACY CODE — not used, but keeping for reference until we decide to delete
+# ======================
+packages/mapper/pdf_autofillr_mapper-1.0.9/
