@@ -29,7 +29,7 @@
 /.github/workflows/        @EM-ShreyashGondane @EM-RaghavaMahanthi @EM-DewaangMathur
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Security-sensitive files — require org owner sign-off
+# Security-sensitive files — require maintainer sign-off
 # ──────────────────────────────────────────────────────────────────────────────
 SECURITY.md                @EM-ShreyashGondane @EM-RaghavaMahanthi @EM-DewaangMathur
 /.github/CODEOWNERS        @EM-ShreyashGondane @EM-RaghavaMahanthi @EM-DewaangMathur
