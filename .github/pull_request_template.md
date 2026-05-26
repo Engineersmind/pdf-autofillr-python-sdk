@@ -1,3 +1,7 @@
+> **Dependabot PR?** Skip the checklist — verify CI is green, review the diff, then merge.
+
+---
+
 ## Description
 <!-- What does this PR do? Be specific. -->
 
