@@ -17,7 +17,7 @@ import shutil
 import time
 from typing import Any, Optional
 
-from packages.mapper.src.pdf_autofillr_mapper.storage import storage_config
+# from packages.mapper.src.pdf_autofillr_mapper.storage import storage_config
 
 from pdf_autofillr_mapper.core.config import get_complete_file_config
 from pdf_autofillr_mapper.embedders.embed_keys import run_embed_java_stage
