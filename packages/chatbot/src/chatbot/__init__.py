@@ -2,15 +2,16 @@
 """
 pdf-autofillr-chatbot SDK
 """
+
 from chatbot.client import chatbotClient
-from chatbot.storage.local_storage import LocalStorage
-from chatbot.storage.s3_storage import S3Storage
-from chatbot.storage.gcp_storage import GCSStorage
-from chatbot.storage.azure_storage import AzureStorage
 from chatbot.config.form_config import FormConfig
+from chatbot.pdf.fill_report import FillReport
 from chatbot.pdf.interface import PDFFillerInterface
 from chatbot.pdf.mapper_filler import MapperPDFFiller
-from chatbot.pdf.fill_report import FillReport
+from chatbot.storage.azure_storage import AzureStorage
+from chatbot.storage.gcp_storage import GCSStorage
+from chatbot.storage.local_storage import LocalStorage
+from chatbot.storage.s3_storage import S3Storage
 
 __version__ = "0.3.0"
 
@@ -39,7 +40,9 @@ def copy_sample_configs(destination: str = ".") -> None:
     if not src.exists():
         src = Path(__file__).parent.parent.parent / "config_samples"
     if not src.exists():
-        raise FileNotFoundError(f"config_samples not found at {src}. Reinstall the package.")
+        raise FileNotFoundError(
+            f"config_samples not found at {src}. Reinstall the package."
+        )
 
     dst = Path(destination) / "configs"
     shutil.copytree(str(src), str(dst), dirs_exist_ok=True)
@@ -47,6 +50,7 @@ def copy_sample_configs(destination: str = ".") -> None:
 
     try:
         import pdf_autofillr_mapper
+
         pdf_autofillr_mapper.copy_sample_configs(destination)
         print("✅ Mapper config (mapper_config.ini) also copied.")
     except ImportError:
@@ -54,14 +58,20 @@ def copy_sample_configs(destination: str = ".") -> None:
     except Exception as e:
         print(f"   Note: could not copy mapper config: {e}")
 
-    print("\n   Edit files in configs/ to customise your form fields and mapper settings.")
+    print(
+        "\n   Edit files in configs/ to customise your form fields and mapper settings."
+    )
 
 
 __all__ = [
     "chatbotClient",
-    "LocalStorage", "S3Storage", "GCSStorage", "AzureStorage",
+    "LocalStorage",
+    "S3Storage",
+    "GCSStorage",
+    "AzureStorage",
     "FormConfig",
-    "PDFFillerInterface", "MapperPDFFiller",
+    "PDFFillerInterface",
+    "MapperPDFFiller",
     "FillReport",
     "copy_sample_configs",
 ]

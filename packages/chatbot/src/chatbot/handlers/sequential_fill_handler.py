@@ -1,9 +1,10 @@
 # chatbot/handlers/sequential_fill_handler.py
 from __future__ import annotations
+
 from chatbot.core.states import State
 from chatbot.handlers.base_handler import BaseHandler
 from chatbot.utils.field_utils import format_field_name
-from chatbot.utils.intent_detection import is_skip_intent, is_affirmative, is_negative
+from chatbot.utils.intent_detection import is_affirmative, is_negative, is_skip_intent
 from chatbot.validation.field_validator import validate_field
 from chatbot.validation.phone_validator import validate_phone
 
@@ -22,11 +23,15 @@ class SequentialFillHandler(BaseHandler):
 
         if not fields:
             session["_in_sequential"] = False
-            return self._done(session, user_input, user_id, session_id, debug, in_optional)
+            return self._done(
+                session, user_input, user_id, session_id, debug, in_optional
+            )
 
         current_field = fields[0]
         is_bool = "_check" in current_field
-        is_phone = any(w in current_field.lower() for w in ("telephone", "phone", "mobile"))
+        is_phone = any(
+            w in current_field.lower() for w in ("telephone", "phone", "mobile")
+        )
 
         # Skip — only allowed for optional fields
         if is_skip_intent(user_input):
@@ -34,7 +39,18 @@ class SequentialFillHandler(BaseHandler):
                 msg = f"This field is required. {self._ask_question(current_field, in_optional)}"
                 self._log_turn(session, user_input, msg, state)
                 return msg, State.SEQUENTIAL_FILL
-            return self._advance(session, user_input, state, live_fill, mandatory_flat, fields, user_id, session_id, debug, in_optional)
+            return self._advance(
+                session,
+                user_input,
+                state,
+                live_fill,
+                mandatory_flat,
+                fields,
+                user_id,
+                session_id,
+                debug,
+                in_optional,
+            )
 
         # ── Boolean fields ─────────────────────────────────────────────
         if is_bool:
@@ -44,25 +60,43 @@ class SequentialFillHandler(BaseHandler):
                 live_fill[current_field] = False
             else:
                 # Try LLM
-                extracted = self._extract_single(user_input, current_field, session, live_fill)
+                extracted = self._extract_single(
+                    user_input, current_field, session, live_fill
+                )
                 value = extracted.get(current_field)
                 if value in (True, False):
                     live_fill[current_field] = value
                 else:
-                    question = self.form_config.get_question(current_field) or format_field_name(current_field)
+                    question = self.form_config.get_question(
+                        current_field
+                    ) or format_field_name(current_field)
                     msg = f"Oops! I didn't get that. Could you please provide the details once more?\n{question}\nPlease answer YES or NO"
                     self._log_turn(session, user_input, msg, state)
                     return msg, State.SEQUENTIAL_FILL
             session["live_fill_flat"] = live_fill
-            debug and debug.log("sequential_fill", f"Boolean: {current_field} = {live_fill[current_field]}")
-            return self._advance(session, user_input, state, live_fill, mandatory_flat, fields, user_id, session_id, debug, in_optional)
+            debug and debug.log(
+                "sequential_fill",
+                f"Boolean: {current_field} = {live_fill[current_field]}",
+            )
+            return self._advance(
+                session,
+                user_input,
+                state,
+                live_fill,
+                mandatory_flat,
+                fields,
+                user_id,
+                session_id,
+                debug,
+                in_optional,
+            )
 
         # ── Phone fields ───────────────────────────────────────────────
         if is_phone:
             val = user_input.strip()
             if not validate_phone(val):
-                digits = ''.join(c for c in val if c.isdigit())
-                has_prefix = val.startswith('+') or val.startswith('00')
+                digits = "".join(c for c in val if c.isdigit())
+                has_prefix = val.startswith("+") or val.startswith("00")
                 if has_prefix and len(digits) < 10:
                     msg = "It appears that the country code entered is invalid. Please ensure it is a numeric value consisting of 1 to 4 digits, and enter it before the phone number (e.g., USA: +1 000 000 0000)."
                 elif not has_prefix and len(digits) == 10:
@@ -73,7 +107,18 @@ class SequentialFillHandler(BaseHandler):
                 return msg, State.SEQUENTIAL_FILL
             live_fill[current_field] = val
             session["live_fill_flat"] = live_fill
-            return self._advance(session, user_input, state, live_fill, mandatory_flat, fields, user_id, session_id, debug, in_optional)
+            return self._advance(
+                session,
+                user_input,
+                state,
+                live_fill,
+                mandatory_flat,
+                fields,
+                user_id,
+                session_id,
+                debug,
+                in_optional,
+            )
 
         # Extract — pass full schema so LLM strips "my address is..." phrases
         extracted = self._extract_single(user_input, current_field, session, live_fill)
@@ -84,8 +129,21 @@ class SequentialFillHandler(BaseHandler):
             if valid or "_check" in current_field:
                 live_fill[current_field] = value
                 session["live_fill_flat"] = live_fill
-                debug and debug.log("sequential_fill", f"Filled {current_field} = {value!r}")
-                return self._advance(session, user_input, state, live_fill, mandatory_flat, fields, user_id, session_id, debug, in_optional)
+                debug and debug.log(
+                    "sequential_fill", f"Filled {current_field} = {value!r}"
+                )
+                return self._advance(
+                    session,
+                    user_input,
+                    state,
+                    live_fill,
+                    mandatory_flat,
+                    fields,
+                    user_id,
+                    session_id,
+                    debug,
+                    in_optional,
+                )
             else:
                 msg = f"{err}\n\n{self._ask_question(current_field, in_optional)}"
                 self._log_turn(session, user_input, msg, state)
@@ -97,9 +155,24 @@ class SequentialFillHandler(BaseHandler):
                 if raw:
                     live_fill[current_field] = raw
                     session["live_fill_flat"] = live_fill
-                    debug and debug.log("sequential_fill", f"Raw fill: {current_field} = {raw!r}")
-                    return self._advance(session, user_input, state, live_fill, mandatory_flat, fields, user_id, session_id, debug, in_optional)
-            msg = f"I couldn't get that. {self._ask_question(current_field, in_optional)}"
+                    debug and debug.log(
+                        "sequential_fill", f"Raw fill: {current_field} = {raw!r}"
+                    )
+                    return self._advance(
+                        session,
+                        user_input,
+                        state,
+                        live_fill,
+                        mandatory_flat,
+                        fields,
+                        user_id,
+                        session_id,
+                        debug,
+                        in_optional,
+                    )
+            msg = (
+                f"I couldn't get that. {self._ask_question(current_field, in_optional)}"
+            )
             self._log_turn(session, user_input, msg, state)
             return msg, State.SEQUENTIAL_FILL
 
@@ -133,7 +206,19 @@ class SequentialFillHandler(BaseHandler):
             return f'{question} If this is not applicable, please respond with "N/A".'
         return question
 
-    def _advance(self, session, user_input, state, live_fill, mandatory_flat, fields, user_id, session_id, debug, in_optional):
+    def _advance(
+        self,
+        session,
+        user_input,
+        state,
+        live_fill,
+        mandatory_flat,
+        fields,
+        user_id,
+        session_id,
+        debug,
+        in_optional,
+    ):
         """Move to the next queued field, or finish sequential fill."""
         remaining = fields[1:]
         session["fields_being_asked"] = remaining
@@ -157,6 +242,7 @@ class SequentialFillHandler(BaseHandler):
             self._log_turn(session, user_input, msg, State.SEQUENTIAL_FILL.value)
             return msg, State.COMPLETE
         from chatbot.handlers.missing_fields_handler import MissingFieldsHandler
+
         handler = MissingFieldsHandler(self.engine)
         return handler.handle(session, user_input, user_id, session_id, debug)
 

@@ -8,7 +8,9 @@ Set env vars:
     RAGPDF_S3_BUCKET=my-ragpdf-bucket
     RAGPDF_S3_REGION=us-east-1
 """
+
 import os
+
 from ragpdf import RAGPDFClient, S3Storage, S3VectorStore, SentenceTransformerBackend
 
 client = RAGPDFClient(

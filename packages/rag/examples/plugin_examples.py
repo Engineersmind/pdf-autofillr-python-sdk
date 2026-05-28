@@ -3,6 +3,7 @@
 Demonstrates all available plugin combinations.
 Each section shows a different configuration.
 """
+
 import os
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -10,12 +11,13 @@ import os
 # pip install ragpdf-sdk[openai-embeddings,s3,anthropic]
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def example_a_openai_s3_anthropic():
     from ragpdf import RAGPDFClient
+    from ragpdf.correctors.anthropic_corrector import AnthropicCorrectorBackend
+    from ragpdf.embeddings.openai_embeddings import OpenAIEmbeddingBackend
     from ragpdf.storage.s3_storage import S3Storage
     from ragpdf.vector_stores.s3_vector_store import S3VectorStore
-    from ragpdf.embeddings.openai_embeddings import OpenAIEmbeddingBackend
-    from ragpdf.correctors.anthropic_corrector import AnthropicCorrectorBackend
 
     client = RAGPDFClient(
         storage=S3Storage(bucket="my-ragpdf-data"),
@@ -37,12 +39,13 @@ def example_a_openai_s3_anthropic():
 # pip install ragpdf-sdk[transformers,pinecone,openai-corrector]
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def example_b_st_pinecone_openai():
     from ragpdf import RAGPDFClient
+    from ragpdf.correctors.openai_corrector import OpenAICorrectorBackend
+    from ragpdf.embeddings.sentence_transformer import SentenceTransformerBackend
     from ragpdf.storage.s3_storage import S3Storage
     from ragpdf.vector_stores.pinecone_store import PineconeStore
-    from ragpdf.embeddings.sentence_transformer import SentenceTransformerBackend
-    from ragpdf.correctors.openai_corrector import OpenAICorrectorBackend
 
     client = RAGPDFClient(
         storage=S3Storage(bucket="my-ragpdf-data"),
@@ -67,17 +70,18 @@ def example_b_st_pinecone_openai():
 # pip install ragpdf-sdk[transformers,chroma]
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def example_c_local_chroma():
-    from ragpdf import RAGPDFClient, LocalStorage
-    from ragpdf.vector_stores.chroma_store import ChromaStore
-    from ragpdf.embeddings.sentence_transformer import SentenceTransformerBackend
+    from ragpdf import LocalStorage, RAGPDFClient
     from ragpdf.correctors.noop_corrector import NoOpCorrectorBackend
+    from ragpdf.embeddings.sentence_transformer import SentenceTransformerBackend
+    from ragpdf.vector_stores.chroma_store import ChromaStore
 
     client = RAGPDFClient(
         storage=LocalStorage(data_path="./data/rag"),
         vector_store=ChromaStore(
             path="./chroma_data",
-            collection="ragpdf_vectors",   # fixed: was collection_name=
+            collection="ragpdf_vectors",  # fixed: was collection_name=
         ),
         embedding_backend=SentenceTransformerBackend("all-MiniLM-L6-v2"),
         corrector=NoOpCorrectorBackend(),
@@ -90,11 +94,12 @@ def example_c_local_chroma():
 # EXAMPLE D: Custom embedding backend (bring your own model)
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def example_d_custom_embedding():
-    from ragpdf import RAGPDFClient, LocalStorage
-    from ragpdf.vector_stores import LocalVectorStore
-    from ragpdf.embeddings.base import EmbeddingBackend
+    from ragpdf import LocalStorage, RAGPDFClient
     from ragpdf.correctors import NoOpCorrectorBackend
+    from ragpdf.embeddings.base import EmbeddingBackend
+    from ragpdf.vector_stores import LocalVectorStore
 
     class MyCustomEmbedder(EmbeddingBackend):
         """Plug in any model — HuggingFace, Cohere, custom fine-tuned, etc."""
@@ -130,17 +135,21 @@ def example_d_custom_embedding():
 # EXAMPLE E: Custom corrector backend (bring your own LLM)
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def example_e_custom_corrector():
-    from ragpdf import RAGPDFClient, LocalStorage
-    from ragpdf.vector_stores import LocalVectorStore
-    from ragpdf.embeddings import SentenceTransformerBackend
+    from ragpdf import LocalStorage, RAGPDFClient
     from ragpdf.correctors.base import FieldCorrectorBackend
+    from ragpdf.embeddings import SentenceTransformerBackend
+    from ragpdf.vector_stores import LocalVectorStore
 
     class LlamaLocalCorrector(FieldCorrectorBackend):
         """Example: call a local Llama server via ollama or llama.cpp."""
 
         def generate_corrected_field_name(self, error_data: dict) -> dict:
-            import requests, json
+            import json
+
+            import requests
+
             prompt = (
                 f"Convert this wrong PDF field name to snake_case: "
                 f"{error_data.get('field_name')}. "
@@ -160,8 +169,14 @@ def example_e_custom_corrector():
                     "reasoning": data.get("reasoning", ""),
                 }
             except Exception as e:
-                fallback = error_data.get("field_name", "unknown").lower().replace(" ", "_")
-                return {"corrected_field_name": fallback, "confidence": 0.5, "reasoning": str(e)}
+                fallback = (
+                    error_data.get("field_name", "unknown").lower().replace(" ", "_")
+                )
+                return {
+                    "corrected_field_name": fallback,
+                    "confidence": 0.5,
+                    "reasoning": str(e),
+                }
 
     client = RAGPDFClient(
         storage=LocalStorage(),
@@ -176,20 +191,19 @@ def example_e_custom_corrector():
 # EXAMPLE F: Custom storage backend (PostgreSQL)
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def example_f_postgres_storage():
-    from ragpdf import RAGPDFClient
-    from ragpdf.storage.base import StorageBackend
-    from ragpdf.vector_stores import LocalVectorStore
-    from ragpdf.embeddings import SentenceTransformerBackend
-    from ragpdf.correctors import NoOpCorrectorBackend
     import json
-    from typing import Any, Optional
+    from typing import Any
+
+    from ragpdf.storage.base import StorageBackend
 
     class PostgresStorage(StorageBackend):
         """Example Postgres-backed storage using psycopg2."""
 
         def __init__(self, dsn: str):
             import psycopg2
+
             self.conn = psycopg2.connect(dsn)
             self._ensure_table()
 
@@ -208,11 +222,11 @@ def example_f_postgres_storage():
             with self.conn.cursor() as cur:
                 cur.execute(
                     "INSERT INTO ragpdf_store(key, value) VALUES(%s, %s) ON CONFLICT(key) DO UPDATE SET value=%s, updated_at=now()",
-                    (key, json.dumps(data), json.dumps(data))
+                    (key, json.dumps(data), json.dumps(data)),
                 )
             self.conn.commit()
 
-        def load_json(self, key: str) -> Optional[Any]:
+        def load_json(self, key: str) -> Any | None:
             with self.conn.cursor() as cur:
                 cur.execute("SELECT value FROM ragpdf_store WHERE key = %s", (key,))
                 row = cur.fetchone()
@@ -239,5 +253,7 @@ def example_f_postgres_storage():
 
 
 if __name__ == "__main__":
-    print("Plugin examples loaded. Each function demonstrates a different configuration.")
+    print(
+        "Plugin examples loaded. Each function demonstrates a different configuration."
+    )
     print("Uncomment and run the one that matches your setup.")

@@ -16,10 +16,12 @@ Usage:
     a) a file path:  --category data/input/pdf_category.json   (recommended on Windows)
     b) inline JSON:  --category '{"category":"Finance",...}'          (Linux/Mac only)
 """
+
 import argparse
 import json
 import os
 import sys
+
 from ragpdf import RAGPDFClient
 
 
@@ -39,7 +41,10 @@ def _load_category(value: str) -> dict:
             with open(value, encoding="utf-8") as fh:
                 data = json.load(fh)
             if not isinstance(data, dict):
-                print(f"ERROR: --category file must contain a JSON object, got {type(data).__name__}", file=sys.stderr)
+                print(
+                    f"ERROR: --category file must contain a JSON object, got {type(data).__name__}",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
             return data
         except json.JSONDecodeError as e:
@@ -50,7 +55,9 @@ def _load_category(value: str) -> dict:
     try:
         data = json.loads(value)
         if not isinstance(data, dict):
-            print("ERROR: --category inline value must be a JSON object", file=sys.stderr)
+            print(
+                "ERROR: --category inline value must be a JSON object", file=sys.stderr
+            )
             sys.exit(1)
         return data
     except json.JSONDecodeError:
@@ -60,7 +67,7 @@ def _load_category(value: str) -> dict:
             f"  On Windows, use a file path instead:\n"
             f"    --category data/input/pdf_category.json\n\n"
             f"  On Linux/Mac, inline JSON works:\n"
-            f"    --category '{{\"category\":\"Finance\",\"sub_category\":\"PE\",\"document_type\":\"Sub\"}}'",
+            f'    --category \'{{"category":"Finance","sub_category":"PE","document_type":"Sub"}}\'',
             file=sys.stderr,
         )
         sys.exit(1)
@@ -72,16 +79,17 @@ def main():
 
     # predict
     p = sub.add_parser("predict", help="Run RAG predictions on PDF fields")
-    p.add_argument("--user",     required=True)
-    p.add_argument("--session",  required=True)
-    p.add_argument("--pdf",      required=True)
-    p.add_argument("--fields",   required=True, help="Path to JSON file with fields list")
-    p.add_argument("--hash",     required=True, help="PDF hash (md5/sha)")
+    p.add_argument("--user", required=True)
+    p.add_argument("--session", required=True)
+    p.add_argument("--pdf", required=True)
+    p.add_argument("--fields", required=True, help="Path to JSON file with fields list")
+    p.add_argument("--hash", required=True, help="PDF hash (md5/sha)")
     p.add_argument(
-        "--category", default="{}",
+        "--category",
+        default="{}",
         help=(
             "File path (recommended on Windows): --category data/input/pdf_category.json  "
-            "OR inline JSON (Linux/Mac): --category '{\"category\":\"Finance\",...}'"
+            'OR inline JSON (Linux/Mac): --category \'{"category":"Finance",...}\''
         ),
     )
 
@@ -90,28 +98,39 @@ def main():
 
     # metrics
     m = sub.add_parser("metrics", help="Get metrics")
-    m.add_argument("--type", required=True, dest="metric_type",
-                   choices=["pdf", "category", "subcategory", "doctype",
-                             "global", "compare", "pdf_hash"])
-    m.add_argument("--user",        default=None)
-    m.add_argument("--session",     default=None)
-    m.add_argument("--pdf",         default=None)
-    m.add_argument("--category",    default=None)
+    m.add_argument(
+        "--type",
+        required=True,
+        dest="metric_type",
+        choices=[
+            "pdf",
+            "category",
+            "subcategory",
+            "doctype",
+            "global",
+            "compare",
+            "pdf_hash",
+        ],
+    )
+    m.add_argument("--user", default=None)
+    m.add_argument("--session", default=None)
+    m.add_argument("--pdf", default=None)
+    m.add_argument("--category", default=None)
     m.add_argument("--subcategory", default=None)
-    m.add_argument("--doctype",     default=None)
-    m.add_argument("--pdf-hash",    default=None, dest="pdf_hash")
+    m.add_argument("--doctype", default=None)
+    m.add_argument("--pdf-hash", default=None, dest="pdf_hash")
 
     # feedback
     f = sub.add_parser("feedback", help="Submit user feedback/corrections")
-    f.add_argument("--user",    required=True)
+    f.add_argument("--user", required=True)
     f.add_argument("--session", required=True)
-    f.add_argument("--pdf",     required=True)
-    f.add_argument("--errors",  required=True, help="Path to JSON file with errors list")
+    f.add_argument("--pdf", required=True)
+    f.add_argument("--errors", required=True, help="Path to JSON file with errors list")
 
     # error-analytics
     ea = sub.add_parser("error-analytics", help="Get error analytics")
-    ea.add_argument("--from",     default=None, dest="date_from")
-    ea.add_argument("--to",       default=None, dest="date_to")
+    ea.add_argument("--from", default=None, dest="date_from")
+    ea.add_argument("--to", default=None, dest="date_to")
     ea.add_argument("--category", default=None)
 
     args = parser.parse_args()
@@ -138,8 +157,11 @@ def main():
         print(json.dumps(client.get_system_info(), indent=2))
 
     elif args.command == "metrics":
-        kwargs = {k: v for k, v in vars(args).items()
-                  if k not in ("command", "metric_type") and v is not None}
+        kwargs = {
+            k: v
+            for k, v in vars(args).items()
+            if k not in ("command", "metric_type") and v is not None
+        }
         print(json.dumps(client.get_metrics(args.metric_type, **kwargs), indent=2))
 
     elif args.command == "feedback":
@@ -147,20 +169,24 @@ def main():
             errors = json.load(fh)
         if isinstance(errors, dict) and "errors" in errors:
             errors = errors["errors"]
-        print(json.dumps(
-            client.submit_feedback(args.user, args.session, args.pdf, errors),
-            indent=2
-        ))
+        print(
+            json.dumps(
+                client.submit_feedback(args.user, args.session, args.pdf, errors),
+                indent=2,
+            )
+        )
 
     elif args.command == "error-analytics":
-        print(json.dumps(
-            client.get_error_analytics(
-                date_from=args.date_from,
-                date_to=args.date_to,
-                category=args.category,
-            ),
-            indent=2
-        ))
+        print(
+            json.dumps(
+                client.get_error_analytics(
+                    date_from=args.date_from,
+                    date_to=args.date_to,
+                    category=args.category,
+                ),
+                indent=2,
+            )
+        )
 
 
 if __name__ == "__main__":

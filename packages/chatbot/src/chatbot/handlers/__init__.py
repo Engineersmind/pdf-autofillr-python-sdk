@@ -5,12 +5,10 @@ Handles INIT and SAVED_INFO_CHECK states.
 
 from __future__ import annotations
 
-from typing import Optional, Tuple
-
 from chatbot.core.states import State
 from chatbot.handlers.base_handler import BaseHandler
-from chatbot.logging.debug_logger import DebugLogger
-from chatbot.utils.intent_detection import is_affirmative, is_negative
+from chatbot.logging.debug_logger import DebugLogger  # noqa: F401
+from chatbot.utils.intent_detection import is_affirmative, is_negative  # noqa: F401
 
 
 class InitHandler(BaseHandler):
@@ -34,7 +32,7 @@ class InitHandler(BaseHandler):
                 msg = "Alright! Feel free to come back whenever you're ready. Goodbye!"
                 self._log_turn(session, user_input, msg, state)
                 return msg, State.COMPLETE
-            
+
             # Any affirmative or unclear -> proceed to saved info check
             return self._proceed_to_saved_info(session, user_input, state, user_id)
 
@@ -60,7 +58,10 @@ class InitHandler(BaseHandler):
 
     def _show_investor_type_menu(self, session, user_input, state):
         from chatbot.core.states import INVESTOR_TYPES
-        lines = ["Could you tell me what type of investor category best describes you?\n"]
+
+        lines = [
+            "Could you tell me what type of investor category best describes you?\n"
+        ]
         for i, t in enumerate(INVESTOR_TYPES, 1):
             lines.append(f"{i}. {t}")
         lines.append("\nEnter Investor Type (number or name):")

@@ -28,6 +28,7 @@ Recommended env vars (set via --set-env-vars or Secret Manager):
     chatbot_PDF_FILLER=mapper     (optional)
     MAPPER_API_URL=https://...    (optional — for HTTP mapper mode)
 """
+
 from __future__ import annotations
 
 import json
@@ -35,17 +36,17 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=os.getenv("chatbot_LOG_LEVEL", "INFO"))
 
-from chatbot import chatbotClient, FormConfig
-from chatbot.storage.factory import StorageFactory
+from chatbot import FormConfig, chatbotClient  # noqa: E402
+from chatbot.storage.factory import StorageFactory  # noqa: E402
 
-_client: Optional[chatbotClient] = None
+_client: chatbotClient | None = None
 
 
 def _build_client() -> chatbotClient:
@@ -56,6 +57,7 @@ def _build_client() -> chatbotClient:
     pdf_filler = None
     if os.getenv("chatbot_PDF_FILLER", "none").lower() in ("mapper", "managed"):
         from chatbot.pdf.mapper_filler import MapperPDFFiller
+
         pdf_filler = MapperPDFFiller(
             mapper_api_url=os.getenv("MAPPER_API_URL", ""),
             mapper_api_key=os.getenv("MAPPER_API_KEY", ""),
@@ -92,6 +94,7 @@ def _make_response(status: int, body: dict):
         status = 500
     try:
         from flask import make_response as flask_make_response
+
         resp = flask_make_response(payload, status)
         resp.headers["Content-Type"] = "application/json"
         return resp
@@ -120,10 +123,10 @@ def main(request: Any) -> Any:
     try:
         payload = _parse_request(request)
 
-        user_id    = payload.get("user_id")
+        user_id = payload.get("user_id")
         session_id = payload.get("session_id")
-        message    = payload.get("message", "")
-        pdf_path   = payload.get("pdf_path") or os.getenv("chatbot_PDF_PATH", "")
+        message = payload.get("message", "")
+        pdf_path = payload.get("pdf_path") or os.getenv("chatbot_PDF_PATH", "")
 
         if not user_id or not session_id:
             return _make_response(400, {"error": "user_id and session_id are required"})
@@ -138,13 +141,16 @@ def main(request: Any) -> Any:
             message=message,
         )
 
-        return _make_response(200, {
-            "user_id":          user_id,
-            "session_id":       session_id,
-            "response":         response,
-            "session_complete": complete,
-            "filled_data":      data if complete else None,
-        })
+        return _make_response(
+            200,
+            {
+                "user_id": user_id,
+                "session_id": session_id,
+                "response": response,
+                "session_complete": complete,
+                "filled_data": data if complete else None,
+            },
+        )
 
     except (KeyError, ValueError) as e:
         logger.warning("Bad request: %s", e)

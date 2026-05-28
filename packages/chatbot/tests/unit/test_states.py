@@ -1,15 +1,15 @@
 """
 Unit tests for state machine constants and enums.
 """
-import pytest
+
 from chatbot.core.states import (
-    State,
-    INVESTOR_TYPES,
-    INVESTOR_TYPE_FILES,
-    INVESTOR_TYPE_BOOLEAN_FIELD,
-    INTERNAL_SPLIT_FIELD_PREFIXES,
     FORM_PF_FIELD_PREFIX,
+    INTERNAL_SPLIT_FIELD_PREFIXES,
+    INVESTOR_TYPE_BOOLEAN_FIELD,
+    INVESTOR_TYPE_FILES,
+    INVESTOR_TYPES,
     US_COUNTRY_VALUES,
+    State,
 )
 
 
@@ -39,16 +39,16 @@ def test_investor_types_count():
 
 def test_investor_type_files_has_entry_per_type():
     for investor_type in INVESTOR_TYPES:
-        assert investor_type in INVESTOR_TYPE_FILES, (
-            f"No file mapping for investor type: {investor_type}"
-        )
+        assert (
+            investor_type in INVESTOR_TYPE_FILES
+        ), f"No file mapping for investor type: {investor_type}"
 
 
 def test_investor_type_boolean_field_has_entry_per_type():
     for investor_type in INVESTOR_TYPES:
-        assert investor_type in INVESTOR_TYPE_BOOLEAN_FIELD, (
-            f"No boolean field for investor type: {investor_type}"
-        )
+        assert (
+            investor_type in INVESTOR_TYPE_BOOLEAN_FIELD
+        ), f"No boolean field for investor type: {investor_type}"
 
 
 def test_form_pf_prefix():

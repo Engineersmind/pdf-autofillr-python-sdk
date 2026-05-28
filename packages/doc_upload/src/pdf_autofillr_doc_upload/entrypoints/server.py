@@ -6,6 +6,7 @@ Usage::
 
     doc-upload-server
 """
+
 from __future__ import annotations
 
 import os
@@ -19,6 +20,7 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 

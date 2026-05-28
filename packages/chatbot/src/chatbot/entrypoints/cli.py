@@ -7,6 +7,7 @@ After `pip install pdf-autofillr-chatbot`:
     chatbot-cli --pdf-path /path/to/blank.pdf --output filled.json --report
     chatbot-cli --message "Hello" --user-id u1 --session-id s1
 """
+
 from __future__ import annotations
 
 import os
@@ -26,7 +27,9 @@ import uuid
 from pathlib import Path
 
 from dotenv import load_dotenv
+
 load_dotenv()
+
 
 # ── Logging: all detail to file, terminal stays clean ────────────────────────
 def _setup_logging(log_level: str = "WARNING") -> None:
@@ -36,9 +39,9 @@ def _setup_logging(log_level: str = "WARNING") -> None:
 
     file_handler = logging.FileHandler(log_file, encoding="utf-8")
     file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(logging.Formatter(
-        "%(asctime)s %(name)s %(levelname)s %(message)s"
-    ))
+    file_handler.setFormatter(
+        logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
+    )
 
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
@@ -46,8 +49,15 @@ def _setup_logging(log_level: str = "WARNING") -> None:
 
     # Silence on terminal — WARNING level
     for name in [
-        "LiteLLM", "litellm", "httpx", "httpcore", "openai",
-        "chatbot", "ragpdf", "urllib3", "asyncio",
+        "LiteLLM",
+        "litellm",
+        "httpx",
+        "httpcore",
+        "openai",
+        "chatbot",
+        "ragpdf",
+        "urllib3",
+        "asyncio",
     ]:
         logging.getLogger(name).setLevel(logging.WARNING)
 
@@ -80,18 +90,18 @@ def _parse_args():
         prog="chatbot-cli",
         description="pdf-autofillr-chatbot — conversational investor onboarding",
     )
-    p.add_argument("--user-id",    default="cli_user")
+    p.add_argument("--user-id", default="cli_user")
     p.add_argument("--session-id", default=None)
-    p.add_argument("--message",    default=None, help="Single message (non-interactive)")
-    p.add_argument("--pdf-path",   default=None)
-    p.add_argument("--output",     default=None, help="Save filled data to JSON file")
-    p.add_argument("--report",     action="store_true")
-    p.add_argument("--log-level",  default="WARNING")
+    p.add_argument("--message", default=None, help="Single message (non-interactive)")
+    p.add_argument("--pdf-path", default=None)
+    p.add_argument("--output", default=None, help="Save filled data to JSON file")
+    p.add_argument("--report", action="store_true")
+    p.add_argument("--log-level", default="WARNING")
     return p.parse_args()
 
 
 def _build_client():
-    from chatbot import chatbotClient, FormConfig
+    from chatbot import FormConfig, chatbotClient
     from chatbot.storage.factory import StorageFactory
 
     storage = StorageFactory.create()
@@ -101,6 +111,7 @@ def _build_client():
     pdf_filler = None
     if os.getenv("chatbot_PDF_FILLER", "none").lower() in ("mapper", "managed"):
         from chatbot.pdf.mapper_filler import MapperPDFFiller
+
         pdf_filler = MapperPDFFiller(
             mapper_api_url=os.getenv("MAPPER_API_URL", ""),
             mapper_api_key=os.getenv("MAPPER_API_KEY", ""),
@@ -117,7 +128,9 @@ def _run_single(args, client, session_id):
     pdf_path = args.pdf_path or os.getenv("chatbot_PDF_PATH", "")
     if pdf_path:
         client.create_session(args.user_id, session_id, pdf_path=pdf_path)
-    response, complete, data = client.send_message(args.user_id, session_id, args.message)
+    response, complete, data = client.send_message(
+        args.user_id, session_id, args.message
+    )
     print(response)
     if complete:
         if args.output and data:
@@ -152,7 +165,9 @@ def _run_interactive(args, client, session_id):
         if user_input.lower() in ("exit", "quit", "q"):
             print("Session ended.")
             break
-        response, complete, data = client.send_message(args.user_id, session_id, user_input)
+        response, complete, data = client.send_message(
+            args.user_id, session_id, user_input
+        )
         print(f"\nBot: {response}\n")
 
     if complete:
@@ -178,7 +193,7 @@ def main():
             _run_single(args, client, session_id)
         else:
             _run_interactive(args, client, session_id)
-    except EnvironmentError as e:
+    except OSError as e:
         print(f"\n❌ Config error:\n{e}", file=sys.stderr)
         sys.exit(1)
 

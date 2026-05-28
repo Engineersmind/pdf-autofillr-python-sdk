@@ -1,8 +1,9 @@
 # pdf_autofillr_doc_upload/pdf/interface.py
 """PDFFillerInterface — abstract base for all PDF filling backends."""
+
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Optional
 
 
 class PDFFillerInterface(ABC):

@@ -3,15 +3,14 @@
 FallbackExtractor — regex-based extraction. No LLM, no network call.
 Used when LLM is unavailable or returns empty.
 """
+
 from __future__ import annotations
 
 import re
-from typing import Optional
-
 
 EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
 PHONE_RE = re.compile(r"(\+?[\d\s\-().]{7,20})")
-ZIP_RE   = re.compile(r"\b(\d{5}(?:-\d{4})?)\b")
+ZIP_RE = re.compile(r"\b(\d{5}(?:-\d{4})?)\b")
 
 
 class FallbackExtractor:
@@ -24,7 +23,7 @@ class FallbackExtractor:
 
     def extract(self, user_input: str, live_fill_flat: dict) -> dict:
         result: dict = {}
-        lc = user_input.lower()
+        user_input.lower()
 
         # Email
         emails = EMAIL_RE.findall(user_input)

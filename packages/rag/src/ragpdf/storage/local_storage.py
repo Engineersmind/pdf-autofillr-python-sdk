@@ -2,7 +2,6 @@
 import json
 import logging
 import os
-from typing import Optional
 
 from ragpdf.storage.base import StorageBackend
 
@@ -32,12 +31,12 @@ class LocalStorage(StorageBackend):
             json.dump(data, f, indent=2)
         logger.debug(f"Saved JSON: {path}")
 
-    def load_json(self, key: str) -> Optional[dict]:
+    def load_json(self, key: str) -> dict | None:
         path = os.path.join(self.data_path, key)
         if not os.path.exists(path):
             logger.debug(f"Not found: {path}")
             return None
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             return json.load(f)
 
     def append_to_jsonl(self, key: str, data: dict) -> None:
@@ -50,7 +49,7 @@ class LocalStorage(StorageBackend):
         if not os.path.exists(path):
             return []
         results = []
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line:
@@ -62,6 +61,7 @@ class LocalStorage(StorageBackend):
 
     def copy_file(self, source_key: str, dest_key: str) -> bool:
         import shutil
+
         src = os.path.join(self.data_path, source_key)
         dst = self._full_path(dest_key)
         if not os.path.exists(src):
@@ -70,9 +70,9 @@ class LocalStorage(StorageBackend):
         shutil.copy2(src, dst)
         return True
 
-    def load_json_from_path(self, full_path: str) -> Optional[dict]:
+    def load_json_from_path(self, full_path: str) -> dict | None:
         """Load from absolute filesystem path."""
         if not os.path.exists(full_path):
             return None
-        with open(full_path, "r", encoding="utf-8") as f:
+        with open(full_path, encoding="utf-8") as f:
             return json.load(f)

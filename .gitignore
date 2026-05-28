@@ -88,11 +88,13 @@ packages/rag/data/vectors/vector_database.json
 # ======================
 packages/*/.github/
 packages/rag/.github/
+data/
 
 # ======================
 # Local secrets — never commit
 # ======================
 pat.txt
+pytest.ini
 
 # ======================
 # OLD LEGACY CODE — not used, but keeping for reference until we decide to delete

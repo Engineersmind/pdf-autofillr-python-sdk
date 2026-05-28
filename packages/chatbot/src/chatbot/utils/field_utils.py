@@ -1,7 +1,7 @@
 # chatbot/utils/field_utils.py
 """Missing fields detection, field classification, resolution, and form_pf filtering."""
+
 from __future__ import annotations
-from typing import List, Tuple
 
 from chatbot.core.states import (
     FORM_PF_FIELD_PREFIX,
@@ -10,7 +10,7 @@ from chatbot.core.states import (
 )
 
 
-def get_missing_mandatory_keys(live_fill_flat: dict, mandatory_flat: dict) -> List[str]:
+def get_missing_mandatory_keys(live_fill_flat: dict, mandatory_flat: dict) -> list[str]:
     """Return mandatory field keys that have not been filled yet."""
     missing = []
     for key in mandatory_flat:
@@ -20,16 +20,19 @@ def get_missing_mandatory_keys(live_fill_flat: dict, mandatory_flat: dict) -> Li
     return missing
 
 
-def get_optional_fields(live_fill_flat: dict, mandatory_flat: dict) -> List[str]:
+def get_optional_fields(live_fill_flat: dict, mandatory_flat: dict) -> list[str]:
     """Return fields present in live_fill_flat but not mandatory and still empty."""
     mandatory_keys = set(mandatory_flat.keys())
     return [
-        k for k, v in live_fill_flat.items()
+        k
+        for k, v in live_fill_flat.items()
         if k not in mandatory_keys and (v is None or v == "")
     ]
 
 
-def classify_fields_by_type(field_keys: List[str], meta_form_keys: dict) -> Tuple[List[str], List[str]]:
+def classify_fields_by_type(
+    field_keys: list[str], meta_form_keys: dict
+) -> tuple[list[str], list[str]]:
     """
     Split field_keys into (boolean_fields, text_fields).
     Uses meta_form_keys to determine type.
@@ -105,7 +108,8 @@ def filter_form_pf_fields(live_fill_flat: dict, registered_country: str) -> dict
 
     # Non-US — strip all form_pf fields
     filtered = {
-        k: v for k, v in live_fill_flat.items()
+        k: v
+        for k, v in live_fill_flat.items()
         if not k.startswith(FORM_PF_FIELD_PREFIX)
     }
     return filtered

@@ -14,6 +14,7 @@ Copy with clean name also written to:
     GCP    -> uploaded to output_bucket at {user_id}/sessions/{session_id}/filled.pdf
     Azure  -> uploaded to output_container at {user_id}/sessions/{session_id}/filled.pdf
 """
+
 from __future__ import annotations
 
 import json
@@ -24,7 +25,6 @@ import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 from chatbot.pdf.interface import PDFFillerInterface
 from chatbot.storage.base import StorageBackend
@@ -34,7 +34,9 @@ logger = logging.getLogger(__name__)
 
 class PDFWorkflowManager:
 
-    def __init__(self, filler: PDFFillerInterface, storage: StorageBackend, settings=None):
+    def __init__(
+        self, filler: PDFFillerInterface, storage: StorageBackend, settings=None
+    ):
         self.filler = filler
         self.storage = storage
         self.poll_interval = getattr(settings, "pdf_poll_interval", 10)
@@ -53,9 +55,12 @@ class PDFWorkflowManager:
     @staticmethod
     def _detect_storage_type(storage) -> str:
         cls = type(storage).__name__
-        if "S3" in cls:       return "s3"
-        if "GCS" in cls or "Gcp" in cls: return "gcp"
-        if "Azure" in cls:    return "azure"
+        if "S3" in cls:
+            return "s3"
+        if "GCS" in cls or "Gcp" in cls:
+            return "gcp"
+        if "Azure" in cls:
+            return "azure"
         return "local"
 
     # ------------------------------------------------------------------
@@ -74,13 +79,17 @@ class PDFWorkflowManager:
         p.mkdir(parents=True, exist_ok=True)
         return str(p / "filled.pdf")
 
-    def _output_filled_pdf_path(self, user_id: str, session_id: str, pdf_path: str) -> str:
+    def _output_filled_pdf_path(
+        self, user_id: str, session_id: str, pdf_path: str
+    ) -> str:
         """
         Clean output copy path:
             {data_path}/output/{user_id}/sessions/{session_id}/{pdf_name}_filled.pdf
         """
         pdf_stem = Path(pdf_path).stem
-        out_dir = Path(str(self._data_path)) / "output" / user_id / "sessions" / session_id
+        out_dir = (
+            Path(str(self._data_path)) / "output" / user_id / "sessions" / session_id
+        )
         out_dir.mkdir(parents=True, exist_ok=True)
         return str(out_dir / f"{pdf_stem}_filled.pdf")
 
@@ -98,7 +107,9 @@ class PDFWorkflowManager:
         if self._storage_type == "s3":
             try:
                 self.storage.s3.upload_file(
-                    local_path, self.storage.output_bucket, key,
+                    local_path,
+                    self.storage.output_bucket,
+                    key,
                     ExtraArgs={"ContentType": "application/pdf"},
                 )
                 return f"s3://{self.storage.output_bucket}/{key}"
@@ -128,17 +139,28 @@ class PDFWorkflowManager:
     # Public interface
     # ------------------------------------------------------------------
 
-    def trigger_prepare_async(self, user_id: str, session_id: str,
-                               pdf_path: str, investor_type: str) -> None:
-        threading.Thread(target=self._prepare_worker,
-                         args=(user_id, session_id, pdf_path, investor_type),
-                         daemon=True).start()
+    def trigger_prepare_async(
+        self, user_id: str, session_id: str, pdf_path: str, investor_type: str
+    ) -> None:
+        threading.Thread(
+            target=self._prepare_worker,
+            args=(user_id, session_id, pdf_path, investor_type),
+            daemon=True,
+        ).start()
 
-    def trigger_async(self, user_id: str, session_id: str, pdf_path: str,
-                      investor_type: str, data_flat: dict) -> None:
-        threading.Thread(target=self._fill_worker,
-                         args=(user_id, session_id, pdf_path, investor_type, data_flat),
-                         daemon=False).start()
+    def trigger_async(
+        self,
+        user_id: str,
+        session_id: str,
+        pdf_path: str,
+        investor_type: str,
+        data_flat: dict,
+    ) -> None:
+        threading.Thread(
+            target=self._fill_worker,
+            args=(user_id, session_id, pdf_path, investor_type, data_flat),
+            daemon=False,
+        ).start()
 
     # ------------------------------------------------------------------
     # Workers
@@ -160,22 +182,33 @@ class PDFWorkflowManager:
             doc_id = session.get("pdf_doc_id")
 
             if not doc_id:
-                doc_id = self._call_prepare(user_id, session_id, pdf_path, investor_type)
+                doc_id = self._call_prepare(
+                    user_id, session_id, pdf_path, investor_type
+                )
                 session["pdf_doc_id"] = doc_id
                 self.storage.save_session_state(user_id, session_id, session)
-                self._log_step(user_id, session_id, "prepare", success=True, doc_id=doc_id)
+                self._log_step(
+                    user_id, session_id, "prepare", success=True, doc_id=doc_id
+                )
 
             ready = self._poll_ready(user_id, session_id, doc_id)
             if not ready:
-                doc_id = self._call_prepare(user_id, session_id, pdf_path, investor_type)
+                doc_id = self._call_prepare(
+                    user_id, session_id, pdf_path, investor_type
+                )
                 session["pdf_doc_id"] = doc_id
                 self.storage.save_session_state(user_id, session_id, session)
                 time.sleep(180)
                 ready = self._poll_ready(user_id, session_id, doc_id)
 
             if not ready:
-                self._log_step(user_id, session_id, "check", success=False,
-                               error="Timeout waiting for document")
+                self._log_step(
+                    user_id,
+                    session_id,
+                    "check",
+                    success=False,
+                    error="Timeout waiting for document",
+                )
                 return
 
             # Java filler always writes to local disk first (original location preserved)
@@ -188,13 +221,21 @@ class PDFWorkflowManager:
                     if result:
                         break
                 except Exception as e:
-                    self._log_step(user_id, session_id, "fill", success=False,
-                                   error=str(e), attempt=attempt)
+                    self._log_step(
+                        user_id,
+                        session_id,
+                        "fill",
+                        success=False,
+                        error=str(e),
+                        attempt=attempt,
+                    )
                     time.sleep(5 * (attempt + 1))
 
             if result:
                 # Upload to cloud if needed, get final URI/path
-                final_path = self._upload_filled_pdf(user_id, session_id, local_filled_path)
+                final_path = self._upload_filled_pdf(
+                    user_id, session_id, local_filled_path
+                )
 
                 # Also copy a clean {pdf_name}_filled.pdf to the output dir (local only)
                 output_copy_path = None
@@ -206,14 +247,25 @@ class PDFWorkflowManager:
                         shutil.copy2(local_filled_path, output_copy_path)
                     except Exception as copy_err:
                         # Non-fatal — original filled.pdf is still intact
-                        self._log_step(user_id, session_id, "fill_copy", success=False,
-                                       error=str(copy_err))
+                        self._log_step(
+                            user_id,
+                            session_id,
+                            "fill_copy",
+                            success=False,
+                            error=str(copy_err),
+                        )
                         output_copy_path = None
 
-                self._log_step(user_id, session_id, "fill", success=True,
-                               local_path=local_filled_path, final_path=final_path,
-                               output_copy_path=output_copy_path,
-                               storage_type=self._storage_type)
+                self._log_step(
+                    user_id,
+                    session_id,
+                    "fill",
+                    success=True,
+                    local_path=local_filled_path,
+                    final_path=final_path,
+                    output_copy_path=output_copy_path,
+                    storage_type=self._storage_type,
+                )
                 session = self.storage.get_session_state(user_id, session_id) or {}
                 session["filled_pdf_path"] = final_path
                 session["filled_pdf_local"] = local_filled_path
@@ -274,17 +326,18 @@ class PDFWorkflowManager:
                 )
                 return
 
-            llm_path   = pred_paths.get("llm_predictions")
+            llm_path = pred_paths.get("llm_predictions")
             final_path = pred_paths.get("final_predictions")
-            rag_uid    = pred_paths.get("user_id", user_id)
-            rag_sid    = pred_paths.get("session_id", session_id)
-            rag_pid    = pred_paths.get("pdf_id", session_id)
+            rag_uid = pred_paths.get("user_id", user_id)
+            rag_sid = pred_paths.get("session_id", session_id)
+            rag_pid = pred_paths.get("pdf_id", session_id)
 
             if not llm_path or not final_path:
                 logger.debug(
                     "_call_rag_api2: llm_predictions=%s final_predictions=%s — "
                     "one or both missing, skipping API 2",
-                    llm_path, final_path,
+                    llm_path,
+                    final_path,
                 )
                 return
 
@@ -295,14 +348,16 @@ class PDFWorkflowManager:
                 )
                 return
 
-            with open(llm_path, "r", encoding="utf-8") as f:
+            with open(llm_path, encoding="utf-8") as f:
                 llm_predictions = json.load(f)
-            with open(final_path, "r", encoding="utf-8") as f:
+            with open(final_path, encoding="utf-8") as f:
                 final_predictions = json.load(f)
 
             logger.info(
                 "_call_rag_api2: calling save_filled_pdf — user=%s session=%s pdf=%s",
-                rag_uid, rag_sid, rag_pid,
+                rag_uid,
+                rag_sid,
+                rag_pid,
             )
 
             client = RAGPDFClient.from_env()
@@ -315,18 +370,24 @@ class PDFWorkflowManager:
                 filled_pdf_location=None,
             )
 
-            vectors_created = (result.get("vector_updates") or {}).get("vectors_created", 0)
-            vectors_updated = (result.get("vector_updates") or {}).get("vectors_updated", 0)
+            vectors_created = (result.get("vector_updates") or {}).get(
+                "vectors_created", 0
+            )
+            vectors_updated = (result.get("vector_updates") or {}).get(
+                "vectors_updated", 0
+            )
             logger.info(
                 "_call_rag_api2: done — vectors_created=%d vectors_updated=%d",
-                vectors_created, vectors_updated,
+                vectors_created,
+                vectors_updated,
             )
 
         except Exception as e:
             # Non-fatal — log at WARNING level and continue
             logger.warning(
                 "_call_rag_api2: post-fill RAG learning failed (non-fatal): %s",
-                e, exc_info=True,
+                e,
+                exc_info=True,
             )
 
     def _is_rag_enabled(self) -> bool:
@@ -338,7 +399,7 @@ class PDFWorkflowManager:
         # Fallback: read the env var directly
         return os.getenv("RAG_ENABLED", "false").lower() == "true"
 
-    def _get_prediction_paths(self, user_id: str, session_id: str) -> Optional[dict]:
+    def _get_prediction_paths(self, user_id: str, session_id: str) -> dict | None:
         """
         Retrieve prediction file paths from the filler.
 
@@ -357,7 +418,9 @@ class PDFWorkflowManager:
     def _call_prepare(self, user_id, session_id, pdf_path, investor_type) -> str:
         session_dir = self._mapper_dir(user_id, session_id)
         try:
-            return self.filler.prepare_document(pdf_path, investor_type, session_dir=session_dir)
+            return self.filler.prepare_document(
+                pdf_path, investor_type, session_dir=session_dir
+            )
         except TypeError:
             return self.filler.prepare_document(pdf_path, investor_type)
 
@@ -371,20 +434,32 @@ class PDFWorkflowManager:
         for attempt in range(self.max_poll_attempts):
             try:
                 if self.filler.check_document_ready(doc_id):
-                    self._log_step(user_id, session_id, "check", success=True, attempt=attempt)
+                    self._log_step(
+                        user_id, session_id, "check", success=True, attempt=attempt
+                    )
                     return True
             except Exception:
                 pass
-            self._log_step(user_id, session_id, "check", success=False,
-                           attempt=attempt, ready=False)
+            self._log_step(
+                user_id,
+                session_id,
+                "check",
+                success=False,
+                attempt=attempt,
+                ready=False,
+            )
             time.sleep(self.poll_interval)
         return False
 
     def _log_step(self, user_id, session_id, step, **kwargs):
-        existing = self.storage.get_pdf_filling_logs(user_id, session_id) or {"steps": []}
-        existing.setdefault("steps", []).append({
-            "step": step,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            **kwargs,
-        })
+        existing = self.storage.get_pdf_filling_logs(user_id, session_id) or {
+            "steps": []
+        }
+        existing.setdefault("steps", []).append(
+            {
+                "step": step,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                **kwargs,
+            }
+        )
         self.storage.save_pdf_filling_logs(user_id, session_id, existing)

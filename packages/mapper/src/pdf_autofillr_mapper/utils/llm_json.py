@@ -6,9 +6,9 @@ preamble text. This module handles that uniformly across all call sites.
 """
 
 import json
-import re
 import logging
-from typing import Any, Dict, Optional
+import re
+from typing import Any, Optional
 
 from pydantic import BaseModel, RootModel, field_validator
 
@@ -50,8 +50,10 @@ def parse_llm_json(text: str) -> Any:
 # Pydantic models for semantic mapper output
 # ---------------------------------------------------------------------------
 
+
 class FieldMatch(BaseModel):
     """A single field mapping returned by the semantic mapper LLM."""
+
     key: Optional[str] = None
     con: float = 0.0
 
@@ -75,7 +77,8 @@ class FieldMatch(BaseModel):
 
 class MappingOutput(RootModel):
     """Full LLM response for one prompt chunk: fid (str) → FieldMatch."""
-    root: Dict[str, FieldMatch]
+
+    root: dict[str, FieldMatch]
 
     def items(self):
         return self.root.items()

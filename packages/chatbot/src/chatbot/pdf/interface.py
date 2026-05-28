@@ -1,10 +1,13 @@
 # chatbot/pdf/interface.py
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any
+
 """
 PDFFillerInterface — abstract class for PDF filling integrations.
 """
+
 
 class PDFFillerInterface(ABC):
     """
@@ -44,8 +47,9 @@ class PDFFillerInterface(ABC):
         """
 
     @abstractmethod
-    def fill_document(self, doc_id: str, data_flat: dict,
-                      output_path: Optional[str] = None) -> Any:
+    def fill_document(
+        self, doc_id: str, data_flat: dict, output_path: str | None = None
+    ) -> Any:
         """
         Fill the prepared document with collected investor data.
         Called after conversation completes.

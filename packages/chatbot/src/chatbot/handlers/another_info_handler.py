@@ -1,9 +1,10 @@
 # chatbot/handlers/another_info_handler.py
 from __future__ import annotations
+
 from chatbot.core.states import State
 from chatbot.handlers.base_handler import BaseHandler
-from chatbot.utils.intent_detection import is_affirmative, is_negative, is_exit_intent
 from chatbot.utils.field_utils import format_field_name
+from chatbot.utils.intent_detection import is_affirmative, is_exit_intent, is_negative
 
 
 class AnotherInfoHandler(BaseHandler):
@@ -26,28 +27,42 @@ class AnotherInfoHandler(BaseHandler):
             return msg, State.DATA_COLLECTION
 
         if is_negative(user_input):
-            debug and debug.log("another_info", "User said no — checking missing fields")
-            from chatbot.handlers.missing_fields_handler import (
-                MissingFieldsHandler, SINGLE_BOOLEAN_MANDATORY, LEGITIMATE_BOOLEAN_GROUPS
+            debug and debug.log(
+                "another_info", "User said no — checking missing fields"
             )
+            from chatbot.handlers.missing_fields_handler import (
+                LEGITIMATE_BOOLEAN_GROUPS,
+                MissingFieldsHandler,
+            )
+
             handler = MissingFieldsHandler(self.engine)
             text_missing = handler._get_missing_text(live_fill, mandatory_flat)
 
             # Check unanswered boolean groups
             missing_bool_groups = []
             for group_name in LEGITIMATE_BOOLEAN_GROUPS:
-                fields = [k for k in mandatory_flat if k.startswith(f"{group_name}.") and live_fill.get(k) is None]
-                if fields and not any(live_fill.get(f) in (True, False) for f in fields):
+                fields = [
+                    k
+                    for k in mandatory_flat
+                    if k.startswith(f"{group_name}.") and live_fill.get(k) is None
+                ]
+                if fields and not any(
+                    live_fill.get(f) in (True, False) for f in fields
+                ):
                     missing_bool_groups.append(group_name)
 
             if text_missing or missing_bool_groups:
                 grouped_labels = handler._get_grouped_missing_labels(text_missing)
                 for group_name in missing_bool_groups:
-                    label = handler.SECTION_LABELS.get(group_name) or format_field_name(group_name)
+                    label = handler.SECTION_LABELS.get(group_name) or format_field_name(
+                        group_name
+                    )
                     if label not in grouped_labels:
                         grouped_labels.append(label)
 
-                lines = ["Okay.\nIt appears that some mandatory information is missing, as listed below.\n"]
+                lines = [
+                    "Okay.\nIt appears that some mandatory information is missing, as listed below.\n"
+                ]
                 for i, label in enumerate(grouped_labels, 1):
                     lines.append(f"{i}. {label}")
                 lines.append("\nWould you like to provide them now?")

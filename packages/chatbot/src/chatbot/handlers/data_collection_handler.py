@@ -1,19 +1,15 @@
 # chatbot/handlers/data_collection_handler.py
 from __future__ import annotations
-from typing import List
-from collections import OrderedDict
 
 from chatbot.core.states import State
 from chatbot.handlers.base_handler import BaseHandler
+from chatbot.utils.address_utils import check_mailing_fields
 from chatbot.utils.field_utils import (
-    get_missing_mandatory_keys,
-    format_field_name,
     filter_form_pf_fields,
     filter_user_facing_fields,
     get_registered_country,
     is_internal_split_field,
 )
-from chatbot.utils.address_utils import check_mailing_fields, copy_registered_to_mailing
 from chatbot.utils.intent_detection import is_exit_intent
 from chatbot.validation.field_validator import validate_field
 from chatbot.validation.phone_validator import split_phone_parts
@@ -22,7 +18,12 @@ MAX_MISSING_DISPLAY = 6
 MIN_EXTRACTED = 1
 PHONE_FAX_FULL_FIELD_SUFFIXES = ("telephone", "phone", "mobile", "fax", "tel")
 
-BOOLEAN_GROUP_SECTIONS = {"share_class", "investor_eligibility", "form_pf", "subscriber_type"}
+BOOLEAN_GROUP_SECTIONS = {
+    "share_class",
+    "investor_eligibility",
+    "form_pf",
+    "subscriber_type",
+}
 NEVER_ASK_PREFIXES = ("investor_type.",)
 
 
@@ -39,6 +40,7 @@ class DataCollectionHandler(BaseHandler):
         # After showing missing list, handle yes/no
         if session.get("_after_missing_list"):
             from chatbot.utils.intent_detection import is_negative
+
             if is_negative(user_input) or is_exit_intent(user_input):
                 session.pop("_after_missing_list", None)
                 msg = "Alright! Please wait while the provided information is added to the uploaded PDF. For any additional information or updates, refer to the notifications panel."
@@ -46,6 +48,7 @@ class DataCollectionHandler(BaseHandler):
                 return msg, State.COMPLETE
             session.pop("_after_missing_list", None)
             from chatbot.handlers.missing_fields_handler import MissingFieldsHandler
+
             handler = MissingFieldsHandler(self.engine)
             return handler.handle(session, user_input, user_id, session_id, debug)
 
@@ -117,7 +120,9 @@ class DataCollectionHandler(BaseHandler):
             return msg, State.MAILING_ADDRESS_CHECK
 
         missing_text = self._get_missing_text_mandatory(live_fill, mandatory_flat)
-        missing_bool_groups = self._get_missing_bool_groups(live_fill, mandatory_flat, investor_type, session)
+        missing_bool_groups = self._get_missing_bool_groups(
+            live_fill, mandatory_flat, investor_type, session
+        )
 
         # All mandatory done — go straight to MISSING_FIELDS_PROMPT (no "Thank you" message)
         if not missing_text and not missing_bool_groups:
@@ -131,7 +136,9 @@ class DataCollectionHandler(BaseHandler):
 
     # ------------------------------------------------------------------
 
-    def _get_missing_text_mandatory(self, live_fill: dict, mandatory_flat: dict) -> list:
+    def _get_missing_text_mandatory(
+        self, live_fill: dict, mandatory_flat: dict
+    ) -> list:
         missing = []
         for key in mandatory_flat:
             section = key.split(".")[0] if "." in key else ""
@@ -144,8 +151,11 @@ class DataCollectionHandler(BaseHandler):
                 missing.append(key)
         return missing
 
-    def _get_missing_bool_groups(self, live_fill: dict, mandatory_flat: dict, investor_type: str, session: dict) -> dict:
+    def _get_missing_bool_groups(
+        self, live_fill: dict, mandatory_flat: dict, investor_type: str, session: dict
+    ) -> dict:
         from collections import defaultdict
+
         groups = defaultdict(list)
         for key in mandatory_flat:
             section = key.split(".")[0] if "." in key else ""
@@ -161,7 +171,9 @@ class DataCollectionHandler(BaseHandler):
             if not value or not isinstance(value, str):
                 continue
             leaf = key.split(".")[-1]
-            if not any(leaf.endswith(s) or leaf == s for s in PHONE_FAX_FULL_FIELD_SUFFIXES):
+            if not any(
+                leaf.endswith(s) or leaf == s for s in PHONE_FAX_FULL_FIELD_SUFFIXES
+            ):
                 continue
             parts = split_phone_parts(value)
             prefix = key.rsplit(".", 1)[0] if "." in key else ""
@@ -187,8 +199,10 @@ class DataCollectionHandler(BaseHandler):
 
     def _registered_address_started(self, live_fill: dict) -> bool:
         """Fires when user has provided at least line1 or city — matches Lambda trigger."""
-        for key in ("address_registered.address_registered_line1_id",
-                    "address_registered.address_registered_city_id"):
+        for key in (
+            "address_registered.address_registered_line1_id",
+            "address_registered.address_registered_city_id",
+        ):
             if live_fill.get(key):
                 return True
         return False

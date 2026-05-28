@@ -1,6 +1,5 @@
 # src/ragpdf/storage/base.py
 from abc import ABC, abstractmethod
-from typing import Any, Optional
 
 
 class StorageBackend(ABC):
@@ -14,7 +13,7 @@ class StorageBackend(ABC):
         """Save a dict as JSON at the given key."""
 
     @abstractmethod
-    def load_json(self, key: str) -> Optional[dict]:
+    def load_json(self, key: str) -> dict | None:
         """Load JSON from key. Returns None if not found."""
 
     @abstractmethod
@@ -29,7 +28,7 @@ class StorageBackend(ABC):
     def copy_file(self, source_key: str, dest_key: str) -> bool:
         """Copy a file from source_key to dest_key."""
 
-    def load_json_from_path(self, full_path: str) -> Optional[dict]:
+    def load_json_from_path(self, full_path: str) -> dict | None:
         """
         Load JSON from a full path (e.g. s3://bucket/key or /abs/path).
         Default implementation — override if your backend needs it.

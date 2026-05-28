@@ -12,12 +12,13 @@ Layout::
             ├── output_flat.json
             └── execution_log.json
 """
+
 from __future__ import annotations
 
 import json
 import shutil
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from pdf_autofillr_doc_upload.storage.base import StorageBackend
 
@@ -31,7 +32,9 @@ class LocalStorage(StorageBackend):
         config_path: Directory containing schema JSON files (read-only).
     """
 
-    def __init__(self, data_path: str = "./data/doc_upload", config_path: str = "./configs"):
+    def __init__(
+        self, data_path: str = "./data/doc_upload", config_path: str = "./configs"
+    ):
         self.data_path = Path(data_path)
         self.config_path = Path(config_path)
         self.data_path.mkdir(parents=True, exist_ok=True)
@@ -45,10 +48,10 @@ class LocalStorage(StorageBackend):
 
     # ── JSON helpers ───────────────────────────────────────────────────
 
-    def _read(self, path: Path) -> Optional[Any]:
+    def _read(self, path: Path) -> Any | None:
         if not path.exists():
             return None
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             return json.load(f)
 
     def _write(self, path: Path, data: Any) -> bool:
@@ -63,7 +66,7 @@ class LocalStorage(StorageBackend):
 
     # ── Job state ──────────────────────────────────────────────────────
 
-    def get_job_state(self, job_id: str) -> Optional[dict]:
+    def get_job_state(self, job_id: str) -> dict | None:
         return self._read(self._job_dir(job_id) / "job_state.json")
 
     def save_job_state(self, job_id: str, state: dict) -> bool:
@@ -71,13 +74,13 @@ class LocalStorage(StorageBackend):
 
     # ── Output ─────────────────────────────────────────────────────────
 
-    def get_output(self, job_id: str) -> Optional[dict]:
+    def get_output(self, job_id: str) -> dict | None:
         return self._read(self._job_dir(job_id) / "output.json")
 
     def save_output(self, job_id: str, data: dict) -> bool:
         return self._write(self._job_dir(job_id) / "output.json", data)
 
-    def get_output_flat(self, job_id: str) -> Optional[dict]:
+    def get_output_flat(self, job_id: str) -> dict | None:
         return self._read(self._job_dir(job_id) / "output_flat.json")
 
     def save_output_flat(self, job_id: str, data: dict) -> bool:
@@ -88,7 +91,7 @@ class LocalStorage(StorageBackend):
     def save_execution_log(self, job_id: str, data: dict) -> bool:
         return self._write(self._job_dir(job_id) / "execution_log.json", data)
 
-    def get_execution_log(self, job_id: str) -> Optional[dict]:
+    def get_execution_log(self, job_id: str) -> dict | None:
         return self._read(self._job_dir(job_id) / "execution_log.json")
 
     # ── Config / document loading ──────────────────────────────────────
@@ -103,7 +106,7 @@ class LocalStorage(StorageBackend):
         p = Path(schema_path)
         if not p.is_absolute() and not p.exists():
             p = self.config_path / schema_path
-        with open(p, "r", encoding="utf-8") as f:
+        with open(p, encoding="utf-8") as f:
             return json.load(f)
 
     def download_document(self, source_path: str, local_dest: str) -> str:

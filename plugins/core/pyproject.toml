@@ -34,6 +34,7 @@ dev = [
     "pytest-asyncio>=0.21.0",
     "black>=23.12.0",
     "flake8>=7.0.0",
+    "ruff>=0.4.0",
     "mypy>=1.8.0",
 ]
 
@@ -43,39 +44,31 @@ Repository = "https://github.com/Engineersmind/pdf-autofillr"
 Documentation = "https://github.com/Engineersmind/pdf-autofillr/tree/main/docs"
 Issues = "https://github.com/Engineersmind/pdf-autofillr/issues"
 
-[tool.setuptools]
-packages = ["pdf_autofiller_core"]
-
 [tool.setuptools.packages.find]
 include = ["pdf_autofiller_core*"]
 
-# =============================================================================
-# Black - Code Formatter
-# =============================================================================
 [tool.black]
 line-length = 100
 target-version = ['py39', 'py310', 'py311']
 
-# =============================================================================
-# isort - Import Sorter
-# =============================================================================
-[tool.isort]
-profile = "black"
-line_length = 100
+[tool.ruff]
+line-length = 100
+target-version = "py39"
 
-# =============================================================================
-# pytest - Testing Framework
-# =============================================================================
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+
 [tool.pytest.ini_options]
 minversion = "7.0"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = ["-v", "--strict-markers"]
-
-# =============================================================================
-# mypy - Static Type Checker
-# =============================================================================
-[tool.mypy]
-python_version = "3.9"
-warn_return_any = true
-warn_unused_configs = true

@@ -1,6 +1,7 @@
 # src/ragpdf/correctors/openai_corrector.py
 import json
 import logging
+
 from ragpdf.correctors.base import FieldCorrectorBackend
 
 logger = logging.getLogger(__name__)
@@ -20,12 +21,24 @@ class OpenAICorrectorBackend(FieldCorrectorBackend):
         )
     """
 
-    def __init__(self, api_key: str = "", model: str = "", temperature: float = 0.3, max_tokens: int = 500):
+    def __init__(
+        self,
+        api_key: str = "",
+        model: str = "",
+        temperature: float = 0.3,
+        max_tokens: int = 500,
+    ):
         try:
             from openai import OpenAI
-        except ImportError:
-            raise ImportError("pip install ragpdf-sdk[openai]")
-        from ragpdf.config.settings import OPENAI_API_KEY, RAGPDF_OPENAI_MODEL, RAGPDF_OPENAI_TEMPERATURE, RAGPDF_OPENAI_MAX_TOKENS
+        except ImportError as e:
+            raise ImportError("pip install ragpdf-sdk[openai]") from e
+        from ragpdf.config.settings import (
+            OPENAI_API_KEY,
+            RAGPDF_OPENAI_MAX_TOKENS,
+            RAGPDF_OPENAI_MODEL,
+            RAGPDF_OPENAI_TEMPERATURE,
+        )
+
         self._client = OpenAI(api_key=api_key or OPENAI_API_KEY)
         self._model = model or RAGPDF_OPENAI_MODEL
         self._temperature = temperature or RAGPDF_OPENAI_TEMPERATURE
@@ -53,22 +66,33 @@ Respond with JSON only, no markdown:
             response = self._client.chat.completions.create(
                 model=self._model,
                 messages=[
-                    {"role": "system", "content": "You are a field mapping expert. Respond with valid JSON only."},
+                    {
+                        "role": "system",
+                        "content": "You are a field mapping expert. Respond with valid JSON only.",
+                    },
                     {"role": "user", "content": prompt},
                 ],
                 temperature=self._temperature,
                 max_tokens=self._max_tokens,
             )
-            content = response.choices[0].message.content.strip()
+            content = (response.choices[0].message.content or "").strip()
             if content.startswith("```"):
                 content = content.split("```")[1]
                 if content.startswith("json"):
                     content = content[4:]
                 content = content.strip()
             result = json.loads(content)
-            logger.info(f"GPT-4 correction: {error_data.get('field_name')} -> {result.get('corrected_field_name')}")
+            logger.info(
+                f"GPT-4 correction: {error_data.get('field_name')} -> {result.get('corrected_field_name')}"
+            )
             return result
         except Exception as e:
             logger.error(f"OpenAI corrector error: {e}")
-            fallback = error_data.get("field_name", "unknown_field").lower().replace(" ", "_")
-            return {"corrected_field_name": fallback, "confidence": 0.5, "reasoning": f"Fallback: {str(e)}"}
+            fallback = (
+                error_data.get("field_name", "unknown_field").lower().replace(" ", "_")
+            )
+            return {
+                "corrected_field_name": fallback,
+                "confidence": 0.5,
+                "reasoning": f"Fallback: {str(e)}",
+            }

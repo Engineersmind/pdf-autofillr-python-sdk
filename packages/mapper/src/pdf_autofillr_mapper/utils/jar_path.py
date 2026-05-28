@@ -41,12 +41,12 @@ def find_jar(name: str) -> str:
         FileNotFoundError: JAR not found in any expected location.
     """
     candidates = [
-        os.path.join(_ASSETS_DIR, name),                        # pdf_autofillr_mapper/assets/
-        os.path.join(_PKG_DIR, "..", "assets", name),           # assets/ (module root)
-        os.path.join(os.getcwd(), name),                        # working directory root
-        os.path.join("/opt", name),                             # Docker / Lambda layer
-        _sdk_jars_path(name),                                   # bundled SDK jars/
-        _env_override(name),                                    # PDF_AUTOFILLER_JAR_DIR
+        os.path.join(_ASSETS_DIR, name),  # pdf_autofillr_mapper/assets/
+        os.path.join(_PKG_DIR, "..", "assets", name),  # assets/ (module root)
+        os.path.join(os.getcwd(), name),  # working directory root
+        os.path.join("/opt", name),  # Docker / Lambda layer
+        _sdk_jars_path(name),  # bundled SDK jars/
+        _env_override(name),  # PDF_AUTOFILLER_JAR_DIR
     ]
 
     for path in candidates:
@@ -54,17 +54,18 @@ def find_jar(name: str) -> str:
             return os.path.abspath(path)
 
     raise FileNotFoundError(
-        f"{name!r} not found. Checked:\n"
-        + "\n".join(f"  {p}" for p in candidates if p)
+        f"{name!r} not found. Checked:\n" + "\n".join(f"  {p}" for p in candidates if p)
     )
 
 
 # ── Private helpers ───────────────────────────────────────────────────────────
 
+
 def _sdk_jars_path(name: str) -> str:
     """Path inside the installed pdf-autofiller SDK package (jars/ sub-dir)."""
     try:
         import importlib.resources as _ir
+
         # Python 3.9+: importlib.resources.files()
         pkg = _ir.files("pdf_autofiller").joinpath("jars").joinpath(name)
         candidate = str(pkg)

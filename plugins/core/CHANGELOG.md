@@ -6,6 +6,19 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Unreleased]
+
+### Changed
+
+- All packages: added `ruff`, `isort`, `flake8` to `[dev]` dependencies
+- All packages: added `[tool.ruff]`, `[tool.isort]` config sections to `pyproject.toml`
+- CI: new `ci.yml` workflow for lint and type checking (black, isort, ruff, mypy) across all packages
+- CI: new `release.yml` workflow adds lint and type gate before publish, plus GitHub Release creation with changelog notes
+
+---
+
+
+
 ## [1.0.0] - 2026-04-22
 
 ### Added

@@ -11,16 +11,18 @@ Requires: pip install "pdf-autofillr-chatbot[gcp]"
 Env vars: GOOGLE_APPLICATION_CREDENTIALS, GCP_OUTPUT_BUCKET,
           GCP_CONFIG_BUCKET, GCP_PROJECT_ID (optional)
 """
+
 from __future__ import annotations
 
 import json
-from typing import Any, List, Optional
+from typing import Any
 
 from chatbot.storage.base import StorageBackend
 
 try:
     from google.cloud import storage as gcs
     from google.cloud.exceptions import NotFound
+
     _GCS_AVAILABLE = True
 except ImportError:
     _GCS_AVAILABLE = False
@@ -28,7 +30,9 @@ except ImportError:
 
 class GCSStorage(StorageBackend):
 
-    def __init__(self, output_bucket: str, config_bucket: str, project: Optional[str] = None):
+    def __init__(
+        self, output_bucket: str, config_bucket: str, project: str | None = None
+    ):
         if not _GCS_AVAILABLE:
             raise ImportError(
                 "google-cloud-storage is required for GCSStorage.\n"
@@ -42,7 +46,7 @@ class GCSStorage(StorageBackend):
 
     # ── Helpers ───────────────────────────────────────────────────────
 
-    def _get(self, bucket, key: str) -> Optional[Any]:
+    def _get(self, bucket, key: str) -> Any | None:
         try:
             blob = bucket.blob(key)
             data = blob.download_as_text(encoding="utf-8")
@@ -77,16 +81,24 @@ class GCSStorage(StorageBackend):
         return self._get(self._out, self._sk(user_id, session_id, "session_state.json"))
 
     def save_session_state(self, user_id, session_id, state):
-        return self._put(self._out, self._sk(user_id, session_id, "session_state.json"), state)
+        return self._put(
+            self._out, self._sk(user_id, session_id, "session_state.json"), state
+        )
 
     # ── User integrated info ──────────────────────────────────────────
 
     def get_user_integrated_info(self, user_id):
-        data = self._get(self._out, self._uk(user_id, "user_integrated_information.json"))
+        data = self._get(
+            self._out, self._uk(user_id, "user_integrated_information.json")
+        )
         return data.get("data", data) if isinstance(data, dict) else data
 
     def save_user_integrated_info(self, user_id, data):
-        return self._put(self._out, self._uk(user_id, "user_integrated_information.json"), {"data": data})
+        return self._put(
+            self._out,
+            self._uk(user_id, "user_integrated_information.json"),
+            {"data": data},
+        )
 
     # ── Final output ──────────────────────────────────────────────────
 
@@ -94,13 +106,19 @@ class GCSStorage(StorageBackend):
         return self._get(self._out, self._sk(user_id, session_id, "final_output.json"))
 
     def save_final_output(self, user_id, session_id, data):
-        return self._put(self._out, self._sk(user_id, session_id, "final_output.json"), data)
+        return self._put(
+            self._out, self._sk(user_id, session_id, "final_output.json"), data
+        )
 
     def get_final_output_flat(self, user_id, session_id):
-        return self._get(self._out, self._sk(user_id, session_id, "final_output_flat.json"))
+        return self._get(
+            self._out, self._sk(user_id, session_id, "final_output_flat.json")
+        )
 
     def save_final_output_flat(self, user_id, session_id, data):
-        return self._put(self._out, self._sk(user_id, session_id, "final_output_flat.json"), data)
+        return self._put(
+            self._out, self._sk(user_id, session_id, "final_output_flat.json"), data
+        )
 
     # ── Session history ───────────────────────────────────────────────
 
@@ -113,19 +131,29 @@ class GCSStorage(StorageBackend):
     # ── Logs ──────────────────────────────────────────────────────────
 
     def save_conversation_log(self, user_id, session_id, data):
-        return self._put(self._out, self._sk(user_id, session_id, "conversation_log.json"), data)
+        return self._put(
+            self._out, self._sk(user_id, session_id, "conversation_log.json"), data
+        )
 
     def save_debug_conversation(self, user_id, session_id, data):
-        return self._put(self._out, self._sk(user_id, session_id, "debug_conversation.json"), data)
+        return self._put(
+            self._out, self._sk(user_id, session_id, "debug_conversation.json"), data
+        )
 
     def get_debug_conversation(self, user_id, session_id):
-        return self._get(self._out, self._sk(user_id, session_id, "debug_conversation.json"))
+        return self._get(
+            self._out, self._sk(user_id, session_id, "debug_conversation.json")
+        )
 
     def get_pdf_filling_logs(self, user_id, session_id):
-        return self._get(self._out, self._sk(user_id, session_id, "calling_filling_logs.json"))
+        return self._get(
+            self._out, self._sk(user_id, session_id, "calling_filling_logs.json")
+        )
 
     def save_pdf_filling_logs(self, user_id, session_id, data):
-        return self._put(self._out, self._sk(user_id, session_id, "calling_filling_logs.json"), data)
+        return self._put(
+            self._out, self._sk(user_id, session_id, "calling_filling_logs.json"), data
+        )
 
     # ── Fill report ───────────────────────────────────────────────────
 
@@ -133,15 +161,19 @@ class GCSStorage(StorageBackend):
         return self._get(self._out, self._sk(user_id, session_id, "fill_report.json"))
 
     def save_fill_report(self, user_id, session_id, data):
-        return self._put(self._out, self._sk(user_id, session_id, "fill_report.json"), data)
+        return self._put(
+            self._out, self._sk(user_id, session_id, "fill_report.json"), data
+        )
 
     # ── Utility ───────────────────────────────────────────────────────
 
-    def list_user_sessions(self, user_id: str) -> List[str]:
+    def list_user_sessions(self, user_id: str) -> list[str]:
         """Uses pages() to correctly collect prefixes across all GCS pages."""
         prefix = f"{user_id}/sessions/"
         sessions = []
-        iterator = self._client.list_blobs(self.output_bucket, prefix=prefix, delimiter="/")
+        iterator = self._client.list_blobs(
+            self.output_bucket, prefix=prefix, delimiter="/"
+        )
         for page in iterator.pages:
             for p in page.prefixes:
                 session_id = p.replace(prefix, "").rstrip("/")
@@ -165,7 +197,9 @@ class GCSStorage(StorageBackend):
     def load_config(self, filename: str) -> dict:
         data = self._get(self._cfg, filename)
         if data is None:
-            raise FileNotFoundError(f"Config not found in GCS: {self.config_bucket}/{filename}")
+            raise FileNotFoundError(
+                f"Config not found in GCS: {self.config_bucket}/{filename}"
+            )
         return data
 
     def load_investor_type_config(self, filename: str) -> dict:

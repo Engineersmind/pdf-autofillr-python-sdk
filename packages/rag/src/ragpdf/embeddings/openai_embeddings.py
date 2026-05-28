@@ -1,5 +1,6 @@
 # src/ragpdf/embeddings/openai_embeddings.py
 import logging
+
 from ragpdf.embeddings.base import EmbeddingBackend
 
 logger = logging.getLogger(__name__)
@@ -24,22 +25,25 @@ class OpenAIEmbeddingBackend(EmbeddingBackend):
     def __init__(self, api_key: str = "", model: str = "text-embedding-3-small"):
         try:
             from openai import OpenAI
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "OpenAIEmbeddingBackend requires openai. "
                 "Install with: pip install ragpdf-sdk[openai]"
-            )
+            ) from e
         from ragpdf.config.settings import OPENAI_API_KEY
+
         self._client = OpenAI(api_key=api_key or OPENAI_API_KEY)
         self._model = model
         logger.info(f"OpenAI embedding backend initialized: {model}")
 
     def embed(self, text: str) -> list:
         text = text.replace("\n", " ").strip()
+        text = text if text else " "
         response = self._client.embeddings.create(input=[text], model=self._model)
         return response.data[0].embedding
 
     def embed_batch(self, texts: list) -> list:
         texts = [t.replace("\n", " ").strip() for t in texts]
+        texts = [t if t else " " for t in texts]
         response = self._client.embeddings.create(input=texts, model=self._model)
         return [d.embedding for d in response.data]

@@ -1,7 +1,9 @@
-from .base import BaseChunker
 import logging
 
+from .base import BaseChunker
+
 logger = logging.getLogger(__name__)
+
 
 class PageBasedChunker(BaseChunker):
     def __init__(self, tokenizer, chunk_size, overlap):
@@ -41,9 +43,11 @@ class PageBasedChunker(BaseChunker):
                 break
             end_page = min(end_page, total_pages)
 
-            context_text = self.get_page_chunk_context(extracted_data, start_page, end_page)
+            context_text = self.get_page_chunk_context(
+                extracted_data, start_page, end_page
+            )
 
-            chunk_pages = extracted_data["pages"][start_page - 1:end_page]
+            chunk_pages = extracted_data["pages"][start_page - 1 : end_page]
             start_fids = []
             end_fids = []
 
@@ -65,7 +69,7 @@ class PageBasedChunker(BaseChunker):
 
             stats_dict[key] = (
                 len(context_text.split()),
-                sum(len(p["form_fields"]) for p in chunk_pages)
+                sum(len(p["form_fields"]) for p in chunk_pages),
             )
 
             i += 1

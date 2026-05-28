@@ -18,6 +18,7 @@ def generate_submission_id(user_id, session_id, pdf_id, pdf_hash, storage):
 def get_pdf_frequency(pdf_hash, storage):
     """How many times has this PDF hash been submitted before?"""
     from ragpdf.utils.constants import PDF_HASH_MAPPING_KEY
+
     mapping = storage.load_json(PDF_HASH_MAPPING_KEY) or {}
     if pdf_hash not in mapping:
         return 1

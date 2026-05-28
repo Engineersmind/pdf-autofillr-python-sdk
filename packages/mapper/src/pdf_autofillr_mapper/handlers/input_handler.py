@@ -15,8 +15,8 @@ Usage in operations:
     # Returns: /tmp/processing/file.pdf (already downloaded)
 """
 
-import os
 import logging
+import os
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -47,8 +47,8 @@ class InputFileHandler:
         self,
         file_type: str,
         source_path: Optional[str] = None,
-        local_path: Optional[str] = None
-    ) -> str:
+        local_path: Optional[str] = None,
+    ) -> Optional[str]:
         """
         Get input file - downloads if needed, returns local path.
 
@@ -91,7 +91,7 @@ class InputFileHandler:
 
         return self.download_input(source_path, local_path)
 
-    def download_input(self, source_path: str, local_path: str) -> str:
+    def download_input(self, source_path: str, local_path: str) -> Optional[str]:
         """
         Download input file from source storage.
         Automatically detects storage type from path prefix.
@@ -109,24 +109,29 @@ class InputFileHandler:
 
         os.makedirs(os.path.dirname(local_path), exist_ok=True)
 
-        if source_path.startswith('s3://'):
+        if source_path.startswith("s3://"):
             logger.debug(f"Detected S3 path: {source_path}")
             return self._download_aws(source_path, local_path)
-        elif source_path.startswith('gs://'):
+        elif source_path.startswith("gs://"):
             logger.debug(f"Detected GCS path: {source_path}")
             return self._download_gcp(source_path, local_path)
-        elif source_path.startswith('azure://') or ('blob.core.windows.net' in source_path and source_path.startswith('https://')):
+        elif source_path.startswith("azure://") or (
+            "blob.core.windows.net" in source_path
+            and source_path.startswith("https://")
+        ):
             logger.debug(f"Detected Azure path: {source_path}")
             return self._download_azure(source_path, local_path)
         else:
-            logger.debug(f"Using configured source type ({self.source_type}) for: {source_path}")
-            if self.source_type == 'local':
+            logger.debug(
+                f"Using configured source type ({self.source_type}) for: {source_path}"
+            )
+            if self.source_type == "local":
                 return self._download_local(source_path, local_path)
-            elif self.source_type == 'aws':
+            elif self.source_type == "aws":
                 return self._download_aws(source_path, local_path)
-            elif self.source_type == 'azure':
+            elif self.source_type == "azure":
                 return self._download_azure(source_path, local_path)
-            elif self.source_type == 'gcp':
+            elif self.source_type == "gcp":
                 return self._download_gcp(source_path, local_path)
             else:
                 logger.error(f"Unknown source type: {self.source_type}")
@@ -142,7 +147,7 @@ class InputFileHandler:
             - extracted_json -> config.local_extracted_json
             - etc.
         """
-        attr_name = f'local_{file_type}'
+        attr_name = f"local_{file_type}"
         local_path = getattr(self.config, attr_name, None)
 
         if not local_path:
@@ -160,14 +165,14 @@ class InputFileHandler:
             GCP: input_pdf -> config.gcs_input_pdf
             Local: input_pdf -> config.source_input_pdf (if set)
         """
-        if self.source_type == 'aws':
-            attr_name = f's3_{file_type}'
-        elif self.source_type == 'azure':
-            attr_name = f'blob_{file_type}'
-        elif self.source_type == 'gcp':
-            attr_name = f'gcs_{file_type}'
-        elif self.source_type == 'local':
-            attr_name = f'source_{file_type}'
+        if self.source_type == "aws":
+            attr_name = f"s3_{file_type}"
+        elif self.source_type == "azure":
+            attr_name = f"blob_{file_type}"
+        elif self.source_type == "gcp":
+            attr_name = f"gcs_{file_type}"
+        elif self.source_type == "local":
+            attr_name = f"source_{file_type}"
         else:
             return None
 
@@ -178,7 +183,7 @@ class InputFileHandler:
 
         return source_path
 
-    def _download_local(self, source_path: str, local_path: str) -> str:
+    def _download_local(self, source_path: str, local_path: str) -> Optional[str]:
         """
         Download from local file system (copy file).
 
@@ -193,7 +198,7 @@ class InputFileHandler:
             logger.error(f"Failed to copy local file: {e}", exc_info=True)
             return None
 
-    def _download_aws(self, source_path: str, local_path: str) -> str:
+    def _download_aws(self, source_path: str, local_path: str) -> Optional[str]:
         """
         Download from AWS S3.
 
@@ -203,7 +208,7 @@ class InputFileHandler:
         try:
             from pdf_autofillr_mapper.configs.aws import AWSStorageConfig
 
-            if hasattr(self.config, 's3_client') and self.config.source_type == 'aws':
+            if hasattr(self.config, "s3_client") and self.config.source_type == "aws":
                 self.config.download_file(source_path, local_path)
             else:
                 aws_config = AWSStorageConfig()
@@ -215,7 +220,7 @@ class InputFileHandler:
             logger.error(f"Failed to download from S3: {e}", exc_info=True)
             return None
 
-    def _download_azure(self, source_path: str, local_path: str) -> str:
+    def _download_azure(self, source_path: str, local_path: str) -> Optional[str]:
         """
         Download from Azure Blob Storage.
 
@@ -225,7 +230,10 @@ class InputFileHandler:
         try:
             from pdf_autofillr_mapper.configs.azure import AzureStorageConfig
 
-            if hasattr(self.config, 'blob_client') and self.config.source_type == 'azure':
+            if (
+                hasattr(self.config, "blob_client")
+                and self.config.source_type == "azure"
+            ):
                 self.config.download_file(source_path, local_path)
             else:
                 azure_config = AzureStorageConfig()
@@ -237,7 +245,7 @@ class InputFileHandler:
             logger.error(f"Failed to download from Azure: {e}", exc_info=True)
             return None
 
-    def _download_gcp(self, source_path: str, local_path: str) -> str:
+    def _download_gcp(self, source_path: str, local_path: str) -> Optional[str]:
         """
         Download from GCP Cloud Storage.
 
@@ -247,7 +255,7 @@ class InputFileHandler:
         try:
             from pdf_autofillr_mapper.configs.gcp import GCPStorageConfig
 
-            if hasattr(self.config, 'gcs_client') and self.config.source_type == 'gcp':
+            if hasattr(self.config, "gcs_client") and self.config.source_type == "gcp":
                 self.config.download_file(source_path, local_path)
             else:
                 gcp_config = GCPStorageConfig()

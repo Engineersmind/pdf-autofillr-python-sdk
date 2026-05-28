@@ -10,25 +10,48 @@ Usage:
 
 import argparse
 
-MODULES  = ["mapper", "chatbot", "doc_upload", "rag"]
+MODULES = ["mapper", "chatbot", "doc_upload", "rag"]
 DATASETS = ["financial", "medical", "legal", "government", "hr", "insurance"]
-MODELS   = ["gpt-4o", "gpt-4o-mini", "claude-3-5-sonnet", "claude-3-5-haiku", "llama3.1", "mistral"]
+MODELS = [
+    "gpt-4o",
+    "gpt-4o-mini",
+    "claude-3-5-sonnet",
+    "claude-3-5-haiku",
+    "llama3.1",
+    "mistral",
+]
 
 MODULE_TASKS = {
-    "mapper":     ["field_extraction", "field_mapping", "form_filling"],
-    "chatbot":    ["conversation_extraction", "session_completion"],
+    "mapper": ["field_extraction", "field_mapping", "form_filling"],
+    "chatbot": ["conversation_extraction", "session_completion"],
     "doc_upload": ["document_extraction", "end_to_end_fill"],
-    "rag":        ["field_prediction", "feedback_loop", "vector_retrieval"],
+    "rag": ["field_prediction", "feedback_loop", "vector_retrieval"],
 }
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run pdf-autofillr benchmarks")
-    parser.add_argument("--module",  choices=MODULES,  default=None, help="Package to benchmark (default: all)")
-    parser.add_argument("--task",    default=None, help="Task name (default: all for module)")
-    parser.add_argument("--model",   choices=MODELS,   default=None, help="Model (default: all)")
-    parser.add_argument("--dataset", choices=DATASETS, default=None, help="Dataset category (default: all)")
-    parser.add_argument("--output",  default="benchmarks/results", help="Output directory")
+    parser.add_argument(
+        "--module",
+        choices=MODULES,
+        default=None,
+        help="Package to benchmark (default: all)",
+    )
+    parser.add_argument(
+        "--task", default=None, help="Task name (default: all for module)"
+    )
+    parser.add_argument(
+        "--model", choices=MODELS, default=None, help="Model (default: all)"
+    )
+    parser.add_argument(
+        "--dataset",
+        choices=DATASETS,
+        default=None,
+        help="Dataset category (default: all)",
+    )
+    parser.add_argument(
+        "--output", default="benchmarks/results", help="Output directory"
+    )
     return parser.parse_args()
 
 
@@ -41,12 +64,14 @@ def main():
     args = parse_args()
 
     modules = [args.module] if args.module else MODULES
-    models  = [args.model]  if args.model  else MODELS
+    models = [args.model] if args.model else MODELS
 
     for module in modules:
-        tasks    = [args.task]    if args.task    else MODULE_TASKS[module]
-        datasets = [args.dataset] if args.dataset else (
-            DATASETS if module in ("mapper", "doc_upload") else ["general"]
+        tasks = [args.task] if args.task else MODULE_TASKS[module]
+        datasets = (
+            [args.dataset]
+            if args.dataset
+            else (DATASETS if module in ("mapper", "doc_upload") else ["general"])
         )
         for task in tasks:
             for model in models:
@@ -55,7 +80,7 @@ def main():
                     print(f"Running: {label} ...")
                     try:
                         run(module, task, model, dataset, args.output)
-                        print(f"  ✓ done")
+                        print("  ✓ done")
                     except NotImplementedError as e:
                         print(f"  – skipped ({e})")
 

@@ -1,3 +1,3 @@
-from chatbot.limits.rate_limiter import RateLimiter, RateLimitConfig, RateLimitExceeded
+from chatbot.limits.rate_limiter import RateLimitConfig, RateLimiter, RateLimitExceeded
 
 __all__ = ["RateLimiter", "RateLimitConfig", "RateLimitExceeded"]

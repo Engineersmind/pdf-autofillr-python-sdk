@@ -3,8 +3,10 @@ Plugins — write and register a custom validator.
 
 Requires: pip install pdf-autofiller-plugins
 """
+
 import re
-from pdf_autofiller_plugins import plugin, PluginManager
+
+from pdf_autofiller_plugins import PluginManager, plugin
 from pdf_autofiller_plugins.interfaces import ValidatorPlugin
 
 

@@ -11,6 +11,7 @@ Environment variables:
     HOST                 (default 0.0.0.0)
     MAPPER_LOG_LEVEL     (default info)
 """
+
 from __future__ import annotations
 
 import os
@@ -29,13 +30,14 @@ def main() -> None:
         sys.exit(1)
 
     from dotenv import load_dotenv
+
     load_dotenv()
 
     # Import the FastAPI app (entrypoints/fastapi_app.py already has fixed imports)
     from entrypoints.fastapi_app import app  # noqa: F401
 
-    port      = int(os.getenv("PORT", "8000"))
-    host      = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", "8000"))
+    host = os.getenv("HOST", "0.0.0.0")
     log_level = os.getenv("MAPPER_LOG_LEVEL", "info").lower()
 
     print(f"\npdf-autofillr-mapper API -> http://{host}:{port}")

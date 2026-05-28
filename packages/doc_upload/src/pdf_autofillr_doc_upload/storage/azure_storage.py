@@ -7,11 +7,10 @@ Env vars::
     AZURE_CONFIG_CONTAINER
     AZURE_STORAGE_CONNECTION_STRING
 """
+
 from __future__ import annotations
 
 import json
-import tempfile
-from typing import Optional
 
 from pdf_autofillr_doc_upload.storage.base import StorageBackend
 
@@ -26,11 +25,12 @@ class AzureStorage(StorageBackend):
         connection_string: str,
     ):
         from azure.storage.blob import BlobServiceClient
+
         self.output_container = output_container
         self.config_container = config_container
         self.service = BlobServiceClient.from_connection_string(connection_string)
 
-    def _get_json(self, container: str, blob_name: str) -> Optional[dict]:
+    def _get_json(self, container: str, blob_name: str) -> dict | None:
         try:
             client = self.service.get_blob_client(container=container, blob=blob_name)
             data = client.download_blob().readall()
@@ -58,28 +58,44 @@ class AzureStorage(StorageBackend):
         return f"jobs/{job_id}/{filename}"
 
     def get_job_state(self, job_id):
-        return self._get_json(self.output_container, self._job_key(job_id, "job_state.json"))
+        return self._get_json(
+            self.output_container, self._job_key(job_id, "job_state.json")
+        )
 
     def save_job_state(self, job_id, state):
-        return self._put_json(self.output_container, self._job_key(job_id, "job_state.json"), state)
+        return self._put_json(
+            self.output_container, self._job_key(job_id, "job_state.json"), state
+        )
 
     def get_output(self, job_id):
-        return self._get_json(self.output_container, self._job_key(job_id, "output.json"))
+        return self._get_json(
+            self.output_container, self._job_key(job_id, "output.json")
+        )
 
     def save_output(self, job_id, data):
-        return self._put_json(self.output_container, self._job_key(job_id, "output.json"), data)
+        return self._put_json(
+            self.output_container, self._job_key(job_id, "output.json"), data
+        )
 
     def get_output_flat(self, job_id):
-        return self._get_json(self.output_container, self._job_key(job_id, "output_flat.json"))
+        return self._get_json(
+            self.output_container, self._job_key(job_id, "output_flat.json")
+        )
 
     def save_output_flat(self, job_id, data):
-        return self._put_json(self.output_container, self._job_key(job_id, "output_flat.json"), data)
+        return self._put_json(
+            self.output_container, self._job_key(job_id, "output_flat.json"), data
+        )
 
     def save_execution_log(self, job_id, data):
-        return self._put_json(self.output_container, self._job_key(job_id, "execution_log.json"), data)
+        return self._put_json(
+            self.output_container, self._job_key(job_id, "execution_log.json"), data
+        )
 
     def get_execution_log(self, job_id):
-        return self._get_json(self.output_container, self._job_key(job_id, "execution_log.json"))
+        return self._get_json(
+            self.output_container, self._job_key(job_id, "execution_log.json")
+        )
 
     def load_schema(self, schema_path: str) -> dict:
         data = self._get_json(self.config_container, schema_path)
@@ -98,6 +114,7 @@ class AzureStorage(StorageBackend):
                 f.write(client.download_blob().readall())
         else:
             import shutil
+
             shutil.copy2(source_path, local_dest)
         return local_dest
 

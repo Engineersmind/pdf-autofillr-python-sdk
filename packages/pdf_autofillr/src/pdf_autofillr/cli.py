@@ -10,15 +10,16 @@ pdf-autofillr CLI — the one command to rule them all.
     pdf-autofillr rag      start the RAG FastAPI server
     pdf-autofillr help     show this message
 """
+
 from __future__ import annotations
 
 import sys
-import os
 
 
 def _start_chatbot():
     try:
         from chatbot.entrypoints.server import main
+
         main()
     except ImportError:
         print("❌  pdf-autofillr-chatbot is not installed.")
@@ -29,6 +30,7 @@ def _start_chatbot():
 def _start_doc_upload():
     try:
         from pdf_autofillr_doc_upload.entrypoints.server import main
+
         main()
     except ImportError:
         print("❌  pdf-autofillr-doc-upload is not installed.")
@@ -39,6 +41,7 @@ def _start_doc_upload():
 def _start_mapper():
     try:
         from pdf_autofillr_mapper.entrypoints.server import main
+
         main()
     except ImportError:
         print("❌  pdf-autofillr-mapper is not installed.")
@@ -49,6 +52,7 @@ def _start_mapper():
 def _start_rag():
     try:
         from ragpdf.entrypoints.fastapi_app import main
+
         main()
     except ImportError:
         print("❌  pdf-autofillr-rag is not installed.")
@@ -71,11 +75,13 @@ def main():
 
     if cmd == "setup":
         from pdf_autofillr.setup import run_setup
+
         dest = args[1] if len(args) > 1 else "."
         run_setup(dest)
 
     elif cmd in ("status", "check"):
         from pdf_autofillr.status import run_status
+
         dest = args[1] if len(args) > 1 else "."
         run_status(dest)
 

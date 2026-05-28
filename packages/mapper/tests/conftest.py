@@ -6,11 +6,12 @@ the mapper operations without needing to invoke AWS Lambda or other entrypoints.
 """
 
 import os
-import pytest
 import tempfile
 from pathlib import Path
-from typing import Dict, Any
-from unittest.mock import Mock, AsyncMock
+from typing import Any
+from unittest.mock import AsyncMock
+
+import pytest
 
 
 @pytest.fixture
@@ -33,7 +34,7 @@ def sample_pdf_path(temp_dir):
 def sample_extracted_json(temp_dir):
     """Create a sample extracted JSON file."""
     import json
-    
+
     json_path = temp_dir / "extracted.json"
     data = {
         "fields": [
@@ -42,29 +43,26 @@ def sample_extracted_json(temp_dir):
                 "type": "text",
                 "value": "",
                 "bbox": [100, 100, 200, 120],
-                "page": 1
+                "page": 1,
             },
             {
                 "name": "last_name",
                 "type": "text",
                 "value": "",
                 "bbox": [250, 100, 350, 120],
-                "page": 1
+                "page": 1,
             },
             {
                 "name": "email",
                 "type": "text",
                 "value": "",
                 "bbox": [100, 150, 300, 170],
-                "page": 1
-            }
+                "page": 1,
+            },
         ],
-        "metadata": {
-            "page_count": 1,
-            "extractor": "test"
-        }
+        "metadata": {"page_count": 1, "extractor": "test"},
     }
-    
+
     json_path.write_text(json.dumps(data, indent=2))
     return str(json_path)
 
@@ -73,18 +71,18 @@ def sample_extracted_json(temp_dir):
 def sample_mapped_json(temp_dir):
     """Create a sample mapped JSON file."""
     import json
-    
+
     json_path = temp_dir / "mapped.json"
     data = {
         "mapped_fields": {
             "firstName": "first_name",
             "lastName": "last_name",
-            "emailAddress": "email"
+            "emailAddress": "email",
         },
         "confidence": 0.85,
-        "mapper": "semantic"
+        "mapper": "semantic",
     }
-    
+
     json_path.write_text(json.dumps(data, indent=2))
     return str(json_path)
 
@@ -93,7 +91,7 @@ def sample_mapped_json(temp_dir):
 def sample_input_json(temp_dir):
     """Create a sample input/global JSON file."""
     import json
-    
+
     json_path = temp_dir / "global_input.json"
     data = {
         "firstName": "John",
@@ -102,9 +100,9 @@ def sample_input_json(temp_dir):
         "address": "123 Main St",
         "city": "Anytown",
         "state": "CA",
-        "zipCode": "12345"
+        "zipCode": "12345",
     }
-    
+
     json_path.write_text(json.dumps(data, indent=2))
     return str(json_path)
 
@@ -112,6 +110,7 @@ def sample_input_json(temp_dir):
 @pytest.fixture
 def mock_storage_config(temp_dir, sample_pdf_path, sample_input_json):
     """Create a mock storage configuration object."""
+
     class MockStorageConfig:
         def __init__(self):
             self.source_type = "local"
@@ -156,7 +155,7 @@ def mock_storage_config(temp_dir, sample_pdf_path, sample_input_json):
             self.cached_radio_json = str(temp_dir / "radio.json")
             self.cached_radio_groups = str(temp_dir / "radio.json")
             self.cached_embedded_pdf = str(temp_dir / "embedded.pdf")
-    
+
     return MockStorageConfig()
 
 
@@ -190,26 +189,22 @@ def pdf_doc_id():
 @pytest.fixture
 def sample_mapping_config():
     """Sample mapping configuration."""
-    return {
-        "strategy": "semantic",
-        "confidence_threshold": 0.7,
-        "use_cache": True
-    }
+    return {"strategy": "semantic", "confidence_threshold": 0.7, "use_cache": True}
 
 
 @pytest.fixture(autouse=True)
 def setup_env_vars(temp_dir):
     """Set up environment variables for testing."""
     original_env = os.environ.copy()
-    
+
     # Set test environment variables
     os.environ["ENVIRONMENT"] = "test"
     os.environ["LOCAL_WORKSPACE"] = str(temp_dir)
     os.environ["AWS_REGION"] = "us-east-1"
     os.environ["S3_BUCKET"] = "test-bucket"
-    
+
     yield
-    
+
     # Restore original environment
     os.environ.clear()
     os.environ.update(original_env)
@@ -218,15 +213,16 @@ def setup_env_vars(temp_dir):
 @pytest.fixture
 def mock_extractor(monkeypatch):
     """Mock the PDF extractor."""
+
     async def mock_extract(*args, **kwargs):
         return {
             "fields": [
                 {"name": "field1", "value": "value1"},
-                {"name": "field2", "value": "value2"}
+                {"name": "field2", "value": "value2"},
             ],
-            "metadata": {"extractor": "mock"}
+            "metadata": {"extractor": "mock"},
         }
-    
+
     # This would be patched in actual tests
     return mock_extract
 
@@ -234,53 +230,52 @@ def mock_extractor(monkeypatch):
 @pytest.fixture
 def mock_mapper(monkeypatch):
     """Mock the semantic mapper."""
+
     async def mock_map(*args, **kwargs):
         return {
-            "mapped_fields": {
-                "targetField1": "field1",
-                "targetField2": "field2"
-            },
-            "confidence": 0.9
+            "mapped_fields": {"targetField1": "field1", "targetField2": "field2"},
+            "confidence": 0.9,
         }
-    
+
     return mock_map
 
 
 @pytest.fixture
 def mock_embedder(monkeypatch):
     """Mock the PDF embedder."""
+
     async def mock_embed(*args, **kwargs):
-        return {
-            "embedded_keys": ["field1", "field2"],
-            "success": True
-        }
-    
+        return {"embedded_keys": ["field1", "field2"], "success": True}
+
     return mock_embed
 
 
 @pytest.fixture
 def mock_filler(monkeypatch):
     """Mock the PDF filler."""
+
     async def mock_fill(*args, **kwargs):
         return {
             "filled_fields": ["field1", "field2"],
             "output_path": "/tmp/filled.pdf",
-            "success": True
+            "success": True,
         }
-    
+
     return mock_fill
 
 
 # Helper functions for tests
+
 
 def create_test_pdf(path: str) -> None:
     """Create a minimal test PDF file."""
     Path(path).write_bytes(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
 
 
-def create_test_json(path: str, data: Dict[str, Any]) -> None:
+def create_test_json(path: str, data: dict[str, Any]) -> None:
     """Create a test JSON file."""
     import json
+
     Path(path).write_text(json.dumps(data, indent=2))
 
 
@@ -289,7 +284,8 @@ def assert_file_exists(path: str) -> bool:
     return Path(path).exists()
 
 
-def read_json_file(path: str) -> Dict[str, Any]:
+def read_json_file(path: str) -> dict[str, Any]:
     """Read and parse a JSON file."""
     import json
+
     return json.loads(Path(path).read_text())

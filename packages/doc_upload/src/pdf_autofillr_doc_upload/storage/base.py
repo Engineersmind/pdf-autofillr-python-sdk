@@ -2,10 +2,10 @@
 """
 StorageBackend — abstract class all storage implementations extend.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Optional
 
 
 class StorageBackend(ABC):
@@ -19,7 +19,7 @@ class StorageBackend(ABC):
     # ── Job / session state ────────────────────────────────────────────
 
     @abstractmethod
-    def get_job_state(self, job_id: str) -> Optional[dict]: ...
+    def get_job_state(self, job_id: str) -> dict | None: ...
 
     @abstractmethod
     def save_job_state(self, job_id: str, state: dict) -> bool: ...
@@ -27,13 +27,13 @@ class StorageBackend(ABC):
     # ── Output data ────────────────────────────────────────────────────
 
     @abstractmethod
-    def get_output(self, job_id: str) -> Optional[dict]: ...
+    def get_output(self, job_id: str) -> dict | None: ...
 
     @abstractmethod
     def save_output(self, job_id: str, data: dict) -> bool: ...
 
     @abstractmethod
-    def get_output_flat(self, job_id: str) -> Optional[dict]: ...
+    def get_output_flat(self, job_id: str) -> dict | None: ...
 
     @abstractmethod
     def save_output_flat(self, job_id: str, data: dict) -> bool: ...
@@ -44,7 +44,7 @@ class StorageBackend(ABC):
     def save_execution_log(self, job_id: str, data: dict) -> bool: ...
 
     @abstractmethod
-    def get_execution_log(self, job_id: str) -> Optional[dict]: ...
+    def get_execution_log(self, job_id: str) -> dict | None: ...
 
     # ── Config loaders ─────────────────────────────────────────────────
 

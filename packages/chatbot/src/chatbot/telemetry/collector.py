@@ -7,6 +7,7 @@ Privacy guarantee:
   - User/session IDs are one-way SHA-256 hashed before transmission.
   - Only metadata (counts, latencies, states, field keys) is sent.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -15,7 +16,6 @@ import json
 import threading
 from collections import deque
 from datetime import datetime, timezone
-from typing import Optional
 
 from chatbot.telemetry.config import TelemetryConfig
 from chatbot.telemetry.document_context import DocumentContext
@@ -37,17 +37,20 @@ class TelemetryCollector:
 
     def __init__(
         self,
-        config: Optional[TelemetryConfig] = None,
-        document_context: Optional[DocumentContext] = None,
+        config: TelemetryConfig | None = None,
+        document_context: DocumentContext | None = None,
     ):
         self.config = config
         self.document_context = document_context
         self._enabled = bool(config and config.enabled)
         self._endpoint = config.endpoint if config else ""
         self._api_key = config.sdk_api_key if config else ""
-        self._batch_size = config.batch_size if config and hasattr(config, "batch_size") else 10
+        self._batch_size = (
+            config.batch_size if config and hasattr(config, "batch_size") else 10
+        )
 
         import os
+
         self._debug = os.getenv("chatbot_DEBUG_LOGGING", "").lower() == "true"
 
         # In-memory queue + background flush thread
@@ -79,14 +82,19 @@ class TelemetryCollector:
     ) -> None:
         if not self._enabled:
             return
-        self._emit("extraction_result", user_id, session_id, {
-            "fields_extracted": fields_extracted,
-            "fields_attempted": fields_attempted,
-            "latency_ms": int(latency * 1000),
-            "method": method,
-            "prompt_version": prompt_version,
-            "hallucination_detected": hallucination_detected,
-        })
+        self._emit(
+            "extraction_result",
+            user_id,
+            session_id,
+            {
+                "fields_extracted": fields_extracted,
+                "fields_attempted": fields_attempted,
+                "latency_ms": int(latency * 1000),
+                "method": method,
+                "prompt_version": prompt_version,
+                "hallucination_detected": hallucination_detected,
+            },
+        )
 
     def track_state_transition(
         self,
@@ -99,12 +107,17 @@ class TelemetryCollector:
     ) -> None:
         if not self._enabled:
             return
-        self._emit("state_transition", user_id, session_id, {
-            "from_state": from_state,
-            "to_state": to_state,
-            "turn_number": turn_number,
-            "latency_ms": int(latency * 1000),
-        })
+        self._emit(
+            "state_transition",
+            user_id,
+            session_id,
+            {
+                "from_state": from_state,
+                "to_state": to_state,
+                "turn_number": turn_number,
+                "latency_ms": int(latency * 1000),
+            },
+        )
 
     def track_session_complete(
         self,
@@ -117,18 +130,25 @@ class TelemetryCollector:
     ) -> None:
         if not self._enabled:
             return
-        self._emit("session_complete", user_id, session_id, {
-            "total_turns": total_turns,
-            "duration_seconds": round(duration_seconds, 1),
-            "mandatory_completion_pct": round(mandatory_pct, 2),
-            "optional_completion_pct": round(optional_pct, 2),
-        })
+        self._emit(
+            "session_complete",
+            user_id,
+            session_id,
+            {
+                "total_turns": total_turns,
+                "duration_seconds": round(duration_seconds, 1),
+                "mandatory_completion_pct": round(mandatory_pct, 2),
+                "optional_completion_pct": round(optional_pct, 2),
+            },
+        )
 
     # ------------------------------------------------------------------
     # Internal
     # ------------------------------------------------------------------
 
-    def _emit(self, event_type: str, user_id: str, session_id: str, payload: dict) -> None:
+    def _emit(
+        self, event_type: str, user_id: str, session_id: str, payload: dict
+    ) -> None:
         event = {
             "event_type": event_type,
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -194,15 +214,19 @@ class TelemetryCollector:
                     timeout=aiohttp.ClientTimeout(total=5),
                 ) as resp:
                     if self._debug:
-                        print(f"[TELEMETRY] Sent {len(batch)} events -> HTTP {resp.status}")
+                        print(
+                            f"[TELEMETRY] Sent {len(batch)} events -> HTTP {resp.status}"
+                        )
         except Exception as e:
             if self._debug:
                 print(f"[TELEMETRY] Failed to send batch: {e}")
 
     def _start_flush_thread(self, interval_seconds: int) -> None:
         """Background thread that flushes the queue on a timer."""
+
         def _loop():
             import time
+
             while True:
                 time.sleep(interval_seconds)
                 try:

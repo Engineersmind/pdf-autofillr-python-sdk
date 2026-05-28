@@ -1,17 +1,15 @@
 # chatbot/handlers/investor_type_handler.py
 """Handles INVESTOR_TYPE_SELECT state."""
+
 from __future__ import annotations
-from typing import Optional, Tuple
 
 from fuzzywuzzy import process as fuzz_process
 
 from chatbot.core.states import (
-    State,
-    INVESTOR_TYPES,
-    INVESTOR_TYPE_BOOLEAN_FIELD,
     INTERNAL_SPLIT_FIELD_PREFIXES,
-    FORM_PF_FIELD_PREFIX,
-    US_COUNTRY_VALUES,
+    INVESTOR_TYPE_BOOLEAN_FIELD,
+    INVESTOR_TYPES,
+    State,
 )
 from chatbot.handlers.base_handler import BaseHandler
 from chatbot.utils.dict_utils import flatten_dict
@@ -21,7 +19,9 @@ class InvestorTypeHandler(BaseHandler):
     def handle(self, session, user_input, user_id, session_id, debug=None):
         investor_type = self._parse_selection(user_input)
         if not investor_type:
-            lines = ["I didn't recognise that. Please choose a number or type the investor type:\n"]
+            lines = [
+                "I didn't recognise that. Please choose a number or type the investor type:\n"
+            ]
             for i, t in enumerate(INVESTOR_TYPES, 1):
                 lines.append(f"  {i}. {t}")
             msg = "\n".join(lines)
@@ -34,13 +34,15 @@ class InvestorTypeHandler(BaseHandler):
 
         # Flatten, strip private keys and internal split fields (never shown to user)
         live_fill_flat = {
-            k: v for k, v in flatten_dict(form_keys).items()
+            k: v
+            for k, v in flatten_dict(form_keys).items()
             if not k.startswith("_")
-            and not any(k.split(".")[-1].startswith(p) for p in INTERNAL_SPLIT_FIELD_PREFIXES)
+            and not any(
+                k.split(".")[-1].startswith(p) for p in INTERNAL_SPLIT_FIELD_PREFIXES
+            )
         }
         mandatory_flat = {
-            k: v for k, v in flatten_dict(mandatory).items()
-            if not k.startswith("_")
+            k: v for k, v in flatten_dict(mandatory).items() if not k.startswith("_")
         }
 
         session["live_fill_flat"] = live_fill_flat

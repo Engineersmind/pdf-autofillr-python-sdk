@@ -14,12 +14,11 @@ Usage in operations:
     handler.save_output(local_path, 'extracted_json')
 """
 
-import os
-import time
 import logging
+import os
 import shutil
+import time
 from typing import Optional
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -43,14 +42,13 @@ class OutputFileHandler:
         """
         self.config = config
         self.source_type = config.source_type
-        logger.info(f"OutputFileHandler initialized for source_type: {self.source_type}")
+        logger.info(
+            f"OutputFileHandler initialized for source_type: {self.source_type}"
+        )
 
     def save_output(
-        self,
-        local_path: str,
-        file_type: str,
-        destination_path: Optional[str] = None
-    ) -> str:
+        self, local_path: str, file_type: str, destination_path: Optional[str] = None
+    ) -> Optional[str]:
         """
         Save output file to source storage immediately.
 
@@ -75,22 +73,25 @@ class OutputFileHandler:
             logger.warning(f"File does not exist, skipping save: {local_path}")
             return None
 
+        dest_path: Optional[str]
         if destination_path:
             dest_path = destination_path
         else:
             dest_path = self._get_destination_path(file_type)
 
         if not dest_path:
-            logger.warning(f"No destination path configured for {file_type}, skipping save")
+            logger.warning(
+                f"No destination path configured for {file_type}, skipping save"
+            )
             return None
 
-        if self.source_type == 'local':
+        if self.source_type == "local":
             return self._save_local(local_path, dest_path)
-        elif self.source_type == 'aws':
+        elif self.source_type == "aws":
             return self._save_aws(local_path, dest_path)
-        elif self.source_type == 'azure':
+        elif self.source_type == "azure":
             return self._save_azure(local_path, dest_path)
-        elif self.source_type == 'gcp':
+        elif self.source_type == "gcp":
             return self._save_gcp(local_path, dest_path)
         else:
             logger.error(f"Unknown source type: {self.source_type}")
@@ -112,14 +113,14 @@ class OutputFileHandler:
             GCP:
                 - extracted_json -> config.gcs_extracted_json
         """
-        if self.source_type == 'local':
-            attr_name = f'dest_{file_type}'
-        elif self.source_type == 'aws':
-            attr_name = f's3_{file_type}'
-        elif self.source_type == 'azure':
-            attr_name = f'blob_{file_type}'
-        elif self.source_type == 'gcp':
-            attr_name = f'gcs_{file_type}'
+        if self.source_type == "local":
+            attr_name = f"dest_{file_type}"
+        elif self.source_type == "aws":
+            attr_name = f"s3_{file_type}"
+        elif self.source_type == "azure":
+            attr_name = f"blob_{file_type}"
+        elif self.source_type == "gcp":
+            attr_name = f"gcs_{file_type}"
         else:
             return None
 
@@ -130,7 +131,7 @@ class OutputFileHandler:
 
         return dest_path
 
-    def _save_local(self, local_path: str, dest_path: str) -> str:
+    def _save_local(self, local_path: str, dest_path: str) -> Optional[str]:
         """
         Save to local file system (copy file).
         Retries on PermissionError to handle Windows file locking — on Windows,
@@ -184,7 +185,7 @@ class OutputFileHandler:
             logger.error(f"Failed to save local file: {e}", exc_info=True)
             return None
 
-    def _save_aws(self, local_path: str, dest_path: str) -> str:
+    def _save_aws(self, local_path: str, dest_path: str) -> Optional[str]:
         """
         Save to AWS S3 (upload file).
 
@@ -199,7 +200,7 @@ class OutputFileHandler:
             logger.error(f"Failed to upload to S3: {e}", exc_info=True)
             return None
 
-    def _save_azure(self, local_path: str, dest_path: str) -> str:
+    def _save_azure(self, local_path: str, dest_path: str) -> Optional[str]:
         """
         Save to Azure Blob Storage (upload file).
 
@@ -214,7 +215,7 @@ class OutputFileHandler:
             logger.error(f"Failed to upload to Azure: {e}", exc_info=True)
             return None
 
-    def _save_gcp(self, local_path: str, dest_path: str) -> str:
+    def _save_gcp(self, local_path: str, dest_path: str) -> Optional[str]:
         """
         Save to GCP Cloud Storage (upload file).
 

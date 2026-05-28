@@ -41,15 +41,14 @@ Usage::
         investor_type="Individual",
     )
 """
+
 from __future__ import annotations
 
 import os
 import tempfile
 import threading
 import time
-from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from pdf_autofillr_doc_upload.config.settings import DocUploadSettings
 from pdf_autofillr_doc_upload.extraction.extractor import Extractor, flatten_dict
@@ -84,16 +83,20 @@ class DocUploadClient:
 
     def __init__(
         self,
-        storage: Optional[StorageBackend] = None,
-        extractor: Optional[Extractor] = None,
+        storage: StorageBackend | None = None,
+        extractor: Extractor | None = None,
         pdf_filler=None,
-        telemetry: Optional[TelemetryCollector] = None,
-        settings: Optional[DocUploadSettings] = None,
+        telemetry: TelemetryCollector | None = None,
+        settings: DocUploadSettings | None = None,
     ):
         self.settings = settings or DocUploadSettings.from_env()
         self.storage = storage or StorageFactory.create()
         self.extractor = extractor or Extractor()
-        self.pdf_filler = pdf_filler if pdf_filler is not None else self._build_default_filler(self.settings)
+        self.pdf_filler = (
+            pdf_filler
+            if pdf_filler is not None
+            else self._build_default_filler(self.settings)
+        )
         self.telemetry = telemetry or TelemetryCollector(
             TelemetryConfig() if self.settings.telemetry != "off" else None
         )
@@ -115,13 +118,17 @@ class DocUploadClient:
         if settings.mapper_api_url:
             # HTTP mode — mapper running as a separate server
             from pdf_autofillr_doc_upload.pdf.mapper_filler import MapperPDFFiller
+
             return MapperPDFFiller(
                 lambda_url=settings.mapper_api_url,
                 api_key=settings.mapper_api_key,
             )
         else:
             # In-process mode — call mapper directly in this Python process
-            from pdf_autofillr_doc_upload.pdf.inprocess_filler import InProcessMapperFiller
+            from pdf_autofillr_doc_upload.pdf.inprocess_filler import (
+                InProcessMapperFiller,
+            )
+
             return InProcessMapperFiller(
                 pdf_path=settings.pdf_path,
                 config_dir=settings.config_path,
@@ -137,17 +144,19 @@ class DocUploadClient:
         self,
         document_path: str,
         schema_path: str,
-        job_id: Optional[str] = None,
-        output_path: Optional[str] = None,
+        job_id: str | None = None,
+        output_path: str | None = None,
         # PDF filling parameters (all optional)
-        pdf_path: Optional[str] = None,        # blank PDF to fill (overrides DOC_UPLOAD_PDF_PATH)
+        pdf_path: (
+            str | None
+        ) = None,  # blank PDF to fill (overrides DOC_UPLOAD_PDF_PATH)
         investor_type: str = "Individual",
-        output_pdf_path: Optional[str] = None, # where to write the filled PDF
+        output_pdf_path: str | None = None,  # where to write the filled PDF
         # Remote Lambda filling params (only needed when MAPPER_API_URL is set)
-        user_id: Optional[str] = None,
-        pdf_doc_id: Optional[str] = None,
-        session_id: Optional[str] = None,
-        filled_doc_pdf_id: Optional[str] = None,
+        user_id: str | None = None,
+        pdf_doc_id: str | None = None,
+        session_id: str | None = None,
+        filled_doc_pdf_id: str | None = None,
         use_profile_info: bool = True,
     ) -> dict:
         """
@@ -176,6 +185,7 @@ class DocUploadClient:
                             filled_pdf_path, success, errors
         """
         import uuid
+
         job_id = job_id or str(uuid.uuid4())
         filled_doc_pdf_id = filled_doc_pdf_id or pdf_doc_id
         # pdf_path arg overrides settings value — mirrors chatbot_PDF_PATH behaviour
@@ -230,13 +240,22 @@ class DocUploadClient:
         # user-supplied value only as a key — the value written to disk
         # comes from the whitelist dict, not from user input.
         _EXT_MAP = {
-            ".pdf": ".pdf", ".docx": ".docx", ".doc": ".doc",
-            ".pptx": ".pptx", ".ppt": ".ppt",
-            ".xlsx": ".xlsx", ".xls": ".xls",
-            ".csv": ".csv", ".tsv": ".tsv",
-            ".json": ".json", ".txt": ".txt",
-            ".md": ".md", ".markdown": ".markdown",
-            ".html": ".html", ".htm": ".htm", ".xml": ".xml",
+            ".pdf": ".pdf",
+            ".docx": ".docx",
+            ".doc": ".doc",
+            ".pptx": ".pptx",
+            ".ppt": ".ppt",
+            ".xlsx": ".xlsx",
+            ".xls": ".xls",
+            ".csv": ".csv",
+            ".tsv": ".tsv",
+            ".json": ".json",
+            ".txt": ".txt",
+            ".md": ".md",
+            ".markdown": ".markdown",
+            ".html": ".html",
+            ".htm": ".htm",
+            ".xml": ".xml",
         }
         with tempfile.NamedTemporaryFile(delete=False, suffix=".tmp") as tmp:
             tmp_path = tmp.name
@@ -273,7 +292,9 @@ class DocUploadClient:
 
                 flat = flatten_dict(extracted)
                 self.storage.save_output_flat(job_id, flat)
-                logger.log(f"[Thread A] ✅ Saved (nested: {len(extracted)} keys, flat: {len(flat)} keys)")
+                logger.log(
+                    f"[Thread A] ✅ Saved (nested: {len(extracted)} keys, flat: {len(flat)} keys)"
+                )
 
                 # If output_path given, also write there
                 if output_path:
@@ -293,7 +314,9 @@ class DocUploadClient:
 
         # ── Thread B: prepare embed (in-process) or make_embed_file (remote) ────
         def api_thread():
-            from pdf_autofillr_doc_upload.pdf.inprocess_filler import InProcessMapperFiller
+            from pdf_autofillr_doc_upload.pdf.inprocess_filler import (
+                InProcessMapperFiller,
+            )
 
             if not self.pdf_filler:
                 api_result["success"] = True
@@ -306,7 +329,9 @@ class DocUploadClient:
                 # In-process: no separate embed step — just mark ready
                 # The actual fill happens synchronously in Step 7
                 if not effective_pdf_path:
-                    logger.log("[Thread B] PDF filling skipped — DOC_UPLOAD_PDF_PATH not set")
+                    logger.log(
+                        "[Thread B] PDF filling skipped — DOC_UPLOAD_PDF_PATH not set"
+                    )
                     api_result["success"] = True
                     api_result["skipped"] = True
                     return
@@ -317,7 +342,9 @@ class DocUploadClient:
 
             # Remote HTTP/Lambda mode
             if not (user_id and pdf_doc_id and session_id):
-                logger.log("[Thread B] PDF filling skipped (user_id / pdf_doc_id / session_id not provided)")
+                logger.log(
+                    "[Thread B] PDF filling skipped (user_id / pdf_doc_id / session_id not provided)"
+                )
                 api_result["success"] = True
                 api_result["skipped"] = True
                 return
@@ -332,7 +359,9 @@ class DocUploadClient:
                     use_second_mapper=True,
                 )
                 if not ok:
-                    logger.log("[Thread B] ⚠️ make_embed_file failed, continuing to polling…")
+                    logger.log(
+                        "[Thread B] ⚠️ make_embed_file failed, continuing to polling…"
+                    )
 
                 logger.log("[Thread B] ── Step 6: check_embed_file (polling) ──")
                 ready, embed_path = self.pdf_filler.check_embed_file(
@@ -375,7 +404,7 @@ class DocUploadClient:
 
         elif api_result.get("inprocess"):
             # In-process mapper fill
-            from pdf_autofillr_doc_upload.pdf.inprocess_filler import InProcessMapperFiller
+
             logger.log("\n── Step 7: fill PDF (in-process mapper) ──")
             filler = self.pdf_filler
             # Update filler pdf_path if caller passed one explicitly
@@ -430,16 +459,15 @@ class DocUploadClient:
 
     # ── Helpers ───────────────────────────────────────────────────────
 
-
     def run_local_with_pdf(
         self,
         document_path: str,
         schema_path: str,
-        pdf_path: Optional[str] = None,
-        job_id: Optional[str] = None,
+        pdf_path: str | None = None,
+        job_id: str | None = None,
         investor_type: str = "Individual",
-        output_json_path: Optional[str] = None,
-        output_pdf_path: Optional[str] = None,
+        output_json_path: str | None = None,
+        output_pdf_path: str | None = None,
     ) -> dict:
         """
         Convenience method for local development: extract from a document
@@ -458,6 +486,7 @@ class DocUploadClient:
             dict with keys: job_id, output_flat, output_nested, filled_pdf_path, success
         """
         import uuid
+
         from pdf_autofillr_doc_upload.pdf.inprocess_filler import InProcessMapperFiller
 
         job_id = job_id or str(uuid.uuid4())
@@ -494,6 +523,7 @@ class DocUploadClient:
     @staticmethod
     def _write_tmp_json(data: dict) -> str:
         import json
+
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".json", delete=False, encoding="utf-8"
         ) as f:

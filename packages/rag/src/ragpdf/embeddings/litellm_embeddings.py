@@ -17,7 +17,9 @@ Usage:
 Credentials: set the provider's env var (OPENAI_API_KEY, ANTHROPIC_API_KEY,
 AZURE_API_KEY, COHERE_API_KEY, etc.) — LiteLLM reads them automatically.
 """
+
 import logging
+
 from ragpdf.embeddings.base import EmbeddingBackend
 
 logger = logging.getLogger(__name__)
@@ -31,13 +33,15 @@ class LiteLLMEmbeddingBackend(EmbeddingBackend):
     def __init__(self, model: str = ""):
         try:
             import litellm
+
             self._litellm = litellm
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "LiteLLMEmbeddingBackend requires litellm. "
                 "Install with: pip install ragpdf-sdk[litellm]"
-            )
+            ) from e
         from ragpdf.config.settings import RAGPDF_LITELLM_EMBEDDING_MODEL
+
         self._model = model or RAGPDF_LITELLM_EMBEDDING_MODEL
         logger.info(f"LiteLLMEmbeddingBackend initialized: model={self._model}")
 

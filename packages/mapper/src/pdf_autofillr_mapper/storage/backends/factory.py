@@ -9,22 +9,22 @@ import logging
 logger = logging.getLogger(__name__)
 
 _BACKEND_CLASSES = {
-    'aws':   'pdf_autofillr_mapper.configs.aws.AWSStorageConfig',
-    'azure': 'pdf_autofillr_mapper.configs.azure.AzureStorageConfig',
-    'gcp':   'pdf_autofillr_mapper.configs.gcp.GCPStorageConfig',
-    'local': 'pdf_autofillr_mapper.configs.local.LocalStorageConfig',
+    "aws": "pdf_autofillr_mapper.configs.aws.AWSStorageConfig",
+    "azure": "pdf_autofillr_mapper.configs.azure.AzureStorageConfig",
+    "gcp": "pdf_autofillr_mapper.configs.gcp.GCPStorageConfig",
+    "local": "pdf_autofillr_mapper.configs.local.LocalStorageConfig",
 }
 
 _instances: dict = {}
 
 # Backends that are fully implemented
-_IMPLEMENTED = {'aws', 'azure', 'gcp', 'local'}
+_IMPLEMENTED = {"aws", "azure", "gcp", "local"}
 
 # Required env vars per backend (at least one must be set for cloud backends)
 _CREDENTIAL_CHECKS = {
-    'aws':   ['AWS_ACCESS_KEY_ID', 'AWS_ROLE_ARN'],   # IAM role OR access key
-    'azure': ['AZURE_STORAGE_CONNECTION_STRING', 'AZURE_STORAGE_ACCOUNT'],
-    'gcp':   ['GOOGLE_APPLICATION_CREDENTIALS', 'GOOGLE_CLOUD_PROJECT'],
+    "aws": ["AWS_ACCESS_KEY_ID", "AWS_ROLE_ARN"],  # IAM role OR access key
+    "azure": ["AZURE_STORAGE_CONNECTION_STRING", "AZURE_STORAGE_ACCOUNT"],
+    "gcp": ["GOOGLE_APPLICATION_CREDENTIALS", "GOOGLE_CLOUD_PROJECT"],
 }
 
 
@@ -60,16 +60,18 @@ def get_storage_backend(source_type: str):
     # Credential check for cloud backends
     if source_type in _CREDENTIAL_CHECKS:
         import os
+
         required = _CREDENTIAL_CHECKS[source_type]
         if not any(os.getenv(var) for var in required):
-            raise EnvironmentError(
+            raise OSError(
                 f"No credentials found for {source_type!r} storage backend. "
                 f"Set at least one of: {required}"
             )
 
     if source_type not in _instances:
         import importlib
-        module_path, class_name = _BACKEND_CLASSES[source_type].rsplit('.', 1)
+
+        module_path, class_name = _BACKEND_CLASSES[source_type].rsplit(".", 1)
         module = importlib.import_module(module_path)
         _instances[source_type] = getattr(module, class_name)()
         logger.debug(f"Created storage backend: {source_type}")

@@ -6,17 +6,16 @@ SessionManager — CRUD only.  No business logic.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Optional
 
 from chatbot.core.states import State
 from chatbot.storage.base import StorageBackend
 
 
-def _empty_session(user_id: str, session_id: str, pdf_path: Optional[str] = None) -> dict:
+def _empty_session(user_id: str, session_id: str, pdf_path: str | None = None) -> dict:
     return {
         "user_id": user_id,
         "session_id": session_id,
-        "state": State.INIT.value,          # store plain string, not enum object
+        "state": State.INIT.value,  # store plain string, not enum object
         "investor_type": None,
         "live_fill_flat": {},
         "mandatory_flat": {},
@@ -47,7 +46,7 @@ class SessionManager:
         self,
         user_id: str,
         session_id: str,
-        pdf_path: Optional[str] = None,
+        pdf_path: str | None = None,
     ) -> dict:
         existing = self.storage.get_session_state(user_id, session_id)
         if existing:
@@ -60,7 +59,7 @@ class SessionManager:
         self,
         user_id: str,
         session_id: str,
-        pdf_path: Optional[str] = None,
+        pdf_path: str | None = None,
     ) -> dict:
         session = self.storage.get_session_state(user_id, session_id)
         if session is None:
@@ -71,7 +70,7 @@ class SessionManager:
         session["updated_at"] = datetime.now(timezone.utc).isoformat()
         self.storage.save_session_state(user_id, session_id, session)
 
-    def get(self, user_id: str, session_id: str) -> Optional[dict]:
+    def get(self, user_id: str, session_id: str) -> dict | None:
         return self.storage.get_session_state(user_id, session_id)
 
     def delete(self, user_id: str, session_id: str) -> bool:

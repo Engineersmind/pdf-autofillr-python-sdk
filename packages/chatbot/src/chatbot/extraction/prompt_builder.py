@@ -2,10 +2,10 @@
 """
 PromptBuilder — builds LLM extraction prompts dynamically from the schema.
 """
+
 from __future__ import annotations
 
 import json
-from typing import Optional
 
 
 class PromptBuilder:

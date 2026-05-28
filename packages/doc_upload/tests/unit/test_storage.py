@@ -1,10 +1,9 @@
 # tests/unit/test_storage.py
 """Unit tests for LocalStorage — no cloud deps, pure filesystem."""
+
 from __future__ import annotations
 
 import json
-import os
-import tempfile
 
 import pytest
 
@@ -12,7 +11,10 @@ import pytest
 @pytest.fixture
 def tmp_storage(tmp_path):
     from pdf_autofillr_doc_upload.storage.local_storage import LocalStorage
-    return LocalStorage(data_path=str(tmp_path / "data"), config_path=str(tmp_path / "configs"))
+
+    return LocalStorage(
+        data_path=str(tmp_path / "data"), config_path=str(tmp_path / "configs")
+    )
 
 
 class TestLocalStorageJobState:
@@ -61,7 +63,9 @@ class TestLocalStorageSchema:
         schema_file = tmp_path / "schema.json"
         schema_file.write_text(json.dumps(schema))
 
-        storage = LocalStorage(data_path=str(tmp_path / "data"), config_path=str(tmp_path))
+        storage = LocalStorage(
+            data_path=str(tmp_path / "data"), config_path=str(tmp_path)
+        )
         loaded = storage.load_schema("schema.json")
         assert loaded["field_a"] == ""
         assert loaded["field_b"] is False
@@ -73,7 +77,9 @@ class TestLocalStorageSchema:
         schema_file = tmp_path / "abs_schema.json"
         schema_file.write_text(json.dumps(schema))
 
-        storage = LocalStorage(data_path=str(tmp_path / "data"), config_path=str(tmp_path))
+        storage = LocalStorage(
+            data_path=str(tmp_path / "data"), config_path=str(tmp_path)
+        )
         loaded = storage.load_schema(str(schema_file))
         assert loaded["x"] == "val"
 

@@ -19,12 +19,12 @@ File layout::
     │           ├── debug_conversation.json
     │           └── calling_filling_logs.json
 """
+
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any
 
 from chatbot.storage.base import StorageBackend
 
@@ -38,7 +38,9 @@ class LocalStorage(StorageBackend):
         config_path: Directory containing form config JSON files (read-only).
     """
 
-    def __init__(self, data_path: str = "./data/chatbot", config_path: str = "./configs"):
+    def __init__(
+        self, data_path: str = "./data/chatbot", config_path: str = "./configs"
+    ):
         self.data_path = Path(data_path)
         self.config_path = Path(config_path)
         self.data_path.mkdir(parents=True, exist_ok=True)
@@ -57,10 +59,10 @@ class LocalStorage(StorageBackend):
 
     # ── JSON helpers ───────────────────────────────────────────────────
 
-    def _read(self, path: Path) -> Optional[Any]:
+    def _read(self, path: Path) -> Any | None:
         if not path.exists():
             return None
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             return json.load(f)
 
     def _write(self, path: Path, data: Any) -> bool:
@@ -79,7 +81,9 @@ class LocalStorage(StorageBackend):
         return self._read(self._session_dir(user_id, session_id) / "session_state.json")
 
     def save_session_state(self, user_id, session_id, state):
-        return self._write(self._session_dir(user_id, session_id) / "session_state.json", state)
+        return self._write(
+            self._session_dir(user_id, session_id) / "session_state.json", state
+        )
 
     # ── User integrated info ───────────────────────────────────────────
 
@@ -89,7 +93,9 @@ class LocalStorage(StorageBackend):
 
     def save_user_integrated_info(self, user_id, data):
         wrapped = {"user_id": user_id, "data": data}
-        return self._write(self._user_dir(user_id) / "user_integrated_information.json", wrapped)
+        return self._write(
+            self._user_dir(user_id) / "user_integrated_information.json", wrapped
+        )
 
     # ── Final output ───────────────────────────────────────────────────
 
@@ -97,13 +103,19 @@ class LocalStorage(StorageBackend):
         return self._read(self._session_dir(user_id, session_id) / "final_output.json")
 
     def save_final_output(self, user_id, session_id, data):
-        return self._write(self._session_dir(user_id, session_id) / "final_output.json", data)
+        return self._write(
+            self._session_dir(user_id, session_id) / "final_output.json", data
+        )
 
     def get_final_output_flat(self, user_id, session_id):
-        return self._read(self._session_dir(user_id, session_id) / "final_output_flat.json")
+        return self._read(
+            self._session_dir(user_id, session_id) / "final_output_flat.json"
+        )
 
     def save_final_output_flat(self, user_id, session_id, data):
-        return self._write(self._session_dir(user_id, session_id) / "final_output_flat.json", data)
+        return self._write(
+            self._session_dir(user_id, session_id) / "final_output_flat.json", data
+        )
 
     # ── Session history ────────────────────────────────────────────────
 
@@ -116,19 +128,29 @@ class LocalStorage(StorageBackend):
     # ── Logs ───────────────────────────────────────────────────────────
 
     def save_conversation_log(self, user_id, session_id, data):
-        return self._write(self._session_dir(user_id, session_id) / "conversation_log.json", data)
+        return self._write(
+            self._session_dir(user_id, session_id) / "conversation_log.json", data
+        )
 
     def save_debug_conversation(self, user_id, session_id, data):
-        return self._write(self._session_dir(user_id, session_id) / "debug_conversation.json", data)
+        return self._write(
+            self._session_dir(user_id, session_id) / "debug_conversation.json", data
+        )
 
     def get_debug_conversation(self, user_id, session_id):
-        return self._read(self._session_dir(user_id, session_id) / "debug_conversation.json")
+        return self._read(
+            self._session_dir(user_id, session_id) / "debug_conversation.json"
+        )
 
     def get_pdf_filling_logs(self, user_id, session_id):
-        return self._read(self._session_dir(user_id, session_id) / "calling_filling_logs.json")
+        return self._read(
+            self._session_dir(user_id, session_id) / "calling_filling_logs.json"
+        )
 
     def save_pdf_filling_logs(self, user_id, session_id, data):
-        return self._write(self._session_dir(user_id, session_id) / "calling_filling_logs.json", data)
+        return self._write(
+            self._session_dir(user_id, session_id) / "calling_filling_logs.json", data
+        )
 
     # ── Fill report ────────────────────────────────────────────────────
 
@@ -136,7 +158,9 @@ class LocalStorage(StorageBackend):
         return self._read(self._session_dir(user_id, session_id) / "fill_report.json")
 
     def save_fill_report(self, user_id, session_id, data):
-        return self._write(self._session_dir(user_id, session_id) / "fill_report.json", data)
+        return self._write(
+            self._session_dir(user_id, session_id) / "fill_report.json", data
+        )
 
     # ── Utility ────────────────────────────────────────────────────────
 
@@ -148,6 +172,7 @@ class LocalStorage(StorageBackend):
 
     def delete_session(self, user_id, session_id):
         import shutil
+
         session_dir = self._user_dir(user_id) / "sessions" / session_id
         if session_dir.exists():
             shutil.rmtree(session_dir)

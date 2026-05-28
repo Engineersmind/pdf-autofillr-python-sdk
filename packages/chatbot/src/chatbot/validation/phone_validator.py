@@ -1,6 +1,8 @@
 # chatbot/validation/phone_validator.py
 """Phone number validation — matches Lambda validate_phone_format() behaviour."""
+
 from __future__ import annotations
+
 import re
 
 # Matches Lambda: requires a country code prefix (+ or 00) followed by
@@ -8,8 +10,8 @@ import re
 # Examples that pass:  +1 212 555 1234,  +44-20-7946-0958,  001 212 5551234
 # Examples that fail:  2125551234  (no country code),  123  (too short)
 PHONE_WITH_COUNTRY_CODE_RE = re.compile(
-    r"^\+?(?:00)?[\d]{1,4}[\s\-.]?"   # country code  (1–4 digits, optional +/00)
-    r"[\d][\d\s\-.()]{8,14}$"          # subscriber number (min 8 more digits/separators)
+    r"^\+?(?:00)?[\d]{1,4}[\s\-.]?"  # country code  (1–4 digits, optional +/00)
+    r"[\d][\d\s\-.()]{8,14}$"  # subscriber number (min 8 more digits/separators)
 )
 
 # Loose fallback — used only for the normalise helper

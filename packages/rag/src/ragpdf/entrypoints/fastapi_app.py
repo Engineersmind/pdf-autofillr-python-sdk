@@ -9,11 +9,14 @@ Run:
 
 Swagger UI: http://localhost:8000/docs
 """
+
 import os
+from typing import Any
+
 import uvicorn
-from fastapi import FastAPI, HTTPException, Header
+from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
-from typing import Optional, List, Any
+
 from ragpdf import RAGPDFClient
 
 app = FastAPI(title="pdf-autofillr-rag", version="0.1.1")
@@ -35,10 +38,10 @@ def _auth(x_api_key: str = Header(None)):
 
 class FieldInput(BaseModel):
     field_id: str
-    field_name: Optional[str] = ""
+    field_name: str | None = ""
     context: str = ""
     section_context: str = ""
-    headers: List[str] = []
+    headers: list[str] = []
 
 
 class PredictRequest(BaseModel):
@@ -47,7 +50,7 @@ class PredictRequest(BaseModel):
     pdf_id: str
     pdf_hash: str
     pdf_category: dict
-    fields: List[FieldInput]
+    fields: list[FieldInput]
 
 
 class FilledPDFRequest(BaseModel):
@@ -56,37 +59,37 @@ class FilledPDFRequest(BaseModel):
     filled_doc_pdf_id: str
     llm_predictions: dict
     final_predictions: dict
-    filled_pdf_location: Optional[str] = None
+    filled_pdf_location: str | None = None
 
 
 class FeedbackError(BaseModel):
     error_type: str
-    field_name: Optional[str] = None
-    field_type: Optional[str] = None
-    value: Optional[Any] = None
-    feedback: Optional[str] = None
-    page_number: Optional[int] = None
-    corners: Optional[List] = None
+    field_name: str | None = None
+    field_type: str | None = None
+    value: Any | None = None
+    feedback: str | None = None
+    page_number: int | None = None
+    corners: list | None = None
 
 
 class FeedbackRequest(BaseModel):
     user_id: str
     session_id: str
     pdf_id: str
-    errors: List[FeedbackError]
-    timestamp: Optional[str] = None
+    errors: list[FeedbackError]
+    timestamp: str | None = None
 
 
 class MetricsRequest(BaseModel):
     metric_type: str
-    user_id: Optional[str] = None
-    session_id: Optional[str] = None
-    pdf_id: Optional[str] = None
-    category: Optional[str] = None
-    subcategory: Optional[str] = None
-    doctype: Optional[str] = None
-    pdf_hash: Optional[str] = None
-    pdfs: Optional[List[dict]] = None
+    user_id: str | None = None
+    session_id: str | None = None
+    pdf_id: str | None = None
+    category: str | None = None
+    subcategory: str | None = None
+    doctype: str | None = None
+    pdf_hash: str | None = None
+    pdfs: list[dict] | None = None
 
 
 @app.get("/health")
@@ -97,38 +100,55 @@ def health():
 @app.post("/predict")
 def predict(req: PredictRequest, x_api_key: str = Header(None)):
     _auth(x_api_key)
-    return {"status": "success", "data": client.get_predictions(
-        user_id=req.user_id, session_id=req.session_id, pdf_id=req.pdf_id,
-        fields=[f.dict() for f in req.fields],
-        pdf_hash=req.pdf_hash, pdf_category=req.pdf_category,
-    )}
+    return {
+        "status": "success",
+        "data": client.get_predictions(
+            user_id=req.user_id,
+            session_id=req.session_id,
+            pdf_id=req.pdf_id,
+            fields=[f.dict() for f in req.fields],
+            pdf_hash=req.pdf_hash,
+            pdf_category=req.pdf_category,
+        ),
+    }
 
 
 @app.post("/save-filled-pdf")
 def save_filled_pdf(req: FilledPDFRequest, x_api_key: str = Header(None)):
     _auth(x_api_key)
-    return {"status": "success", "data": client.save_filled_pdf(
-        user_id=req.user_id, session_id=req.session_id,
-        pdf_id=req.filled_doc_pdf_id,
-        llm_predictions=req.llm_predictions,
-        final_predictions=req.final_predictions,
-    )}
+    return {
+        "status": "success",
+        "data": client.save_filled_pdf(
+            user_id=req.user_id,
+            session_id=req.session_id,
+            pdf_id=req.filled_doc_pdf_id,
+            llm_predictions=req.llm_predictions,
+            final_predictions=req.final_predictions,
+        ),
+    }
 
 
 @app.post("/feedback")
 def feedback(req: FeedbackRequest, x_api_key: str = Header(None)):
     _auth(x_api_key)
-    return {"status": "success", "data": client.submit_feedback(
-        user_id=req.user_id, session_id=req.session_id, pdf_id=req.pdf_id,
-        errors=[e.dict() for e in req.errors], timestamp=req.timestamp,
-    )}
+    return {
+        "status": "success",
+        "data": client.submit_feedback(
+            user_id=req.user_id,
+            session_id=req.session_id,
+            pdf_id=req.pdf_id,
+            errors=[e.dict() for e in req.errors],
+            timestamp=req.timestamp,
+        ),
+    }
 
 
 @app.post("/metrics")
 def metrics(req: MetricsRequest, x_api_key: str = Header(None)):
     _auth(x_api_key)
-    params = {k: v for k, v in req.dict().items()
-              if v is not None and k != "metric_type"}
+    params = {
+        k: v for k, v in req.dict().items() if v is not None and k != "metric_type"
+    }
     return {"status": "success", "data": client.get_metrics(req.metric_type, **params)}
 
 
@@ -141,9 +161,10 @@ def system_info(x_api_key: str = Header(None)):
 @app.post("/error-analytics")
 def error_analytics(body: dict, x_api_key: str = Header(None)):
     _auth(x_api_key)
-    return {"status": "success", "data": client.get_error_analytics(
-        **{k: v for k, v in body.items()}
-    )}
+    return {
+        "status": "success",
+        "data": client.get_error_analytics(**{k: v for k, v in body.items()}),
+    }
 
 
 def main():

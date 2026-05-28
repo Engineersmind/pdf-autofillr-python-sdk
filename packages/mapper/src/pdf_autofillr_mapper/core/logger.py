@@ -1,9 +1,11 @@
 import logging
 import sys
+
 from pythonjsonlogger import jsonlogger
 
 # Create a default logger instance for modules to import
 logger = logging.getLogger(__name__)
+
 
 def setup_logging(log_level: str = "INFO") -> None:
     """Configure root logger for JSON output to stdout."""

@@ -7,11 +7,10 @@ Env vars::
     AWS_CONFIG_BUCKET   Bucket containing schema/config files
     AWS_REGION          (default: us-east-1)
 """
+
 from __future__ import annotations
 
 import json
-import tempfile
-from typing import Optional
 
 from pdf_autofillr_doc_upload.storage.base import StorageBackend
 
@@ -32,15 +31,18 @@ class S3Storage(StorageBackend):
         region:        AWS region.
     """
 
-    def __init__(self, output_bucket: str, config_bucket: str, region: str = "us-east-1"):
+    def __init__(
+        self, output_bucket: str, config_bucket: str, region: str = "us-east-1"
+    ):
         import boto3
+
         self.output_bucket = output_bucket
         self.config_bucket = config_bucket
         self.s3 = boto3.client("s3", region_name=region)
 
     # ── Helpers ────────────────────────────────────────────────────────
 
-    def _get_json(self, bucket: str, key: str) -> Optional[dict]:
+    def _get_json(self, bucket: str, key: str) -> dict | None:
         try:
             obj = self.s3.get_object(Bucket=bucket, Key=key)
             return json.loads(obj["Body"].read())
@@ -68,33 +70,47 @@ class S3Storage(StorageBackend):
 
     # ── Job state ──────────────────────────────────────────────────────
 
-    def get_job_state(self, job_id: str) -> Optional[dict]:
-        return self._get_json(self.output_bucket, self._job_key(job_id, "job_state.json"))
+    def get_job_state(self, job_id: str) -> dict | None:
+        return self._get_json(
+            self.output_bucket, self._job_key(job_id, "job_state.json")
+        )
 
     def save_job_state(self, job_id: str, state: dict) -> bool:
-        return self._put_json(self.output_bucket, self._job_key(job_id, "job_state.json"), state)
+        return self._put_json(
+            self.output_bucket, self._job_key(job_id, "job_state.json"), state
+        )
 
     # ── Output ─────────────────────────────────────────────────────────
 
-    def get_output(self, job_id: str) -> Optional[dict]:
+    def get_output(self, job_id: str) -> dict | None:
         return self._get_json(self.output_bucket, self._job_key(job_id, "output.json"))
 
     def save_output(self, job_id: str, data: dict) -> bool:
-        return self._put_json(self.output_bucket, self._job_key(job_id, "output.json"), data)
+        return self._put_json(
+            self.output_bucket, self._job_key(job_id, "output.json"), data
+        )
 
-    def get_output_flat(self, job_id: str) -> Optional[dict]:
-        return self._get_json(self.output_bucket, self._job_key(job_id, "output_flat.json"))
+    def get_output_flat(self, job_id: str) -> dict | None:
+        return self._get_json(
+            self.output_bucket, self._job_key(job_id, "output_flat.json")
+        )
 
     def save_output_flat(self, job_id: str, data: dict) -> bool:
-        return self._put_json(self.output_bucket, self._job_key(job_id, "output_flat.json"), data)
+        return self._put_json(
+            self.output_bucket, self._job_key(job_id, "output_flat.json"), data
+        )
 
     # ── Logs ───────────────────────────────────────────────────────────
 
     def save_execution_log(self, job_id: str, data: dict) -> bool:
-        return self._put_json(self.output_bucket, self._job_key(job_id, "execution_log.json"), data)
+        return self._put_json(
+            self.output_bucket, self._job_key(job_id, "execution_log.json"), data
+        )
 
-    def get_execution_log(self, job_id: str) -> Optional[dict]:
-        return self._get_json(self.output_bucket, self._job_key(job_id, "execution_log.json"))
+    def get_execution_log(self, job_id: str) -> dict | None:
+        return self._get_json(
+            self.output_bucket, self._job_key(job_id, "execution_log.json")
+        )
 
     # ── Config / document ──────────────────────────────────────────────
 
@@ -120,6 +136,7 @@ class S3Storage(StorageBackend):
             self.s3.download_file(bucket, key, local_dest)
         else:
             import shutil
+
             shutil.copy2(source_path, local_dest)
         return local_dest
 

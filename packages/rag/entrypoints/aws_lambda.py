@@ -19,9 +19,12 @@ Local test:
     print(lambda_handler(event, None))
     "
 """
+
 import json
-import os
 import logging
+import os
+from typing import Any
+
 from ragpdf import RAGPDFClient
 
 logger = logging.getLogger()
@@ -38,8 +41,10 @@ def _get_client() -> RAGPDFClient:
     return _client
 
 
-def _response(status_code: int, message: str, data: dict = None) -> dict:
-    body = {
+def _response(
+    status_code: int, message: str, data: dict[Any, Any] | None = None
+) -> dict:
+    body: dict[str, Any] = {
         "status": "success" if status_code == 200 else "failure",
         "message": message,
     }
@@ -65,32 +70,44 @@ def lambda_handler(event, context):
         c = _get_client()
 
         if api_name == "get_rag_predictions":
-            return _response(200, "OK", c.get_predictions(
-                user_id=body["user_id"],
-                session_id=body["session_id"],
-                pdf_id=body["pdf_id"],
-                fields=body["fields"],
-                pdf_hash=body["pdf_hash"],
-                pdf_category=body["pdf_category"],
-            ))
+            return _response(
+                200,
+                "OK",
+                c.get_predictions(
+                    user_id=body["user_id"],
+                    session_id=body["session_id"],
+                    pdf_id=body["pdf_id"],
+                    fields=body["fields"],
+                    pdf_hash=body["pdf_hash"],
+                    pdf_category=body["pdf_category"],
+                ),
+            )
 
         elif api_name == "saving_filled_pdf":
-            return _response(200, "OK", c.save_filled_pdf(
-                user_id=body["user_id"],
-                session_id=body["session_id"],
-                pdf_id=body["filled_doc_pdf_id"],
-                llm_predictions=body["llm_predictions"],
-                final_predictions=body["final_predictions"],
-            ))
+            return _response(
+                200,
+                "OK",
+                c.save_filled_pdf(
+                    user_id=body["user_id"],
+                    session_id=body["session_id"],
+                    pdf_id=body["filled_doc_pdf_id"],
+                    llm_predictions=body["llm_predictions"],
+                    final_predictions=body["final_predictions"],
+                ),
+            )
 
         elif api_name == "user_feedback":
-            return _response(200, "OK", c.submit_feedback(
-                user_id=body["user_id"],
-                session_id=body["session_id"],
-                pdf_id=body["pdf_id"],
-                errors=body.get("errors", []),
-                timestamp=body.get("timestamp"),
-            ))
+            return _response(
+                200,
+                "OK",
+                c.submit_feedback(
+                    user_id=body["user_id"],
+                    session_id=body["session_id"],
+                    pdf_id=body["pdf_id"],
+                    errors=body.get("errors", []),
+                    timestamp=body.get("timestamp"),
+                ),
+            )
 
         elif api_name == "get_metrics":
             mt = body.pop("metric_type")

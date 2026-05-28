@@ -12,16 +12,18 @@ Env vars (set in .env):
     AZURE_OUTPUT_CONTAINER           container for session data (read/write)
     AZURE_CONFIG_CONTAINER           container for form config JSONs (read-only)
 """
+
 from __future__ import annotations
 
 import json
-from typing import Any, List, Optional
+from typing import Any
 
 from chatbot.storage.base import StorageBackend
 
 try:
-    from azure.storage.blob import BlobServiceClient
     from azure.core.exceptions import ResourceNotFoundError
+    from azure.storage.blob import BlobServiceClient
+
     _AZURE_AVAILABLE = True
 except ImportError:
     _AZURE_AVAILABLE = False
@@ -56,7 +58,7 @@ class AzureStorage(StorageBackend):
 
     # ── Helpers ───────────────────────────────────────────────────────
 
-    def _get(self, container_client, key: str) -> Optional[Any]:
+    def _get(self, container_client, key: str) -> Any | None:
         try:
             blob = container_client.get_blob_client(key)
             data = blob.download_blob().readall().decode("utf-8")
@@ -92,16 +94,24 @@ class AzureStorage(StorageBackend):
         return self._get(self._out, self._sk(user_id, session_id, "session_state.json"))
 
     def save_session_state(self, user_id, session_id, state):
-        return self._put(self._out, self._sk(user_id, session_id, "session_state.json"), state)
+        return self._put(
+            self._out, self._sk(user_id, session_id, "session_state.json"), state
+        )
 
     # ── User integrated info ──────────────────────────────────────────
 
     def get_user_integrated_info(self, user_id):
-        data = self._get(self._out, self._uk(user_id, "user_integrated_information.json"))
+        data = self._get(
+            self._out, self._uk(user_id, "user_integrated_information.json")
+        )
         return data.get("data", data) if isinstance(data, dict) else data
 
     def save_user_integrated_info(self, user_id, data):
-        return self._put(self._out, self._uk(user_id, "user_integrated_information.json"), {"data": data})
+        return self._put(
+            self._out,
+            self._uk(user_id, "user_integrated_information.json"),
+            {"data": data},
+        )
 
     # ── Final output ──────────────────────────────────────────────────
 
@@ -109,13 +119,19 @@ class AzureStorage(StorageBackend):
         return self._get(self._out, self._sk(user_id, session_id, "final_output.json"))
 
     def save_final_output(self, user_id, session_id, data):
-        return self._put(self._out, self._sk(user_id, session_id, "final_output.json"), data)
+        return self._put(
+            self._out, self._sk(user_id, session_id, "final_output.json"), data
+        )
 
     def get_final_output_flat(self, user_id, session_id):
-        return self._get(self._out, self._sk(user_id, session_id, "final_output_flat.json"))
+        return self._get(
+            self._out, self._sk(user_id, session_id, "final_output_flat.json")
+        )
 
     def save_final_output_flat(self, user_id, session_id, data):
-        return self._put(self._out, self._sk(user_id, session_id, "final_output_flat.json"), data)
+        return self._put(
+            self._out, self._sk(user_id, session_id, "final_output_flat.json"), data
+        )
 
     # ── Session history ───────────────────────────────────────────────
 
@@ -128,19 +144,29 @@ class AzureStorage(StorageBackend):
     # ── Logs ──────────────────────────────────────────────────────────
 
     def save_conversation_log(self, user_id, session_id, data):
-        return self._put(self._out, self._sk(user_id, session_id, "conversation_log.json"), data)
+        return self._put(
+            self._out, self._sk(user_id, session_id, "conversation_log.json"), data
+        )
 
     def save_debug_conversation(self, user_id, session_id, data):
-        return self._put(self._out, self._sk(user_id, session_id, "debug_conversation.json"), data)
+        return self._put(
+            self._out, self._sk(user_id, session_id, "debug_conversation.json"), data
+        )
 
     def get_debug_conversation(self, user_id, session_id):
-        return self._get(self._out, self._sk(user_id, session_id, "debug_conversation.json"))
+        return self._get(
+            self._out, self._sk(user_id, session_id, "debug_conversation.json")
+        )
 
     def get_pdf_filling_logs(self, user_id, session_id):
-        return self._get(self._out, self._sk(user_id, session_id, "calling_filling_logs.json"))
+        return self._get(
+            self._out, self._sk(user_id, session_id, "calling_filling_logs.json")
+        )
 
     def save_pdf_filling_logs(self, user_id, session_id, data):
-        return self._put(self._out, self._sk(user_id, session_id, "calling_filling_logs.json"), data)
+        return self._put(
+            self._out, self._sk(user_id, session_id, "calling_filling_logs.json"), data
+        )
 
     # ── Fill report ───────────────────────────────────────────────────
 
@@ -148,16 +174,18 @@ class AzureStorage(StorageBackend):
         return self._get(self._out, self._sk(user_id, session_id, "fill_report.json"))
 
     def save_fill_report(self, user_id, session_id, data):
-        return self._put(self._out, self._sk(user_id, session_id, "fill_report.json"), data)
+        return self._put(
+            self._out, self._sk(user_id, session_id, "fill_report.json"), data
+        )
 
     # ── Utility ───────────────────────────────────────────────────────
 
-    def list_user_sessions(self, user_id: str) -> List[str]:
+    def list_user_sessions(self, user_id: str) -> list[str]:
         prefix = f"{user_id}/sessions/"
         blobs = self._out.list_blobs(name_starts_with=prefix)
         seen = set()
         for blob in blobs:
-            parts = blob.name[len(prefix):].split("/")
+            parts = blob.name[len(prefix) :].split("/")
             if parts:
                 seen.add(parts[0])
         return list(seen)
@@ -174,7 +202,9 @@ class AzureStorage(StorageBackend):
     def load_config(self, filename: str) -> dict:
         data = self._get(self._cfg, filename)
         if data is None:
-            raise FileNotFoundError(f"Config not found in Azure: {self.config_container}/{filename}")
+            raise FileNotFoundError(
+                f"Config not found in Azure: {self.config_container}/{filename}"
+            )
         return data
 
     def load_investor_type_config(self, filename: str) -> dict:

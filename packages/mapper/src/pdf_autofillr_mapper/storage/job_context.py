@@ -35,7 +35,7 @@ class JobContext:
     def __init__(self, storage_config, user_id, session_id, pdf_doc_id):
         from pdf_autofillr_mapper.storage.paths.resolver import PathResolver
 
-        self._storage    = storage_config.backend
+        self._storage = storage_config.backend
         self.source_type = storage_config.storage_type
 
         uid, sid, pid = user_id, session_id, pdf_doc_id
@@ -48,73 +48,75 @@ class JobContext:
         local = resolver.local_paths(uid, sid, pid, self.processing_dir)
 
         # ── Local processing paths (/tmp/processing/<uuid>/) ──────────────────
-        self.local_input_pdf           = local["processing_input_pdf"]
+        self.local_input_pdf = local["processing_input_pdf"]
         # global_json = keys-only schema → used by handle_map_operation (embed pipeline)
-        self.local_global_json         = local["processing_global_json"]
+        self.local_global_json = local["processing_global_json"]
         # input_json  = per-user data    → used by handle_fill_operation (fill pipeline)
-        self.local_input_json          = local["processing_input_json"]
-        self.local_extracted_json      = local["extracted_json"]
-        self.local_mapped_json         = local["mapped_json"]
-        self.local_radio_json          = local["radio_groups_json"]
-        self.local_embedded_pdf        = local["embedded_pdf"]
-        self.local_filled_pdf          = local["filled_pdf"]
-        self.local_semantic_mapping    = local["semantic_mapping"]
+        self.local_input_json = local["processing_input_json"]
+        self.local_extracted_json = local["extracted_json"]
+        self.local_mapped_json = local["mapped_json"]
+        self.local_radio_json = local["radio_groups_json"]
+        self.local_embedded_pdf = local["embedded_pdf"]
+        self.local_filled_pdf = local["filled_pdf"]
+        self.local_semantic_mapping = local["semantic_mapping"]
         self.local_headers_with_fields = local["headers_with_fields"]
-        self.local_final_form_fields   = local["final_form_fields"]
-        self.local_header_file         = local["header_file"]
-        self.local_section_file        = local["section_file"]
-        self.local_llm_predictions     = local["llm_predictions"]
-        self.local_rag_predictions     = local["rag_predictions"]
-        self.local_final_predictions   = local["final_predictions"]
-        self.local_java_mapping        = local["java_mapping"]
+        self.local_final_form_fields = local["final_form_fields"]
+        self.local_header_file = local["header_file"]
+        self.local_section_file = local["section_file"]
+        self.local_llm_predictions = local["llm_predictions"]
+        self.local_rag_predictions = local["rag_predictions"]
+        self.local_final_predictions = local["final_predictions"]
+        self.local_java_mapping = local["java_mapping"]
         # local_cache_registry — ALWAYS a local filesystem path so hash_cache.py can use
         # standard file I/O (os.path.exists / open / json) regardless of MAPPER_STORAGE.
         # Derived from config.ini [general] cache_registry_path or MAPPER_CACHE_PATH env var.
-        self.local_cache_registry      = resolver.local_cache_registry_path()
+        self.local_cache_registry = resolver.local_cache_registry_path()
 
         # ── Remote source paths (inputs) ──────────────────────────────────────
-        self.source_input_pdf   = resolver.remote_input_pdf(uid, sid, pid)
+        self.source_input_pdf = resolver.remote_input_pdf(uid, sid, pid)
         # global_json = keys-only schema → used by handle_map_operation (embed pipeline)
         self.source_global_json = resolver.remote_global_json(uid, sid, pid)
         # input_json  = per-user data    → used by handle_fill_operation (fill pipeline)
-        self.source_input_json  = resolver.remote_input_json(uid, sid, pid)
+        self.source_input_json = resolver.remote_input_json(uid, sid, pid)
 
         # AWS-style input aliases (operations.py uses hasattr guards on these)
-        self.s3_input_pdf   = self.source_input_pdf
+        self.s3_input_pdf = self.source_input_pdf
         self.s3_global_json = self.source_global_json
-        self.s3_input_json  = self.source_input_json
+        self.s3_input_json = self.source_input_json
 
         # ── Remote destination paths (outputs) ────────────────────────────────
-        self.dest_extracted_json        = resolver.remote_extracted(uid, sid, pid)
-        self.dest_mapped_json           = resolver.remote_mapped(uid, sid, pid)
-        self.dest_radio_json            = resolver.remote_radio(uid, sid, pid)
-        self.dest_embedded_pdf          = resolver.remote_embedded(uid, sid, pid)
-        self.dest_filled_pdf            = resolver.remote_filled(uid, sid, pid)
-        self.dest_semantic_mapping      = resolver.remote_semantic_mapping(uid, sid, pid)
-        self.dest_headers_with_fields   = resolver.remote_headers_with_fields(uid, sid, pid)
-        self.dest_final_form_fields     = resolver.remote_final_form_fields(uid, sid, pid)
-        self.dest_header_file           = resolver.remote_header_file(uid, sid, pid)
-        self.dest_section_file          = resolver.remote_section_file(uid, sid, pid)
-        self.dest_java_mapping          = resolver.remote_java_mapping(uid, sid, pid)
-        self.dest_final_predictions     = resolver.remote_final_predictions(uid, sid, pid)
-        self.dest_llm_predictions       = resolver.remote_llm_predictions(uid, sid, pid)
-        self.dest_rag_predictions       = resolver.remote_rag_predictions(uid, sid, pid)
-        self.dest_cache_registry        = resolver.remote_cache_registry(uid, sid, pid)
+        self.dest_extracted_json = resolver.remote_extracted(uid, sid, pid)
+        self.dest_mapped_json = resolver.remote_mapped(uid, sid, pid)
+        self.dest_radio_json = resolver.remote_radio(uid, sid, pid)
+        self.dest_embedded_pdf = resolver.remote_embedded(uid, sid, pid)
+        self.dest_filled_pdf = resolver.remote_filled(uid, sid, pid)
+        self.dest_semantic_mapping = resolver.remote_semantic_mapping(uid, sid, pid)
+        self.dest_headers_with_fields = resolver.remote_headers_with_fields(
+            uid, sid, pid
+        )
+        self.dest_final_form_fields = resolver.remote_final_form_fields(uid, sid, pid)
+        self.dest_header_file = resolver.remote_header_file(uid, sid, pid)
+        self.dest_section_file = resolver.remote_section_file(uid, sid, pid)
+        self.dest_java_mapping = resolver.remote_java_mapping(uid, sid, pid)
+        self.dest_final_predictions = resolver.remote_final_predictions(uid, sid, pid)
+        self.dest_llm_predictions = resolver.remote_llm_predictions(uid, sid, pid)
+        self.dest_rag_predictions = resolver.remote_rag_predictions(uid, sid, pid)
+        self.dest_cache_registry = resolver.remote_cache_registry(uid, sid, pid)
 
         # AWS-style output aliases (operations.py accesses these with hasattr guards)
-        self.s3_extracted_json  = self.dest_extracted_json
-        self.s3_mapped_json     = self.dest_mapped_json
-        self.s3_radio_json      = self.dest_radio_json
-        self.s3_embedded_pdf    = self.dest_embedded_pdf
-        self.s3_filled_pdf      = self.dest_filled_pdf
+        self.s3_extracted_json = self.dest_extracted_json
+        self.s3_mapped_json = self.dest_mapped_json
+        self.s3_radio_json = self.dest_radio_json
+        self.s3_embedded_pdf = self.dest_embedded_pdf
+        self.s3_filled_pdf = self.dest_filled_pdf
 
         # Cache placeholders (inherited from old BaseStorageConfig interface)
-        self.cached_embedded_pdf        = None
-        self.cached_mapping_json        = None
-        self.cached_radio_groups        = None
+        self.cached_embedded_pdf = None
+        self.cached_mapping_json = None
+        self.cached_radio_groups = None
         self.cached_headers_with_fields = None
-        self.cached_final_form_fields   = None
-        self.cached_extraction          = None
+        self.cached_final_form_fields = None
+        self.cached_extraction = None
 
     # ── Storage delegation ────────────────────────────────────────────────────
 

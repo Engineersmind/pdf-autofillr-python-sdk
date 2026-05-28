@@ -1,5 +1,6 @@
 # chatbot/handlers/boolean_group_handler.py
 from __future__ import annotations
+
 from chatbot.core.states import State
 from chatbot.handlers.base_handler import BaseHandler
 from chatbot.utils.field_utils import format_field_name
@@ -53,7 +54,7 @@ class BooleanGroupHandler(BaseHandler):
 
         if numbered is not None:
             for i, key in enumerate(fields):
-                live_fill[key] = (i in numbered)
+                live_fill[key] = i in numbered
             any_filled = True
         elif is_negative(user_input) or user_input.strip().lower() == "none":
             for key in fields:
@@ -79,7 +80,9 @@ class BooleanGroupHandler(BaseHandler):
         session["live_fill_flat"] = live_fill
 
         if not any_filled:
-            lines = ["Oops! I didn't get that. Could you please provide the details once more?\nPlease select valid option numbers.\n"]
+            lines = [
+                "Oops! I didn't get that. Could you please provide the details once more?\nPlease select valid option numbers.\n"
+            ]
             for i, key in enumerate(fields, 1):
                 question = self.form_config.get_question(key) or format_field_name(key)
                 lines.append(f"{i}. {question}")
@@ -108,6 +111,7 @@ class BooleanGroupHandler(BaseHandler):
         session["fields_being_asked"] = []
         session["current_group"] = None
         from chatbot.handlers.missing_fields_handler import MissingFieldsHandler
+
         handler = MissingFieldsHandler(self.engine)
         return handler.handle(session, user_input, None, None, None)
 

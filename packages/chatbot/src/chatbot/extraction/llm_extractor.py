@@ -5,12 +5,12 @@ LLMExtractor — extracts form field values using any LiteLLM-supported model.
 Replaces the previous hardcoded ChatOpenAI / GPT-4o-mini implementation.
 Model is configured via CHATBOT_LLM_MODEL in .env.
 """
+
 from __future__ import annotations
 
 import json
 import logging
 import time
-from typing import Optional
 
 from chatbot.extraction.llm_client import LLMClient
 from chatbot.extraction.prompt_builder import PromptBuilder
@@ -31,9 +31,9 @@ class LLMExtractor:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         prompt_builder=None,
-        model: Optional[str] = None,
+        model: str | None = None,
     ):
         self.prompt_builder = prompt_builder or PromptBuilder()
         self.llm = LLMClient(model=model, api_key=api_key)
@@ -44,8 +44,8 @@ class LLMExtractor:
         conversation_history: str,
         live_fill_flat: dict,
         meta_form_keys: dict,
-        mandatory_flat: Optional[dict] = None,
-        investor_type: Optional[str] = None,
+        mandatory_flat: dict | None = None,
+        investor_type: str | None = None,
     ) -> tuple:
         """
         Call the configured LLM with the full form schema and return extracted fields.
@@ -73,7 +73,9 @@ class LLMExtractor:
 
         logger.debug(
             "LLMExtractor: model=%s extracted=%d fields latency=%.2fs",
-            self.llm.model, len(filtered), latency,
+            self.llm.model,
+            len(filtered),
+            latency,
         )
 
         return filtered, latency, "llm"
@@ -82,7 +84,7 @@ class LLMExtractor:
         raw = raw.strip()
         for fence in ("```json", "```"):
             if raw.startswith(fence):
-                raw = raw[len(fence):]
+                raw = raw[len(fence) :]
         if raw.endswith("```"):
             raw = raw[:-3]
         try:

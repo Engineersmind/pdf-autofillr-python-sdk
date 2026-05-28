@@ -16,20 +16,19 @@ Supported formats:
     .htm    html.parser strip tags
     .xml    ElementTree text walk
 """
+
 from __future__ import annotations
 
 import csv
-import html
 import json
-import os
 from pathlib import Path
-from typing import Optional
-
 
 # ── Per-format extractors ──────────────────────────────────────────────────────
 
+
 def _read_pdf(path: str) -> str:
     import fitz  # PyMuPDF
+
     doc = fitz.open(path)
     pages = []
     for page in doc:
@@ -41,6 +40,7 @@ def _read_pdf(path: str) -> str:
 
 def _read_docx(path: str) -> str:
     from docx import Document
+
     doc = Document(path)
     parts = []
     for para in doc.paragraphs:
@@ -56,6 +56,7 @@ def _read_docx(path: str) -> str:
 
 def _read_pptx(path: str) -> str:
     from pptx import Presentation
+
     prs = Presentation(path)
     slides = []
     for i, slide in enumerate(prs.slides, 1):
@@ -70,6 +71,7 @@ def _read_pptx(path: str) -> str:
 
 def _read_xlsx(path: str) -> str:
     import openpyxl
+
     wb = openpyxl.load_workbook(path, data_only=True)
     sheets = []
     for name in wb.sheetnames:
@@ -96,13 +98,13 @@ def _read_csv(path: str) -> str:
 
 
 def _read_json(path: str) -> str:
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         data = json.load(f)
     return json.dumps(data, indent=2, ensure_ascii=False)
 
 
 def _read_text(path: str) -> str:
-    with open(path, "r", encoding="utf-8", errors="replace") as f:
+    with open(path, encoding="utf-8", errors="replace") as f:
         return f.read().strip()
 
 
@@ -131,7 +133,7 @@ def _read_html(path: str) -> str:
         def get_text(self):
             return "\n".join(self._parts)
 
-    with open(path, "r", encoding="utf-8", errors="replace") as f:
+    with open(path, encoding="utf-8", errors="replace") as f:
         content = f.read()
     s = _Stripper()
     s.feed(content)
@@ -140,6 +142,7 @@ def _read_html(path: str) -> str:
 
 def _read_xml(path: str) -> str:
     import xml.etree.ElementTree as ET
+
     tree = ET.parse(path)
     parts = []
 
@@ -158,19 +161,19 @@ def _read_xml(path: str) -> str:
 # ── Dispatch table ─────────────────────────────────────────────────────────────
 
 _READERS = {
-    ".pdf":  _read_pdf,
+    ".pdf": _read_pdf,
     ".docx": _read_docx,
     ".pptx": _read_pptx,
     ".xlsx": _read_xlsx,
-    ".xls":  _read_xlsx,
-    ".csv":  _read_csv,
+    ".xls": _read_xlsx,
+    ".csv": _read_csv,
     ".json": _read_json,
-    ".txt":  _read_text,
-    ".md":   _read_text,
+    ".txt": _read_text,
+    ".md": _read_text,
     ".markdown": _read_text,
     ".html": _read_html,
-    ".htm":  _read_html,
-    ".xml":  _read_xml,
+    ".htm": _read_html,
+    ".xml": _read_xml,
 }
 
 SUPPORTED_EXTENSIONS = list(_READERS.keys())

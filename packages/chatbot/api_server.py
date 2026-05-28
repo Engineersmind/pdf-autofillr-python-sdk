@@ -14,29 +14,30 @@ PDF filler mode (set in .env):
     chatbot_PDF_FILLER=none      ← data-only (default)
     chatbot_PDF_FILLER=mapper    ← connect to pdf-autofillr-mapper
 """
+
 from __future__ import annotations
 
-import os
 import logging
-from typing import Optional
+import os
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 try:
+    import uvicorn
     from fastapi import FastAPI, HTTPException
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import JSONResponse
     from pydantic import BaseModel, Field
-    import uvicorn
-except ImportError:
+except ImportError as e:
     raise ImportError(
         "FastAPI is required to run the API server.\n"
         "Install it with: pip install 'pdf-autofillr-chatbot[server]'"
-    )
+    ) from e
 
-from chatbot import chatbotClient, FormConfig
-from chatbot.storage.factory import StorageFactory
+from chatbot import FormConfig, chatbotClient  # noqa: E402
+from chatbot.storage.factory import StorageFactory  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -45,9 +46,11 @@ app = FastAPI(
     description="Conversational investor onboarding — collects data and fills PDF forms.",
     version="0.3.0",
 )
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
+)
 
-_client: Optional[chatbotClient] = None
+_client: chatbotClient | None = None
 
 
 def _build_pdf_filler():
@@ -56,6 +59,7 @@ def _build_pdf_filler():
         return None
     if mode in ("mapper", "managed"):
         from chatbot.pdf.mapper_filler import MapperPDFFiller
+
         return MapperPDFFiller(
             mapper_api_url=os.getenv("MAPPER_API_URL", ""),
             mapper_api_key=os.getenv("MAPPER_API_KEY", ""),
@@ -66,7 +70,9 @@ def _build_pdf_filler():
             "chatbot_PDF_FILLER=custom requires wiring programmatically.\n"
             "Instantiate chatbotClient directly and pass your PDFFillerInterface."
         )
-    raise ValueError(f"Unknown chatbot_PDF_FILLER: {mode!r}. Use: none | mapper | custom")
+    raise ValueError(
+        f"Unknown chatbot_PDF_FILLER: {mode!r}. Use: none | mapper | custom"
+    )
 
 
 def get_client() -> chatbotClient:
@@ -85,11 +91,16 @@ def get_client() -> chatbotClient:
 
 # ── Request / Response models ─────────────────────────────────────────────────
 
+
 class ChatRequest(BaseModel):
     user_id: str = Field(..., description="Unique identifier for the investor")
-    session_id: str = Field(..., description="Unique identifier for this conversation session")
+    session_id: str = Field(
+        ..., description="Unique identifier for this conversation session"
+    )
     message: str = Field(default="", description="User's message text")
-    pdf_path: Optional[str] = Field(default=None, description="Path to blank PDF (first turn only)")
+    pdf_path: str | None = Field(
+        default=None, description="Path to blank PDF (first turn only)"
+    )
 
 
 class ChatResponse(BaseModel):
@@ -97,16 +108,17 @@ class ChatResponse(BaseModel):
     session_id: str
     response: str
     session_complete: bool
-    filled_data: Optional[dict] = None
+    filled_data: dict | None = None
 
 
 class SessionDataResponse(BaseModel):
     user_id: str
     session_id: str
-    data: Optional[dict]
+    data: dict | None
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
+
 
 @app.get("/")
 def root():
@@ -125,7 +137,9 @@ def chat(req: ChatRequest):
         pdf_path = req.pdf_path or os.getenv("chatbot_PDF_PATH", "")
         if pdf_path:
             client.create_session(req.user_id, req.session_id, pdf_path=pdf_path)
-        response, complete, data = client.send_message(req.user_id, req.session_id, req.message)
+        response, complete, data = client.send_message(
+            req.user_id, req.session_id, req.message
+        )
         return ChatResponse(
             user_id=req.user_id,
             session_id=req.session_id,
@@ -134,17 +148,19 @@ def chat(req: ChatRequest):
             filled_data=data if complete else None,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.exception("Unhandled error in /chatbot/chat")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/chatbot/session/{user_id}/{session_id}", response_model=SessionDataResponse)
 def get_session(user_id: str, session_id: str):
     data = get_client().get_session_data(user_id, session_id)
     if data is None:
-        raise HTTPException(status_code=404, detail="Session not found or not yet complete.")
+        raise HTTPException(
+            status_code=404, detail="Session not found or not yet complete."
+        )
     return SessionDataResponse(user_id=user_id, session_id=session_id, data=data)
 
 
@@ -185,4 +201,9 @@ async def global_exception_handler(request, exc):
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "8001"))
-    uvicorn.run(app, host="0.0.0.0", port=port, log_level=os.getenv("chatbot_LOG_LEVEL", "info").lower())
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=port,
+        log_level=os.getenv("chatbot_LOG_LEVEL", "info").lower(),
+    )

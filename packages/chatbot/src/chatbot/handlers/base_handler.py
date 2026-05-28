@@ -2,13 +2,13 @@
 """
 BaseHandler — abstract class all state handlers extend.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Optional, Tuple
 
-from chatbot.core.states import State
 from chatbot.core.protocols import EngineProtocol
+from chatbot.core.states import State
 from chatbot.logging.debug_logger import DebugLogger
 
 
@@ -34,8 +34,8 @@ class BaseHandler(ABC):
         user_input: str,
         user_id: str,
         session_id: str,
-        debug: Optional[DebugLogger] = None,
-    ) -> Tuple[str, State]:
+        debug: DebugLogger | None = None,
+    ) -> tuple[str, State]:
         """
         Process one turn in this state.
 

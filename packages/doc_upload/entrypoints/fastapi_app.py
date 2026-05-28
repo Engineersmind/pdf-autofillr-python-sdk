@@ -14,25 +14,28 @@ Endpoints:
     GET  /jobs/{job_id}    — get job output
     GET  /health           — health check
 """
+
 from __future__ import annotations
 
 import os
 import sys
 import uuid
 from pathlib import Path
-from typing import Optional
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 try:
-    from fastapi import FastAPI, HTTPException, Header, UploadFile, File, Form
+    from fastapi import FastAPI, Header, HTTPException
     from fastapi.responses import JSONResponse
     from pydantic import BaseModel
-except ImportError:
-    raise ImportError("fastapi and uvicorn are required: pip install 'pdf-autofillr-doc-upload[server]'")
+except ImportError as e:
+    raise ImportError(
+        "fastapi and uvicorn are required: pip install 'pdf-autofillr-doc-upload[server]'"
+    ) from e
 
 app = FastAPI(
     title="pdf-autofillr-doc-upload",
@@ -47,34 +50,38 @@ def _get_client():
     global _client
     if _client is None:
         from pdf_autofillr_doc_upload import DocUploadClient
-        from pdf_autofillr_doc_upload.storage.factory import StorageFactory
         from pdf_autofillr_doc_upload.extraction.extractor import Extractor
         from pdf_autofillr_doc_upload.extraction.llm_client import LLMClient
+        from pdf_autofillr_doc_upload.storage.factory import StorageFactory
 
         storage = StorageFactory.create()
         extractor = Extractor(llm_client=LLMClient())
 
         pdf_filler = None  # DocUploadClient._build_default_filler handles this from env
 
-        _client = DocUploadClient(storage=storage, extractor=extractor, pdf_filler=pdf_filler)
+        _client = DocUploadClient(
+            storage=storage, extractor=extractor, pdf_filler=pdf_filler
+        )
     return _client
 
 
 # ── Request / response models ────────────────────────────────────────────────
 
+
 class ExtractRequest(BaseModel):
     document_path: str
     schema_path: str = "configs/form_keys.json"
-    job_id: Optional[str] = None
-    output_path: Optional[str] = None
-    user_id: Optional[str] = None
-    pdf_doc_id: Optional[str] = None
-    session_id: Optional[str] = None
+    job_id: str | None = None
+    output_path: str | None = None
+    user_id: str | None = None
+    pdf_doc_id: str | None = None
+    session_id: str | None = None
     investor_type: str = "Individual"
-    filled_doc_pdf_id: Optional[str] = None
+    filled_doc_pdf_id: str | None = None
 
 
 # ── Endpoints ────────────────────────────────────────────────────────────────
+
 
 @app.get("/health")
 def health():
@@ -84,7 +91,7 @@ def health():
 @app.post("/extract")
 def extract(
     request: ExtractRequest,
-    x_api_key: Optional[str] = Header(default=None),
+    x_api_key: str | None = Header(default=None),
 ):
     _check_api_key(x_api_key)
     client = _get_client()
@@ -101,18 +108,20 @@ def extract(
             investor_type=request.investor_type,
             filled_doc_pdf_id=request.filled_doc_pdf_id,
         )
-        return JSONResponse(content={
-            "status": "success",
-            "job_id": job_id,
-            "output_flat": result["output_flat"],
-            "output_path": result.get("output_path"),
-        })
+        return JSONResponse(
+            content={
+                "status": "success",
+                "job_id": job_id,
+                "output_flat": result["output_flat"],
+                "output_path": result.get("output_path"),
+            }
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/jobs/{job_id}/output")
-def get_job_output(job_id: str, x_api_key: Optional[str] = Header(default=None)):
+def get_job_output(job_id: str, x_api_key: str | None = Header(default=None)):
     _check_api_key(x_api_key)
     client = _get_client()
     data = client.storage.get_output(job_id)
@@ -122,7 +131,7 @@ def get_job_output(job_id: str, x_api_key: Optional[str] = Header(default=None))
 
 
 @app.get("/jobs/{job_id}/output-flat")
-def get_job_output_flat(job_id: str, x_api_key: Optional[str] = Header(default=None)):
+def get_job_output_flat(job_id: str, x_api_key: str | None = Header(default=None)):
     _check_api_key(x_api_key)
     client = _get_client()
     data = client.storage.get_output_flat(job_id)
@@ -133,7 +142,8 @@ def get_job_output_flat(job_id: str, x_api_key: Optional[str] = Header(default=N
 
 # ── API key helper ───────────────────────────────────────────────────────────
 
-def _check_api_key(provided: Optional[str]) -> None:
+
+def _check_api_key(provided: str | None) -> None:
     expected = os.environ.get("AUTH_TOKEN")
     if not expected:
         return  # auth disabled
@@ -145,6 +155,7 @@ def _check_api_key(provided: Optional[str]) -> None:
 
 def main():
     import uvicorn
+
     uvicorn.run(
         "entrypoints.fastapi_app:app",
         host=os.getenv("DOC_UPLOAD_HOST", "0.0.0.0"),

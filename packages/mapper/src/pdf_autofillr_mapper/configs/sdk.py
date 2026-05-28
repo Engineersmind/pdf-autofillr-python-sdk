@@ -30,7 +30,7 @@ keep the stages clean).
 
 import os
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 
 from .local import LocalStorageConfig
 
@@ -97,6 +97,7 @@ class SDKStorageConfig(LocalStorageConfig):
 
         if output_dir is None:
             import tempfile
+
             output_dir = os.path.join(tempfile.gettempdir(), f"pdf_mapper_{stem}")
 
         output_dir = os.path.abspath(output_dir)
@@ -111,59 +112,67 @@ class SDKStorageConfig(LocalStorageConfig):
         # Global JSON: keys-only schema (e.g. {"firstName": "", "lastName": ""})
         # Read by handle_map_operation via input_handler.get_input('global_json').
         # Only set when this config is used for the embed pipeline.
-        self.local_global_json = os.path.abspath(global_json_path) \
-            if global_json_path else None
+        self.local_global_json = (
+            os.path.abspath(global_json_path) if global_json_path else None
+        )
 
         # Input JSON: per-user data (e.g. {"firstName": "Jane", "lastName": "Doe"})
         # Read by handle_fill_operation via input_handler.get_input('input_json').
         # Only set when this config is used for the fill pipeline.
-        self.local_input_json = os.path.abspath(input_json_path) \
-            if input_json_path else None
+        self.local_input_json = (
+            os.path.abspath(input_json_path) if input_json_path else None
+        )
 
         # ── Pipeline output files ─────────────────────────────────────────────
-        self.local_extracted_json  = os.path.join(output_dir, f"{stem}_extracted.json")
-        self.local_mapped_json     = os.path.join(output_dir, f"{stem}_mapped_fields.json")
-        self.local_radio_json      = os.path.join(output_dir, f"{stem}_radio_groups.json")
-        self.local_embedded_pdf    = os.path.join(output_dir, f"{stem}_embedded.pdf")
-        self.local_filled_pdf      = os.path.join(output_dir, f"{stem}_filled.pdf")
-        self.dest_embedded_pdf     = self.local_embedded_pdf
+        self.local_extracted_json = os.path.join(output_dir, f"{stem}_extracted.json")
+        self.local_mapped_json = os.path.join(output_dir, f"{stem}_mapped_fields.json")
+        self.local_radio_json = os.path.join(output_dir, f"{stem}_radio_groups.json")
+        self.local_embedded_pdf = os.path.join(output_dir, f"{stem}_embedded.pdf")
+        self.local_filled_pdf = os.path.join(output_dir, f"{stem}_filled.pdf")
+        self.dest_embedded_pdf = self.local_embedded_pdf
 
         # ── RAG / headers (only used when use_second_mapper=True) ─────────────
-        self.local_header_file          = os.path.join(output_dir, f"{stem}_header_file.json")
-        self.local_section_file         = os.path.join(output_dir, f"{stem}_section_file.json")
-        self.local_rag_predictions      = os.path.join(output_dir, f"{stem}_rag_predictions.json")
-        self.local_headers_with_fields  = os.path.join(output_dir, f"{stem}_headers_with_fields.json")
-        self.local_final_form_fields    = os.path.join(output_dir, f"{stem}_final_form_fields.json")
+        self.local_header_file = os.path.join(output_dir, f"{stem}_header_file.json")
+        self.local_section_file = os.path.join(output_dir, f"{stem}_section_file.json")
+        self.local_rag_predictions = os.path.join(
+            output_dir, f"{stem}_rag_predictions.json"
+        )
+        self.local_headers_with_fields = os.path.join(
+            output_dir, f"{stem}_headers_with_fields.json"
+        )
+        self.local_final_form_fields = os.path.join(
+            output_dir, f"{stem}_final_form_fields.json"
+        )
 
         # ── Cloud paths — all None in SDK mode ───────────────────────────────
-        self.s3_input_pdf       = None
-        self.s3_input_json      = None
-        self.s3_global_json     = None
-        self.s3_extracted_json  = None
-        self.s3_mapped_json     = None
-        self.s3_embedded_json   = None
+        self.s3_input_pdf = None
+        self.s3_input_json = None
+        self.s3_global_json = None
+        self.s3_extracted_json = None
+        self.s3_mapped_json = None
+        self.s3_embedded_json = None
         self.s3_rag_predictions = None
 
         self.azure_input_pdf = None
-        self.gcp_input_pdf   = None
+        self.gcp_input_pdf = None
 
     # ── Convenience ──────────────────────────────────────────────────────────
 
-    def summary(self) -> Dict[str, Any]:
+    def summary(self) -> dict[str, Any]:
         """Return a dict of all configured paths — useful for debugging."""
         return {
-            "source_type":              self.source_type,
-            "local_input_pdf":          self.local_input_pdf,
-            "local_global_json":        self.local_global_json,   # embed pipeline only
-            "local_input_json":         self.local_input_json,    # fill pipeline only
-            "local_extracted_json":     self.local_extracted_json,
-            "local_mapped_json":        self.local_mapped_json,
-            "local_radio_json":         self.local_radio_json,
-            "local_embedded_pdf":       self.local_embedded_pdf,
-            "local_filled_pdf":         self.local_filled_pdf,
-            "local_header_file":        self.local_header_file,
-            "local_section_file":       self.local_section_file,
-            "local_rag_predictions":    self.local_rag_predictions,
+            "source_type": self.source_type,
+            "local_input_pdf": self.local_input_pdf,
+            "local_global_json": self.local_global_json,  # embed pipeline only
+            "local_input_json": self.local_input_json,  # fill pipeline only
+            "local_extracted_json": self.local_extracted_json,
+            "local_mapped_json": self.local_mapped_json,
+            "local_radio_json": self.local_radio_json,
+            "local_embedded_pdf": self.local_embedded_pdf,
+            "local_filled_pdf": self.local_filled_pdf,
+            "local_header_file": self.local_header_file,
+            "local_section_file": self.local_section_file,
+            "local_rag_predictions": self.local_rag_predictions,
         }
 
     def __repr__(self) -> str:

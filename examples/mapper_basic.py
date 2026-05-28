@@ -12,17 +12,17 @@ First-time setup:
 """
 
 import asyncio
-import os
-from pdf_autofillr_mapper import PDFPipeline, MapperConfig, MapperOrchestrator
 
-PDF_PATH   = "./data/input/blank_form.pdf"
-USER_ID    = "example_user"
+from pdf_autofillr_mapper import MapperConfig, MapperOrchestrator, PDFPipeline
+
+PDF_PATH = "./data/input/blank_form.pdf"
+USER_ID = "example_user"
 PDF_DOC_ID = "lp_sub_v1"
-USER_DATA  = {
-    "investor_name":    "Jane Smith",
-    "investor_type":    "Individual",
+USER_DATA = {
+    "investor_name": "Jane Smith",
+    "investor_type": "Individual",
     "commitment_amount": "500000",
-    "email":            "jane@example.com",
+    "email": "jane@example.com",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -95,24 +95,30 @@ cfg.validate()  # warns if no API key is found for either LLM phase
 pipeline = PDFPipeline(mapper_config=cfg)
 
 # Option 1 — Run the full pipeline in one call (extract → map → embed → fill)
-result = asyncio.run(pipeline.run_all(
-    input_pdf_path=PDF_PATH,
-    input_data_path="./configs/form_keys.json",
-))
+result = asyncio.run(
+    pipeline.run_all(
+        input_pdf_path=PDF_PATH,
+        input_data_path="./configs/form_keys.json",
+    )
+)
 print(f"Filled PDF (full run): {result['final_output']}")
 
 # Option 2 — Step-by-step: embed once, fill many times
-embed_result = asyncio.run(pipeline.make_embed_file(
-    pdf_path=PDF_PATH,
-    user_id=USER_ID,
-    pdf_doc_id=PDF_DOC_ID,
-))
+embed_result = asyncio.run(
+    pipeline.make_embed_file(
+        pdf_path=PDF_PATH,
+        user_id=USER_ID,
+        pdf_doc_id=PDF_DOC_ID,
+    )
+)
 print(f"Embedded template: {embed_result.get('embedded_pdf_path')}")
 
-fill_result = asyncio.run(pipeline.fill_pdf(
-    pdf_path=PDF_PATH,
-    user_id=USER_ID,
-    pdf_doc_id=PDF_DOC_ID,
-    user_data=USER_DATA,
-))
+fill_result = asyncio.run(
+    pipeline.fill_pdf(
+        pdf_path=PDF_PATH,
+        user_id=USER_ID,
+        pdf_doc_id=PDF_DOC_ID,
+        user_data=USER_DATA,
+    )
+)
 print(f"Filled PDF (pipeline): {fill_result.get('filled_pdf_path')}")

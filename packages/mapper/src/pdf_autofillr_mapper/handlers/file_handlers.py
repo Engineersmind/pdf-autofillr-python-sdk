@@ -7,12 +7,12 @@ This module provides a source-agnostic way to handle files in operations:
 
 Usage in operations:
     from pdf_autofillr_mapper.handlers.file_handlers import create_file_handlers
-    
+
     input_handler, output_handler = create_file_handlers(config)
-    
+
     # Get input file (already downloaded)
     pdf_path = input_handler.get_input('input_pdf')
-    
+
     # After creating output file
     output_handler.save_output('/tmp/processing/output.json', 'extracted_json')
 """
@@ -30,23 +30,23 @@ def create_file_handlers(config):
         Tuple of (InputFileHandler, OutputFileHandler)
     Example:
         input_handler, output_handler = create_file_handlers(config)
-        
+
         # Download input
         pdf = input_handler.get_input('input_pdf')
-        
+
         # Save output
         output_handler.save_output(local_file, 'extracted_json')
     """
     input_handler = create_input_handler(config)
     output_handler = create_output_handler(config)
-    
+
     return input_handler, output_handler
 
 
 __all__ = [
-    'InputFileHandler',
-    'OutputFileHandler',
-    'create_input_handler',
-    'create_output_handler',
-    'create_file_handlers'
+    "InputFileHandler",
+    "OutputFileHandler",
+    "create_input_handler",
+    "create_output_handler",
+    "create_file_handlers",
 ]

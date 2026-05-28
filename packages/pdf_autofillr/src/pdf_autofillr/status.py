@@ -3,6 +3,7 @@ pdf-autofillr status — checks what is installed and configured.
 
     pdf-autofillr status
 """
+
 from __future__ import annotations
 
 import os
@@ -37,10 +38,10 @@ def run_status(dest_str: str = ".") -> None:
     print("\nModules")
     print("-" * 64)
     modules = [
-        ("chatbot",                    "chatbot",                   "pdf-autofillr-chatbot"),
-        ("pdf_autofillr_doc_upload",   "doc_upload",                "pdf-autofillr-doc-upload"),
-        ("pdf_autofillr_mapper",       "mapper",                    "pdf-autofillr-mapper"),
-        ("ragpdf",                     "rag",                       "pdf-autofillr-rag"),
+        ("chatbot", "chatbot", "pdf-autofillr-chatbot"),
+        ("pdf_autofillr_doc_upload", "doc_upload", "pdf-autofillr-doc-upload"),
+        ("pdf_autofillr_mapper", "mapper", "pdf-autofillr-mapper"),
+        ("ragpdf", "rag", "pdf-autofillr-rag"),
     ]
     installed_combo: set[str] = set()
     for pkg, label, install_name in modules:
@@ -60,18 +61,22 @@ def run_status(dest_str: str = ".") -> None:
     print("-" * 64)
 
     files_to_check = [
-        (dest / "configs" / "form_keys.json",      "configs/form_keys.json"),
-        (dest / "configs" / "mapper_config.ini",   "configs/mapper_config.ini"),
-        (dest / ".env",                            ".env"),
-        (dest / ".env.example",                    ".env.example"),
+        (dest / "configs" / "form_keys.json", "configs/form_keys.json"),
+        (dest / "configs" / "mapper_config.ini", "configs/mapper_config.ini"),
+        (dest / ".env", ".env"),
+        (dest / ".env.example", ".env.example"),
     ]
     if "chatbot" in installed_combo or "doc_upload" in installed_combo:
-        files_to_check.append((dest / "data" / "input" / "blank_form.pdf", "data/input/blank_form.pdf"))
+        files_to_check.append(
+            (dest / "data" / "input" / "blank_form.pdf", "data/input/blank_form.pdf")
+        )
     if "rag" in installed_combo:
-        files_to_check.append((
-            dest / "data" / "rag" / "vectors" / "vector_database.json",
-            "data/rag/vectors/vector_database.json"
-        ))
+        files_to_check.append(
+            (
+                dest / "data" / "rag" / "vectors" / "vector_database.json",
+                "data/rag/vectors/vector_database.json",
+            )
+        )
 
     all_files_ok = True
     for path, label in files_to_check:
@@ -82,6 +87,7 @@ def run_status(dest_str: str = ".") -> None:
         if exists and path.suffix == ".json":
             try:
                 import json
+
                 data = json.loads(path.read_text())
                 if isinstance(data, dict) and label == "configs/form_keys.json":
                     note = f"  ({len(data)} top-level keys)"
@@ -116,26 +122,32 @@ def run_status(dest_str: str = ".") -> None:
         pdf_path = _env("DOC_UPLOAD_PDF_PATH", "")
         print(f"  doc_upload  LLM: {model}   storage: {storage}   pdf_filler: {filler}")
         if filler != "none" and not pdf_path:
-            warnings.append("DOC_UPLOAD_PDF_FILLER is set but DOC_UPLOAD_PDF_PATH is empty")
+            warnings.append(
+                "DOC_UPLOAD_PDF_FILLER is set but DOC_UPLOAD_PDF_PATH is empty"
+            )
 
     if "mapper" in installed_combo:
         mapper_url = _env("MAPPER_API_URL", "")
-        rag_enabled = _env("RAG_ENABLED", "false")
+        rag_enabled_str = _env("RAG_ENABLED", "false")
         rag_mode = _env("RAG_MODE", "inprocess")
         mode_str = "inprocess" if not mapper_url else f"http -> {mapper_url}"
         print(f"  mapper    connection: {mode_str}")
-        if rag_enabled.lower() == "true":
+        if rag_enabled_str.lower() == "true":
             print(f"  mapper->rag  enabled  mode: {rag_mode}")
         else:
             if "rag" in installed_combo:
-                warnings.append("rag is installed but RAG_ENABLED=false — set RAG_ENABLED=true in .env to activate")
+                warnings.append(
+                    "rag is installed but RAG_ENABLED=false — set RAG_ENABLED=true in .env to activate"
+                )
 
     if "rag" in installed_combo:
         storage = _env("RAGPDF_STORAGE", "local")
         embed = _env("RAGPDF_EMBEDDING_BACKEND", "sentence_transformer")
         vstore = _env("RAGPDF_VECTOR_STORE", "local")
         corrector = _env("RAGPDF_CORRECTOR_BACKEND", "noop")
-        print(f"  rag       storage: {storage}   embeddings: {embed}   vectors: {vstore}   corrector: {corrector}")
+        print(
+            f"  rag       storage: {storage}   embeddings: {embed}   vectors: {vstore}   corrector: {corrector}"
+        )
 
     # ── Connections ───────────────────────────────────────────────
     print("\nConnections")
@@ -148,9 +160,13 @@ def run_status(dest_str: str = ".") -> None:
         mode = "inprocess" if not mapper_url else f"http -> {mapper_url}"
         print(f"  doc_upload -> mapper   {mode}")
     if "mapper" in installed_combo and "rag" in installed_combo:
-        rag_enabled = _env("RAG_ENABLED", "false").lower() == "true"
+        rag_enabled_bool: bool = _env("RAG_ENABLED", "false").lower() == "true"
         rag_mode = _env("RAG_MODE", "inprocess")
-        status = f"ENABLED ({rag_mode})" if rag_enabled else "DISABLED (set RAG_ENABLED=true)"
+        status = (
+            f"ENABLED ({rag_mode})"
+            if rag_enabled_bool
+            else "DISABLED (set RAG_ENABLED=true)"
+        )
         print(f"  mapper -> rag   {status}")
 
     # ── Warnings ──────────────────────────────────────────────────

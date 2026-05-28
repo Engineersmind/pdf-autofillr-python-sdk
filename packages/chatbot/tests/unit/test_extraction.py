@@ -4,18 +4,21 @@ Unit tests for extraction layer:
     - PromptBuilder: prompt generation
     - Extractor: LLM-first with fallback
 """
-import pytest
-from unittest.mock import patch, MagicMock
 
+from unittest.mock import patch
+
+import pytest
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FallbackExtractor
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestFallbackExtractor:
     @pytest.fixture
     def extractor(self):
         from chatbot.extraction.fallback_extractor import FallbackExtractor
+
         return FallbackExtractor()
 
     def test_extracts_email(self, extractor):
@@ -48,10 +51,12 @@ class TestFallbackExtractor:
 # PromptBuilder
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestPromptBuilder:
     @pytest.fixture
     def builder(self):
         from chatbot.extraction.prompt_builder import PromptBuilder
+
         return PromptBuilder()
 
     def test_build_returns_string(self, builder):
@@ -106,10 +111,12 @@ class TestPromptBuilder:
 # Extractor (integration of LLM + fallback)
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestExtractor:
     @pytest.fixture
     def extractor(self):
         from chatbot.extraction.extractor import Extractor
+
         return Extractor(openai_api_key="sk-test")
 
     # def test_llm_success_returns_llm_result(self, extractor):
@@ -139,7 +146,9 @@ class TestExtractor:
                 meta_form_keys={},
                 investor_type="Individual",
             )
-            assert result == {"full_name": "Alice"}   # <-- move assert INSIDE the with block
+            assert result == {
+                "full_name": "Alice"
+            }  # <-- move assert INSIDE the with block
             assert method == "llm"
 
     def test_fallback_used_when_llm_empty(self, extractor):

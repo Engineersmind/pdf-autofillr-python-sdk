@@ -5,10 +5,10 @@ ConversationEngine — main orchestrator.
 Owns the session lifecycle, routes each turn to the correct handler,
 and coordinates extraction, storage, telemetry, and PDF workflow.
 """
+
 from __future__ import annotations
 
 import time
-from typing import Optional, Tuple
 
 from chatbot.config.form_config import FormConfig
 from chatbot.config.settings import Settings
@@ -34,12 +34,12 @@ class ConversationEngine:
         self,
         storage: StorageBackend,
         form_config: FormConfig,
-        api_key: Optional[str] = None,
-        pdf_filler: Optional[PDFFillerInterface] = None,
+        api_key: str | None = None,
+        pdf_filler: PDFFillerInterface | None = None,
         telemetry: TelemetryCollector = None,
         prompt_builder=None,
-        settings: Optional[Settings] = None,
-        openai_api_key: Optional[str] = None,
+        settings: Settings | None = None,
+        openai_api_key: str | None = None,
     ):
         self.storage = storage
         self.form_config = form_config
@@ -54,7 +54,7 @@ class ConversationEngine:
             prompt_builder=prompt_builder,
         )
 
-        self.pdf_workflow: Optional[PDFWorkflowManager] = (
+        self.pdf_workflow: PDFWorkflowManager | None = (
             PDFWorkflowManager(filler=pdf_filler, storage=storage, settings=settings)
             if pdf_filler
             else None
@@ -66,6 +66,7 @@ class ConversationEngine:
     def router(self):
         if self._router is None:
             from chatbot.core.router import StateRouter
+
             self._router = StateRouter.build(self)
         return self._router
 
@@ -76,8 +77,8 @@ class ConversationEngine:
         user_id: str,
         session_id: str,
         user_input: str,
-        debug: Optional[DebugLogger] = None,
-    ) -> Tuple[str, bool]:
+        debug: DebugLogger | None = None,
+    ) -> tuple[str, bool]:
         """
         Process one message turn.
 
@@ -104,7 +105,9 @@ class ConversationEngine:
             debug=debug,
         )
 
-        session["state"] = next_state.value if isinstance(next_state, State) else next_state
+        session["state"] = (
+            next_state.value if isinstance(next_state, State) else next_state
+        )
         self.session_manager.save(user_id, session_id, session)
 
         try:
@@ -152,11 +155,14 @@ class ConversationEngine:
         live_fill_flat = session.get("live_fill_flat", {})
 
         self.storage.save_final_output_flat(user_id, session_id, live_fill_flat)
-        self.storage.save_final_output(user_id, session_id, unflatten_dict(live_fill_flat))
+        self.storage.save_final_output(
+            user_id, session_id, unflatten_dict(live_fill_flat)
+        )
         self._update_integrated_info(user_id, live_fill_flat)
 
         try:
             from chatbot.pdf.fill_report import FillReport
+
             investor_type = session.get("investor_type", "")
             report = FillReport.generate(
                 form_config=self.form_config,
@@ -189,5 +195,8 @@ class ConversationEngine:
 
     def _update_integrated_info(self, user_id: str, live_fill_flat: dict) -> None:
         existing = self.storage.get_user_integrated_info(user_id) or {}
-        merged = {**existing, **{k: v for k, v in live_fill_flat.items() if v not in (None, "", [])}}
+        merged = {
+            **existing,
+            **{k: v for k, v in live_fill_flat.items() if v not in (None, "", [])},
+        }
         self.storage.save_user_integrated_info(user_id, merged)

@@ -20,10 +20,12 @@ Usage:
     a) a file path:  --category data/rag/input/pdf_category.json   (recommended on Windows)
     b) inline JSON:  --category '{"category":"Finance",...}'          (Linux/Mac only)
 """
+
 import argparse
 import json
 import os
 import sys
+
 from ragpdf import RAGPDFClient
 
 
@@ -43,7 +45,10 @@ def _load_category(value: str) -> dict:
             with open(value, encoding="utf-8") as fh:
                 data = json.load(fh)
             if not isinstance(data, dict):
-                print(f"ERROR: --category file must contain a JSON object, got {type(data).__name__}", file=sys.stderr)
+                print(
+                    f"ERROR: --category file must contain a JSON object, got {type(data).__name__}",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
             return data
         except json.JSONDecodeError as e:
@@ -54,7 +59,9 @@ def _load_category(value: str) -> dict:
     try:
         data = json.loads(value)
         if not isinstance(data, dict):
-            print("ERROR: --category inline value must be a JSON object", file=sys.stderr)
+            print(
+                "ERROR: --category inline value must be a JSON object", file=sys.stderr
+            )
             sys.exit(1)
         return data
     except json.JSONDecodeError:
@@ -64,7 +71,7 @@ def _load_category(value: str) -> dict:
             f"  On Windows, use a file path instead:\n"
             f"    --category data/rag/input/pdf_category.json\n\n"
             f"  On Linux/Mac, inline JSON works:\n"
-            f"    --category '{{\"category\":\"Finance\",\"sub_category\":\"PE\",\"document_type\":\"Sub\"}}'",
+            f'    --category \'{{"category":"Finance","sub_category":"PE","document_type":"Sub"}}\'',
             file=sys.stderr,
         )
         sys.exit(1)
@@ -93,11 +100,13 @@ def main():
         ),
     )
     iv.add_argument(
-        "--source", default="",
+        "--source",
+        default="",
         help="Path to your vector source JSON (field definitions without embeddings).",
     )
     iv.add_argument(
-        "--backend", default="",
+        "--backend",
+        default="",
         choices=["openai", "sentence_transformer"],
         help=(
             "Embedding backend to use. "
@@ -106,38 +115,48 @@ def main():
         ),
     )
     iv.add_argument(
-        "--model", default="",
+        "--model",
+        default="",
         help="Embedding model name. Leave blank to use the backend default.",
     )
     iv.add_argument(
-        "--data-path", default="", dest="data_path",
+        "--data-path",
+        default="",
+        dest="data_path",
         help="RAGPDF_DATA_PATH folder. Defaults to value in .env.",
     )
     iv.add_argument(
-        "--force", action="store_true",
+        "--force",
+        action="store_true",
         help="Re-embed ALL vectors, even those already embedded.",
     )
     iv.add_argument(
-        "--batch-size", default=50, type=int, dest="batch_size",
+        "--batch-size",
+        default=50,
+        type=int,
+        dest="batch_size",
         help="Vectors per API call (default: 50).",
     )
     iv.add_argument(
-        "--no-sanity-check", action="store_true", dest="no_sanity",
+        "--no-sanity-check",
+        action="store_true",
+        dest="no_sanity",
         help="Skip the self-test after embedding.",
     )
 
     # ── predict ───────────────────────────────────────────────────────────────
     p = sub.add_parser("predict", help="Run RAG predictions on PDF fields")
-    p.add_argument("--user",    required=True)
+    p.add_argument("--user", required=True)
     p.add_argument("--session", required=True)
-    p.add_argument("--pdf",     required=True)
-    p.add_argument("--fields",  required=True, help="Path to JSON file with fields list")
-    p.add_argument("--hash",    required=True, help="PDF hash (md5/sha)")
+    p.add_argument("--pdf", required=True)
+    p.add_argument("--fields", required=True, help="Path to JSON file with fields list")
+    p.add_argument("--hash", required=True, help="PDF hash (md5/sha)")
     p.add_argument(
-        "--category", default="{}",
+        "--category",
+        default="{}",
         help=(
             "File path (recommended on Windows): --category data/rag/input/pdf_category.json  "
-            "OR inline JSON (Linux/Mac): --category '{\"category\":\"Finance\",...}'"
+            'OR inline JSON (Linux/Mac): --category \'{"category":"Finance",...}\''
         ),
     )
 
@@ -146,28 +165,39 @@ def main():
 
     # ── metrics ───────────────────────────────────────────────────────────────
     m = sub.add_parser("metrics", help="Get metrics")
-    m.add_argument("--type", required=True, dest="metric_type",
-                   choices=["pdf", "category", "subcategory", "doctype",
-                             "global", "compare", "pdf_hash"])
-    m.add_argument("--user",        default=None)
-    m.add_argument("--session",     default=None)
-    m.add_argument("--pdf",         default=None)
-    m.add_argument("--category",    default=None)
+    m.add_argument(
+        "--type",
+        required=True,
+        dest="metric_type",
+        choices=[
+            "pdf",
+            "category",
+            "subcategory",
+            "doctype",
+            "global",
+            "compare",
+            "pdf_hash",
+        ],
+    )
+    m.add_argument("--user", default=None)
+    m.add_argument("--session", default=None)
+    m.add_argument("--pdf", default=None)
+    m.add_argument("--category", default=None)
     m.add_argument("--subcategory", default=None)
-    m.add_argument("--doctype",     default=None)
-    m.add_argument("--pdf-hash",    default=None, dest="pdf_hash")
+    m.add_argument("--doctype", default=None)
+    m.add_argument("--pdf-hash", default=None, dest="pdf_hash")
 
     # ── feedback ──────────────────────────────────────────────────────────────
     f = sub.add_parser("feedback", help="Submit user feedback/corrections")
-    f.add_argument("--user",    required=True)
+    f.add_argument("--user", required=True)
     f.add_argument("--session", required=True)
-    f.add_argument("--pdf",     required=True)
-    f.add_argument("--errors",  required=True, help="Path to JSON file with errors list")
+    f.add_argument("--pdf", required=True)
+    f.add_argument("--errors", required=True, help="Path to JSON file with errors list")
 
     # ── error-analytics ───────────────────────────────────────────────────────
     ea = sub.add_parser("error-analytics", help="Get error analytics")
-    ea.add_argument("--from",     default=None, dest="date_from")
-    ea.add_argument("--to",       default=None, dest="date_to")
+    ea.add_argument("--from", default=None, dest="date_from")
+    ea.add_argument("--to", default=None, dest="date_to")
     ea.add_argument("--category", default=None)
 
     # ── parse ─────────────────────────────────────────────────────────────────
@@ -180,21 +210,22 @@ def main():
     if args.command == "init-vectors":
         try:
             from dotenv import load_dotenv
+
             load_dotenv()
         except ImportError:
             pass
 
-        from ragpdf.init_vectors import run_init_vectors
         from ragpdf.config.settings import (
             RAGPDF_DATA_PATH,
             RAGPDF_EMBEDDING_BACKEND,
-            RAGPDF_ST_MODEL,
             RAGPDF_OPENAI_EMBEDDING_MODEL,
+            RAGPDF_ST_MODEL,
         )
+        from ragpdf.init_vectors import run_init_vectors
 
         data_path = args.data_path or RAGPDF_DATA_PATH
-        backend   = args.backend   or RAGPDF_EMBEDDING_BACKEND
-        model     = args.model     or (
+        backend = args.backend or RAGPDF_EMBEDDING_BACKEND
+        model = args.model or (
             RAGPDF_OPENAI_EMBEDDING_MODEL if backend == "openai" else RAGPDF_ST_MODEL
         )
 
@@ -227,7 +258,7 @@ def main():
         except FileNotFoundError as e:
             print(f"\nERROR: {e}", file=sys.stderr)
             sys.exit(1)
-        except EnvironmentError as e:
+        except OSError as e:
             print(f"\nERROR: {e}", file=sys.stderr)
             sys.exit(1)
         except Exception as e:
@@ -255,8 +286,11 @@ def main():
         print(json.dumps(client.get_system_info(), indent=2))
 
     elif args.command == "metrics":
-        raw   = {k: v for k, v in vars(args).items()
-                 if k not in ("command", "metric_type") and v is not None}
+        raw = {
+            k: v
+            for k, v in vars(args).items()
+            if k not in ("command", "metric_type") and v is not None
+        }
         remap = {"user": "user_id", "session": "session_id", "pdf": "pdf_id"}
         kwargs = {remap.get(k, k): v for k, v in raw.items()}
         print(json.dumps(client.get_metrics(args.metric_type, **kwargs), indent=2))
@@ -266,20 +300,24 @@ def main():
             errors = json.load(fh)
         if isinstance(errors, dict) and "errors" in errors:
             errors = errors["errors"]
-        print(json.dumps(
-            client.submit_feedback(args.user, args.session, args.pdf, errors),
-            indent=2
-        ))
+        print(
+            json.dumps(
+                client.submit_feedback(args.user, args.session, args.pdf, errors),
+                indent=2,
+            )
+        )
 
     elif args.command == "error-analytics":
-        print(json.dumps(
-            client.get_error_analytics(
-                date_from=args.date_from,
-                date_to=args.date_to,
-                category=args.category,
-            ),
-            indent=2
-        ))
+        print(
+            json.dumps(
+                client.get_error_analytics(
+                    date_from=args.date_from,
+                    date_to=args.date_to,
+                    category=args.category,
+                ),
+                indent=2,
+            )
+        )
 
 
 if __name__ == "__main__":

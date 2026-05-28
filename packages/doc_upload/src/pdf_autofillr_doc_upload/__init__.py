@@ -16,15 +16,16 @@ Quick start::
         output_path="output/filled.json",
     )
 """
+
 from pdf_autofillr_doc_upload.client import DocUploadClient
-from pdf_autofillr_doc_upload.storage.local_storage import LocalStorage
-from pdf_autofillr_doc_upload.storage.s3_storage import S3Storage
-from pdf_autofillr_doc_upload.storage.gcp_storage import GCSStorage
-from pdf_autofillr_doc_upload.storage.azure_storage import AzureStorage
 from pdf_autofillr_doc_upload.config.settings import DocUploadSettings
+from pdf_autofillr_doc_upload.pdf.inprocess_filler import InProcessMapperFiller
 from pdf_autofillr_doc_upload.pdf.interface import PDFFillerInterface
 from pdf_autofillr_doc_upload.pdf.mapper_filler import MapperPDFFiller
-from pdf_autofillr_doc_upload.pdf.inprocess_filler import InProcessMapperFiller
+from pdf_autofillr_doc_upload.storage.azure_storage import AzureStorage
+from pdf_autofillr_doc_upload.storage.gcp_storage import GCSStorage
+from pdf_autofillr_doc_upload.storage.local_storage import LocalStorage
+from pdf_autofillr_doc_upload.storage.s3_storage import S3Storage
 
 __version__ = "0.1.5"
 
@@ -44,7 +45,9 @@ def copy_sample_configs(destination: str = ".") -> None:
     if not src.exists():
         src = Path(__file__).parent.parent.parent / "config_samples"
     if not src.exists():
-        raise FileNotFoundError(f"config_samples not found at {src}. Reinstall the package.")
+        raise FileNotFoundError(
+            f"config_samples not found at {src}. Reinstall the package."
+        )
 
     dst = Path(destination) / "configs"
     shutil.copytree(str(src), str(dst), dirs_exist_ok=True)
@@ -52,6 +55,7 @@ def copy_sample_configs(destination: str = ".") -> None:
 
     try:
         import pdf_autofillr_mapper
+
         pdf_autofillr_mapper.copy_sample_configs(destination)
         print("✅ Mapper config (mapper_config.ini) also copied.")
     except ImportError:

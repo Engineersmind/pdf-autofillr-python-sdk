@@ -1,10 +1,14 @@
-from .base import BaseChunker
 import logging
+
+from .base import BaseChunker
 
 logger = logging.getLogger(__name__)
 
+
 class WindowBasedChunker(BaseChunker):
-    def __init__(self, tokenizer, prefix_threshold=10, suffix_threshold=10, lines_limit=40):
+    def __init__(
+        self, tokenizer, prefix_threshold=10, suffix_threshold=10, lines_limit=40
+    ):
         super().__init__(tokenizer)
         self.prefix_threshold = prefix_threshold
         self.suffix_threshold = suffix_threshold
@@ -72,13 +76,25 @@ class WindowBasedChunker(BaseChunker):
                 current_gid_set = combined_gids
                 i += 1
             else:
-                chunks.append({"fids": current_fids, "window_ranges": current_window_ranges, "total_lines": len(current_gid_set)})
+                chunks.append(
+                    {
+                        "fids": current_fids,
+                        "window_ranges": current_window_ranges,
+                        "total_lines": len(current_gid_set),
+                    }
+                )
                 current_fids = []
                 current_window_ranges = []
                 current_gid_set = set()
 
         if current_fids:
-            chunks.append({"fids": current_fids, "window_ranges": current_window_ranges, "total_lines": len(current_gid_set)})
+            chunks.append(
+                {
+                    "fids": current_fids,
+                    "window_ranges": current_window_ranges,
+                    "total_lines": len(current_gid_set),
+                }
+            )
 
         return chunks
 
@@ -107,7 +123,7 @@ class WindowBasedChunker(BaseChunker):
                 "start_fid": min(fid_ints) if fid_ints else -1,
                 "end_fid": max(fid_ints) if fid_ints else -1,
                 "gids": sorted_gids,
-                "num_lines": len(text_lines)
+                "num_lines": len(text_lines),
             }
 
         return result, {}

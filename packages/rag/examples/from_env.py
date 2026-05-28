@@ -5,6 +5,7 @@ All config from .env file or environment variables.
 Copy .env.example to .env and fill in your values, then:
     python examples/from_env.py
 """
+
 from ragpdf import RAGPDFClient
 
 client = RAGPDFClient.from_env()

@@ -3,9 +3,9 @@
 Tests for VectorStoreBackend.find_by_name() — used by FeedbackPipeline
 to route errors to the correct vector without hardcoding file paths.
 """
+
 import pytest
-import tempfile
-import os
+
 from ragpdf.vector_stores.local_vector_store import LocalVectorStore
 
 

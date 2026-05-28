@@ -17,10 +17,12 @@ class MyCustomStorage(StorageInterface):
 
     def exists(self, path: str) -> bool:
         import os
+
         return os.path.exists(path)
 
     def delete(self, path: str) -> None:
         import os
+
         os.remove(path)
 
 

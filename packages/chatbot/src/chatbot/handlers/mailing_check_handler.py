@@ -6,12 +6,11 @@ Asks the user whether their mailing address is the same as their
 registered address. If yes, copies all registered -> mailing fields.
 If no, returns to DATA_COLLECTION for the user to provide mailing details.
 """
+
 from __future__ import annotations
-from typing import Optional, Tuple
 
 from chatbot.core.states import State
 from chatbot.handlers.base_handler import BaseHandler
-from chatbot.logging.debug_logger import DebugLogger
 from chatbot.utils.address_utils import copy_registered_to_mailing
 from chatbot.utils.intent_detection import is_affirmative, is_negative
 
@@ -44,7 +43,9 @@ class MailingCheckHandler(BaseHandler):
 
         if is_negative(user_input):
             session["_mailing_checked"] = True
-            debug and debug.log("mailing_check", "User will provide separate mailing address")
+            debug and debug.log(
+                "mailing_check", "User will provide separate mailing address"
+            )
 
             # Build a prompt listing the mailing address fields needed
             mailing_keys = [k for k in live_fill if "address_mailing" in k]

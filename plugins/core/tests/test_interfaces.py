@@ -1,7 +1,8 @@
 """Basic tests for pdf-autofiller-core interfaces."""
 
 import pytest
-from pdf_autofiller_core import StorageInterface, HandlerInterface
+
+from pdf_autofiller_core import HandlerInterface, StorageInterface
 
 
 def test_storage_interface_is_abstract():

@@ -1,7 +1,9 @@
 # tests/unit/test_storage_local.py
 import os
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+
 from ragpdf.storage.local_storage import LocalStorage
 
 
@@ -11,6 +13,7 @@ def storage(tmp_path):
 
 
 # ── LocalStorage tests ────────────────────────────────────────────────────────
+
 
 def test_save_and_load_json(storage):
     data = {"key": "value", "num": 42}
@@ -59,11 +62,11 @@ def test_exists(storage, tmp_path):
 
 # ── helpers tests ─────────────────────────────────────────────────────────────
 
-from ragpdf.utils.helpers import (
+from ragpdf.utils.helpers import (  # noqa: E402
+    calculate_avg,
     generate_submission_id,
     generate_vector_id,
     get_pdf_frequency,
-    calculate_avg,
 )
 
 
@@ -81,8 +84,8 @@ def test_submission_id_format():
     assert parts[0] == "user1"
     assert parts[1] == "sess1"
     assert parts[2] == "pdf1"
-    assert parts[3] == "1"         # frequency=1 on first submission
-    assert parts[4].isdigit()      # unix timestamp
+    assert parts[3] == "1"  # frequency=1 on first submission
+    assert parts[4].isdigit()  # unix timestamp
     assert frequency == 1
     assert is_duplicate is False
 
@@ -90,9 +93,7 @@ def test_submission_id_format():
 def test_submission_id_duplicate():
     # frequency > 1 means is_duplicate=True
     mock_storage = MagicMock()
-    mock_storage.load_json.return_value = {
-        "somehash": {"pdf_count": 2}
-    }
+    mock_storage.load_json.return_value = {"somehash": {"pdf_count": 2}}
     _, frequency, is_duplicate = generate_submission_id(
         "user1", "sess1", "pdf1", "somehash", mock_storage
     )
@@ -112,7 +113,7 @@ def test_generate_vector_id_sequential():
 def test_get_pdf_frequency_new():
     # FIX: get_pdf_frequency takes (pdf_hash, storage_object), not a plain dict.
     mock_storage = MagicMock()
-    mock_storage.load_json.return_value = {}   # empty mapping
+    mock_storage.load_json.return_value = {}  # empty mapping
     assert get_pdf_frequency("abc123", mock_storage) == 1
 
 
@@ -136,7 +137,7 @@ def test_calculate_avg():
 
 # ── MetricsService tests ──────────────────────────────────────────────────────
 
-from ragpdf.services.metrics_service import MetricsService
+from ragpdf.services.metrics_service import MetricsService  # noqa: E402
 
 
 @pytest.fixture
@@ -149,8 +150,14 @@ def metrics_service(tmp_path):
 def _make_preds(fields, predicted=True, confidence=0.9):
     return {
         "predictions": {
-            f["field_id"]: {"predicted_field_name": f"mapped_{f['field_id']}", "confidence": confidence}
-            if predicted else None
+            f["field_id"]: (
+                {
+                    "predicted_field_name": f"mapped_{f['field_id']}",
+                    "confidence": confidence,
+                }
+                if predicted
+                else None
+            )
             for f in fields
         }
     }
@@ -171,15 +178,19 @@ def _make_final(fields, selected_from="rag"):
 
 def _make_case_cls(fields):
     from ragpdf.utils.constants import CASE_A, CASE_B, CASE_C, CASE_D, CASE_E
+
     return {
         "total_fields": len(fields),
         "case_breakdown": {
-            CASE_A: {"count": len(fields), "field_ids": [f["field_id"] for f in fields]},
+            CASE_A: {
+                "count": len(fields),
+                "field_ids": [f["field_id"] for f in fields],
+            },
             CASE_B: {"count": 0, "field_ids": []},
             CASE_C: {"count": 0, "field_ids": []},
             CASE_D: {"count": 0, "field_ids": []},
             CASE_E: {"count": 0, "field_ids": []},
-        }
+        },
     }
 
 
@@ -187,8 +198,11 @@ def test_metrics_initial_accuracy_is_1(metrics_service):
     fields = [{"field_id": "f1"}, {"field_id": "f2"}]
     # FIX: calculate_metrics takes 10 keyword args — no "model" positional arg
     metrics = metrics_service.calculate_metrics(
-        user_id="u1", session_id="s1", pdf_id="p1",
-        submission_id="sub1", pdf_hash="hash1",
+        user_id="u1",
+        session_id="s1",
+        pdf_id="p1",
+        submission_id="sub1",
+        pdf_hash="hash1",
         rag_preds=_make_preds(fields),
         llm_preds=_make_preds(fields),
         final_preds=_make_final(fields),
@@ -204,15 +218,21 @@ def test_metrics_recalculate_after_errors(metrics_service, tmp_path):
     rag_p = _make_preds(fields)
     llm_p = _make_preds(fields)
     fin_p = _make_final(fields, "rag")
-    cc    = _make_case_cls(fields)
-    cat   = {"category": "PE", "sub_category": "LP", "document_type": "Sub"}
+    cc = _make_case_cls(fields)
+    cat = {"category": "PE", "sub_category": "LP", "document_type": "Sub"}
 
     # First calculate and persist metrics + final_preds so recalculate can load them
     metrics = metrics_service.calculate_metrics(
-        user_id="u1", session_id="s1", pdf_id="p1",
-        submission_id="sub1", pdf_hash="hash1",
-        rag_preds=rag_p, llm_preds=llm_p, final_preds=fin_p,
-        case_classification=cc, pdf_category=cat,
+        user_id="u1",
+        session_id="s1",
+        pdf_id="p1",
+        submission_id="sub1",
+        pdf_hash="hash1",
+        rag_preds=rag_p,
+        llm_preds=llm_p,
+        final_preds=fin_p,
+        case_classification=cc,
+        pdf_category=cat,
     )
     # Persist the files that recalculate_accuracy_after_errors loads internally
     metrics_service.storage.save_json(
@@ -225,7 +245,9 @@ def test_metrics_recalculate_after_errors(metrics_service, tmp_path):
     # FIX: recalculate_accuracy_after_errors takes (user_id, session_id, pdf_id, errors)
     # and loads metrics + final_preds from storage itself — no kwargs for those
     updated = metrics_service.recalculate_accuracy_after_errors(
-        "u1", "s1", "p1",
+        "u1",
+        "s1",
+        "p1",
         errors=[{"field_name": "mapped_f1"}],
     )
     assert updated["accuracy"]["errors_ensemble"] == 1

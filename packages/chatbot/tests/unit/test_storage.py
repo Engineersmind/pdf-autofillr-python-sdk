@@ -4,14 +4,17 @@ Unit tests for LocalStorage backend.
 Tests all CRUD operations defined in StorageBackend against
 the LocalStorage implementation using a temp directory.
 """
+
 import json
-import pytest
 from pathlib import Path
+
+import pytest
 
 
 @pytest.fixture
 def storage(temp_dir):
     from chatbot.storage.local_storage import LocalStorage
+
     return LocalStorage(
         data_path=str(temp_dir / "data"),
         config_path=str(temp_dir / "configs"),
@@ -19,6 +22,7 @@ def storage(temp_dir):
 
 
 # ── session state ──────────────────────────────────────────────────────
+
 
 def test_save_and_get_session_state(storage):
     state = {"state": "INIT", "live_fill_flat": {}}
@@ -40,6 +44,7 @@ def test_save_session_state_overwrites(storage):
 
 # ── user integrated info ───────────────────────────────────────────────
 
+
 def test_save_and_get_user_integrated_info(storage):
     data = {"full_name": "Alice", "email": "alice@test.com"}
     storage.save_user_integrated_info("u1", data)
@@ -52,6 +57,7 @@ def test_user_integrated_info_missing_returns_none(storage):
 
 
 # ── final output ───────────────────────────────────────────────────────
+
 
 def test_save_and_get_final_output(storage):
     data = {"name": {"first": "Alice"}}
@@ -67,6 +73,7 @@ def test_save_and_get_final_output_flat(storage):
 
 
 # ── conversation log ───────────────────────────────────────────────────
+
 
 def test_save_conversation_log(storage):
     """Issue 7 fix: save_conversation_log must persist to its own file."""
@@ -84,6 +91,7 @@ def test_save_conversation_log(storage):
 
 # ── debug conversation ─────────────────────────────────────────────────
 
+
 def test_save_and_get_debug_conversation(storage):
     debug = {"entries": [{"level": "info", "message": "test"}]}
     storage.save_debug_conversation("u1", "s1", debug)
@@ -92,6 +100,7 @@ def test_save_and_get_debug_conversation(storage):
 
 
 # ── pdf filling logs ───────────────────────────────────────────────────
+
 
 def test_save_and_get_pdf_filling_logs(storage):
     logs = {"steps": [{"step": "prepare", "status": "complete"}]}
@@ -102,6 +111,7 @@ def test_save_and_get_pdf_filling_logs(storage):
 
 # ── fill report ────────────────────────────────────────────────────────
 
+
 def test_save_and_get_fill_report(storage):
     report = {"summary": {"total_fields_filled": 10, "fill_rate_pct": 80.0}}
     storage.save_fill_report("u1", "s1", report)
@@ -110,6 +120,7 @@ def test_save_and_get_fill_report(storage):
 
 
 # ── list / delete sessions ─────────────────────────────────────────────
+
 
 def test_list_user_sessions(storage):
     storage.save_session_state("u1", "s1", {"state": "INIT"})

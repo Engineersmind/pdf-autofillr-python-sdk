@@ -19,7 +19,9 @@ def field_extraction(pdf_path: str, ground_truth: dict) -> dict:
     raise NotImplementedError
 
 
-def field_mapping(pdf_path: str, schema_keys_path: str, ground_truth: dict, model: str) -> dict:
+def field_mapping(
+    pdf_path: str, schema_keys_path: str, ground_truth: dict, model: str
+) -> dict:
     """
     Run field mapping via LLM and score against ground truth.
 

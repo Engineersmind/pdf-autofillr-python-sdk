@@ -3,6 +3,7 @@ RAG — predict field mappings and submit feedback.
 
 Requires: pip install "pdf-autofillr-rag[openai]"
 """
+
 from ragpdf import RAGPDFClient
 
 client = RAGPDFClient.from_env()

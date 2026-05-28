@@ -3,6 +3,7 @@
 Validates env/config at startup and raises clear errors
 telling the user exactly what to set and how to install it.
 """
+
 import os
 
 
@@ -18,10 +19,10 @@ def validate():
     """
     errors = []
 
-    storage         = os.getenv("RAGPDF_STORAGE", "local")
-    embedding       = os.getenv("RAGPDF_EMBEDDING_BACKEND", "sentence_transformer")
-    vector_store    = os.getenv("RAGPDF_VECTOR_STORE", "local")
-    corrector       = os.getenv("RAGPDF_CORRECTOR_BACKEND", "noop")
+    storage = os.getenv("RAGPDF_STORAGE", "local")
+    embedding = os.getenv("RAGPDF_EMBEDDING_BACKEND", "sentence_transformer")
+    vector_store = os.getenv("RAGPDF_VECTOR_STORE", "local")
+    corrector = os.getenv("RAGPDF_CORRECTOR_BACKEND", "noop")
 
     # ── Storage checks ────────────────────────────────────────
     if storage == "s3":
@@ -32,7 +33,7 @@ def validate():
                 "  Install: pip install pdf-autofillr-rag[s3]"
             )
         try:
-            import boto3
+            import boto3  # noqa: F401
         except ImportError:
             errors.append(
                 "[S3 Storage] boto3 is not installed.\n"
@@ -42,7 +43,7 @@ def validate():
     # ── Embedding checks ──────────────────────────────────────
     if embedding == "sentence_transformer":
         try:
-            import sentence_transformers
+            import sentence_transformers  # noqa: F401
         except ImportError:
             errors.append(
                 "[Embeddings] sentence-transformers is not installed.\n"
@@ -84,7 +85,7 @@ def validate():
                 "  Fix: add RAGPDF_PINECONE_INDEX=ragpdf-vectors to your .env"
             )
         try:
-            import pinecone
+            import pinecone  # noqa: F401
         except ImportError:
             errors.append(
                 "[Vector Store] pinecone-client is not installed.\n"
@@ -93,7 +94,7 @@ def validate():
 
     if vector_store == "chroma":
         try:
-            import chromadb
+            import chromadb  # noqa: F401
         except ImportError:
             errors.append(
                 "[Vector Store] chromadb is not installed.\n"
@@ -107,7 +108,7 @@ def validate():
                 "  Fix: add RAGPDF_WEAVIATE_URL=http://localhost:8080 to your .env"
             )
         try:
-            import weaviate
+            import weaviate  # noqa: F401
         except ImportError:
             errors.append(
                 "[Vector Store] weaviate-client is not installed.\n"
@@ -122,7 +123,7 @@ def validate():
                 "  Fix: add OPENAI_API_KEY=sk-... to your .env"
             )
         try:
-            import openai
+            import openai  # noqa: F401
         except ImportError:
             errors.append(
                 "[Corrector] openai package is not installed.\n"
@@ -136,7 +137,7 @@ def validate():
                 "  Fix: add ANTHROPIC_API_KEY=sk-ant-... to your .env"
             )
         try:
-            import anthropic
+            import anthropic  # noqa: F401
         except ImportError:
             errors.append(
                 "[Corrector] anthropic package is not installed.\n"
@@ -147,8 +148,8 @@ def validate():
     server_mode = os.getenv("RAGPDF_SERVER_MODE", "false").lower() == "true"
     if server_mode:
         try:
-            import fastapi
-            import uvicorn
+            import fastapi  # noqa: F401
+            import uvicorn  # noqa: F401
         except ImportError:
             errors.append(
                 "[Server] fastapi/uvicorn are not installed.\n"

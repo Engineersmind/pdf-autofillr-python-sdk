@@ -5,18 +5,18 @@ RAGPDFClient — single public entry point for the ragpdf-sdk.
 All six APIs are exposed as typed Python methods.
 Every component (storage, embeddings, vector store, corrector) is pluggable.
 """
-import logging
-from typing import Optional
 
-from ragpdf.storage.base import StorageBackend
-from ragpdf.embeddings.base import EmbeddingBackend
-from ragpdf.vector_stores.base import VectorStoreBackend
+import logging
+
 from ragpdf.correctors.base import FieldCorrectorBackend
+from ragpdf.embeddings.base import EmbeddingBackend
 from ragpdf.models.predictor import FieldPredictor
+from ragpdf.pipeline.feedback_pipeline import FeedbackPipeline
 from ragpdf.pipeline.prediction_pipeline import PredictionPipeline
 from ragpdf.pipeline.processing_pipeline import ProcessingPipeline
-from ragpdf.pipeline.feedback_pipeline import FeedbackPipeline
 from ragpdf.services.analytics_service import AnalyticsService
+from ragpdf.storage.base import StorageBackend
+from ragpdf.vector_stores.base import VectorStoreBackend
 
 logger = logging.getLogger(__name__)
 
@@ -52,28 +52,30 @@ class RAGPDFClient:
         storage: StorageBackend,
         vector_store: VectorStoreBackend,
         embedding_backend: EmbeddingBackend,
-        corrector: Optional[FieldCorrectorBackend] = None,
+        corrector: FieldCorrectorBackend | None = None,
     ):
         self._storage = storage
         self._vector_store = vector_store
         self._embedding = embedding_backend
 
         from ragpdf.correctors.noop_corrector import NoOpCorrectorBackend
+
         self._corrector = corrector or NoOpCorrectorBackend()
 
         predictor = FieldPredictor(embedding_backend, vector_store)
         self._prediction = PredictionPipeline(predictor, storage)
         self._processing = ProcessingPipeline(storage, vector_store, embedding_backend)
-        self._feedback   = FeedbackPipeline(storage, vector_store, self._corrector)
-        self._analytics  = AnalyticsService(storage)
+        self._feedback = FeedbackPipeline(storage, vector_store, self._corrector)
+        self._analytics = AnalyticsService(storage)
 
     @classmethod
     def from_env(cls) -> "RAGPDFClient":
         """Create client from environment variables / .env file."""
-        from ragpdf.storage.factory import StorageFactory
-        from ragpdf.embeddings.factory import EmbeddingFactory
-        from ragpdf.vector_stores.factory import VectorStoreFactory
         from ragpdf.correctors.factory import CorrectorFactory
+        from ragpdf.embeddings.factory import EmbeddingFactory
+        from ragpdf.storage.factory import StorageFactory
+        from ragpdf.vector_stores.factory import VectorStoreFactory
+
         return cls(
             storage=StorageFactory.create(),
             vector_store=VectorStoreFactory.create(),
@@ -112,7 +114,9 @@ class RAGPDFClient:
         Returns dict with submission_id, frequency, is_duplicate, and prediction summary.
         RAG predictions are saved to storage automatically.
         """
-        return self._prediction.run(user_id, session_id, pdf_id, fields, pdf_hash, pdf_category)
+        return self._prediction.run(
+            user_id, session_id, pdf_id, fields, pdf_hash, pdf_category
+        )
 
     # ── API 2: Save Filled PDF + Run Processing Pipeline ─────────────────────
     def save_filled_pdf(
@@ -122,7 +126,7 @@ class RAGPDFClient:
         pdf_id: str,
         llm_predictions: dict,
         final_predictions: dict,
-        filled_pdf_location: str = None,
+        filled_pdf_location: str | None = None,
     ) -> dict:
         """
         Store the filled PDF and run the full processing pipeline:
@@ -137,7 +141,9 @@ class RAGPDFClient:
 
         Returns processing summary.
         """
-        return self._processing.run(user_id, session_id, pdf_id, llm_predictions, final_predictions)
+        return self._processing.run(
+            user_id, session_id, pdf_id, llm_predictions, final_predictions
+        )
 
     # ── API 4: User Feedback ──────────────────────────────────────────────────
     def submit_feedback(
@@ -146,7 +152,7 @@ class RAGPDFClient:
         session_id: str,
         pdf_id: str,
         errors: list,
-        timestamp: str = None,
+        timestamp: str | None = None,
     ) -> dict:
         """
         Submit user error feedback. Each error triggers:
@@ -170,8 +176,12 @@ class RAGPDFClient:
         sub_info = self._storage.load_json(
             f"predictions/{user_id}/{session_id}/{pdf_id}/metadata/submission_info.json"
         )
-        submission_id = sub_info.get("submission_id", "unknown") if sub_info else "unknown"
-        return self._feedback.run(user_id, session_id, pdf_id, submission_id, errors, timestamp)
+        submission_id = (
+            sub_info.get("submission_id", "unknown") if sub_info else "unknown"
+        )
+        return self._feedback.run(
+            user_id, session_id, pdf_id, submission_id, errors, timestamp
+        )
 
     # ── API 5: Get Metrics ────────────────────────────────────────────────────
     def get_metrics(self, metric_type: str, **kwargs) -> dict:
@@ -204,11 +214,11 @@ class RAGPDFClient:
     # ── API 7: Get Error Analytics ────────────────────────────────────────────
     def get_error_analytics(
         self,
-        date_from: str = None,
-        date_to: str = None,
-        category: str = None,
-        subcategory: str = None,
-        doctype: str = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
+        category: str | None = None,
+        subcategory: str | None = None,
+        doctype: str | None = None,
     ) -> dict:
         """
         Filtered error analytics with breakdowns by category, date, error type, case type.
@@ -221,7 +231,12 @@ class RAGPDFClient:
                 category="Private Markets"
             )
         """
-        return self._analytics.get_error_analytics({
-            "date_from": date_from, "date_to": date_to,
-            "category": category, "subcategory": subcategory, "doctype": doctype,
-        })
+        return self._analytics.get_error_analytics(
+            {
+                "date_from": date_from,
+                "date_to": date_to,
+                "category": category,
+                "subcategory": subcategory,
+                "doctype": doctype,
+            }
+        )

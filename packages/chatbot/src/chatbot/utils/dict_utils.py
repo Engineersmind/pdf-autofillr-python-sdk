@@ -1,5 +1,6 @@
 # chatbot/utils/dict_utils.py
 """flatten_dict, unflatten_dict, deep_update."""
+
 from __future__ import annotations
 
 

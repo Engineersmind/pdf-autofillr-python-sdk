@@ -3,7 +3,7 @@ Unit tests for SessionManager and _empty_session.
 
 Covers Issue 9 fix: langchain_buffer removed from _empty_session.
 """
-import pytest
+
 from chatbot.core.session import SessionManager, _empty_session
 from chatbot.core.states import State
 
@@ -11,10 +11,20 @@ from chatbot.core.states import State
 def test_empty_session_has_required_keys():
     session = _empty_session("u1", "s1")
     required = [
-        "user_id", "session_id", "state", "investor_type",
-        "live_fill_flat", "mandatory_flat", "fields_being_asked",
-        "current_group", "pdf_path", "pdf_doc_id", "pdf_workflow_status",
-        "conversation_log", "created_at", "updated_at",
+        "user_id",
+        "session_id",
+        "state",
+        "investor_type",
+        "live_fill_flat",
+        "mandatory_flat",
+        "fields_being_asked",
+        "current_group",
+        "pdf_path",
+        "pdf_doc_id",
+        "pdf_workflow_status",
+        "conversation_log",
+        "created_at",
+        "updated_at",
     ]
     for key in required:
         assert key in session, f"Missing key: {key}"
@@ -76,6 +86,7 @@ def test_session_manager_save_updates_timestamp(local_storage):
     old_ts = session["updated_at"]
 
     import time
+
     time.sleep(0.01)
     mgr.save("u1", "s1", session)
     reloaded = mgr.get("u1", "s1")

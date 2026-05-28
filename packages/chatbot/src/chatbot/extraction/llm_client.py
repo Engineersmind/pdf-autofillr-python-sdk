@@ -19,11 +19,11 @@ The correct API key env var is determined by the provider prefix.
 Set CHATBOT_LLM_API_KEY as a universal override (maps to the right
 provider key automatically via LiteLLM's key resolution).
 """
+
 from __future__ import annotations
 
 import logging
 import os
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -50,15 +50,19 @@ class LLMClient:
 
     def __init__(
         self,
-        model: Optional[str] = None,
-        api_key: Optional[str] = None,
+        model: str | None = None,
+        api_key: str | None = None,
         temperature: float = 0.0,
         max_tokens: int = 1024,
         timeout: int = 60,
         max_retries: int = 2,
     ):
         self.model = model or os.getenv("CHATBOT_LLM_MODEL", DEFAULT_MODEL)
-        self.api_key = api_key or os.getenv("CHATBOT_LLM_API_KEY") or _infer_api_key(self.model)
+        self.api_key = (
+            api_key
+            or os.getenv("CHATBOT_LLM_API_KEY")
+            or _infer_api_key(self.model or "")
+        )
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.timeout = timeout
@@ -90,7 +94,7 @@ class LLMClient:
 
         # Azure needs base URL
         azure_base = os.getenv("AZURE_API_BASE") or os.getenv("AZURE_OPENAI_ENDPOINT")
-        if azure_base and self.model.startswith("azure/"):
+        if azure_base and (self.model or "").startswith("azure/"):
             kwargs["api_base"] = azure_base
             kwargs["api_version"] = os.getenv("AZURE_API_VERSION", "2024-02-15-preview")
 
@@ -98,7 +102,7 @@ class LLMClient:
         return response.choices[0].message.content or ""
 
 
-def _infer_api_key(model: str) -> Optional[str]:
+def _infer_api_key(model: str) -> str | None:
     """
     Try to find the right API key from env vars based on the model prefix.
     Returns None if nothing found — LiteLLM will try its own resolution.
