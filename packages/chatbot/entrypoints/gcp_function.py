@@ -77,25 +77,6 @@ def _get_client() -> chatbotClient:
     return _client
 
 
-# def _make_response(status: int, body: dict):
-#     """
-#     Build a response compatible with both real GCF runtime and local testing.
-
-#     In real GCF: the runtime provides a Flask app context, so we return a
-#     proper Flask Response via flask.make_response.
-#     In tests / local: no app context exists, so we return a plain dict.
-#     """
-#     payload = json.dumps(body, default=str)
-#     try:
-#         from flask import make_response as flask_make_response
-#         resp = flask_make_response(payload, status)
-#         resp.headers["Content-Type"] = "application/json"
-#         return resp
-#     except RuntimeError:
-#         # Outside Flask application context (unit tests, local execution)
-#         return {"statusCode": status, "body": payload}
-
-
 def _make_response(status: int, body: dict):
     """
     Build a response compatible with both real GCF runtime and local testing.
@@ -170,14 +151,6 @@ def main(request: Any) -> Any:
                 "filled_data": data if complete else None,
             },
         )
-
-    # except (KeyError, ValueError) as e:
-    #     logger.warning("Bad request: %s", e)
-    #     return _make_response(400, {"error": str(e)})
-    # except Exception:
-    #     # Log full exception server-side only — never expose stack trace to caller
-    #     logger.exception("Unhandled GCP Function error")
-    #     return _make_response(500, {"error": "Internal server error"})
 
     except (KeyError, ValueError) as e:
         logger.warning("Bad request: %s", e)

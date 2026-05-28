@@ -31,4 +31,5 @@ class HandlerProtocol(Protocol):
         user_id: str,
         session_id: str,
         debug: object = None,
-    ) -> tuple: ...
+    ) -> tuple:
+        pass

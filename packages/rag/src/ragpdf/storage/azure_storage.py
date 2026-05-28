@@ -97,7 +97,7 @@ class AzureStorage(StorageBackend):
             blob = self._container_client.get_blob_client(self._blob_name(key))
             existing = blob.download_blob().readall().decode("utf-8")
         except Exception:
-            pass
+            pass  # intentional
         blob = self._container_client.get_blob_client(self._blob_name(key))
         blob.upload_blob(
             (existing + json.dumps(data) + "\n").encode("utf-8"), overwrite=True

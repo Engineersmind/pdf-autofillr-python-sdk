@@ -107,7 +107,7 @@ class FormConfig:
                     filename
                 )
             except Exception:
-                pass
+                pass  # intentional
 
         return cls(
             form_keys=form_keys,

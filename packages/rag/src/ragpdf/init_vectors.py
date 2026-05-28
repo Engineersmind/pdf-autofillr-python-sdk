@@ -208,7 +208,7 @@ def _get_embedder(backend: str, model: str):
 
             load_dotenv()
         except ImportError:
-            pass
+            pass  # intentional
         from openai import OpenAI
 
         api_key = os.environ.get("OPENAI_API_KEY", "")
@@ -457,7 +457,7 @@ def run_init_vectors(
                 embed_fn, _ = _get_embedder(backend, model)
                 _sanity_check(merged[:3], embed_fn, runtime_path, verbose=verbose)
             except Exception:
-                pass
+                pass  # intentional
         return {
             "vectors_total": len(merged),
             "vectors_embedded": 0,
@@ -550,7 +550,9 @@ def _find_bundled_source() -> Path | None:
         # importlib.resources gives a non-Path object on older Python — extract to temp
         import tempfile
 
-        tmp = Path(tempfile.mktemp(suffix=".json"))
+        fd, tmp_str = tempfile.mkstemp(suffix=".json")
+        os.close(fd)
+        tmp = Path(tmp_str)
         with p.open("rb") as src, open(tmp, "wb") as dst:
             dst.write(src.read())
         return tmp
@@ -564,7 +566,7 @@ def _find_bundled_source() -> Path | None:
         if p.exists():
             return p
     except Exception:
-        pass
+        pass  # intentional
 
     return None
 

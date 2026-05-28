@@ -75,6 +75,7 @@ def _load_category(value: str) -> dict:
             file=sys.stderr,
         )
         sys.exit(1)
+    return {}
 
 
 def main():
@@ -213,7 +214,7 @@ def main():
 
             load_dotenv()
         except ImportError:
-            pass
+            pass  # intentional
 
         from ragpdf.config.settings import (
             RAGPDF_DATA_PATH,

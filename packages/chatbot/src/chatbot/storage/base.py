@@ -19,85 +19,96 @@ class StorageBackend(ABC):
     # ── Session state ──────────────────────────────────────────────────
 
     @abstractmethod
-    def get_session_state(self, user_id: str, session_id: str) -> dict | None: ...
+    def get_session_state(self, user_id: str, session_id: str) -> dict | None:
+        pass
 
     @abstractmethod
-    def save_session_state(
-        self, user_id: str, session_id: str, state: dict
-    ) -> bool: ...
+    def save_session_state(self, user_id: str, session_id: str, state: dict) -> bool:
+        pass
 
     # ── User integrated info ───────────────────────────────────────────
 
     @abstractmethod
-    def get_user_integrated_info(self, user_id: str) -> dict | None: ...
+    def get_user_integrated_info(self, user_id: str) -> dict | None:
+        pass
 
     @abstractmethod
-    def save_user_integrated_info(self, user_id: str, data: dict) -> bool: ...
+    def save_user_integrated_info(self, user_id: str, data: dict) -> bool:
+        pass
 
     # ── Final output ───────────────────────────────────────────────────
 
     @abstractmethod
-    def get_final_output(self, user_id: str, session_id: str) -> dict | None: ...
+    def get_final_output(self, user_id: str, session_id: str) -> dict | None:
+        pass
 
     @abstractmethod
-    def save_final_output(self, user_id: str, session_id: str, data: dict) -> bool: ...
+    def save_final_output(self, user_id: str, session_id: str, data: dict) -> bool:
+        pass
 
     @abstractmethod
-    def get_final_output_flat(self, user_id: str, session_id: str) -> dict | None: ...
+    def get_final_output_flat(self, user_id: str, session_id: str) -> dict | None:
+        pass
 
     @abstractmethod
-    def save_final_output_flat(
-        self, user_id: str, session_id: str, data: dict
-    ) -> bool: ...
+    def save_final_output_flat(self, user_id: str, session_id: str, data: dict) -> bool:
+        pass
 
     # ── Session history ────────────────────────────────────────────────
 
     @abstractmethod
-    def get_session_history(self, user_id: str) -> list | None: ...
+    def get_session_history(self, user_id: str) -> list | None:
+        pass
 
     @abstractmethod
-    def save_session_history(self, user_id: str, history: list) -> bool: ...
+    def save_session_history(self, user_id: str, history: list) -> bool:
+        pass
 
     # ── Conversation / debug logs ──────────────────────────────────────
 
     @abstractmethod
-    def save_conversation_log(
-        self, user_id: str, session_id: str, data: dict
-    ) -> bool: ...
+    def save_conversation_log(self, user_id: str, session_id: str, data: dict) -> bool:
+        pass
 
     @abstractmethod
     def save_debug_conversation(
         self, user_id: str, session_id: str, data: dict
-    ) -> bool: ...
+    ) -> bool:
+        pass
 
     @abstractmethod
-    def get_debug_conversation(self, user_id: str, session_id: str) -> dict | None: ...
+    def get_debug_conversation(self, user_id: str, session_id: str) -> dict | None:
+        pass
 
     # ── PDF workflow logs ──────────────────────────────────────────────
 
     @abstractmethod
-    def get_pdf_filling_logs(self, user_id: str, session_id: str) -> dict | None: ...
+    def get_pdf_filling_logs(self, user_id: str, session_id: str) -> dict | None:
+        pass
 
     @abstractmethod
-    def save_pdf_filling_logs(
-        self, user_id: str, session_id: str, data: dict
-    ) -> bool: ...
+    def save_pdf_filling_logs(self, user_id: str, session_id: str, data: dict) -> bool:
+        pass
 
     # ── Utility ────────────────────────────────────────────────────────
 
     @abstractmethod
-    def list_user_sessions(self, user_id: str) -> list[str]: ...
+    def list_user_sessions(self, user_id: str) -> list[str]:
+        pass
 
     @abstractmethod
-    def delete_session(self, user_id: str, session_id: str) -> bool: ...
+    def delete_session(self, user_id: str, session_id: str) -> bool:
+        pass
 
     # ── Fill report ────────────────────────────────────────────────────
 
     @abstractmethod
-    def save_fill_report(self, user_id: str, session_id: str, data: dict) -> bool: ...
+    def save_fill_report(self, user_id: str, session_id: str, data: dict) -> bool:
+        pass
 
     @abstractmethod
-    def get_fill_report(self, user_id: str, session_id: str) -> dict | None: ...
+    def get_fill_report(self, user_id: str, session_id: str) -> dict | None:
+        pass
 
     # ── Config loaders (used by FormConfig.from_storage) ──────────────
     # FIX D: these were missing from the abstract contract. Both LocalStorage
@@ -106,7 +117,9 @@ class StorageBackend(ABC):
     # at runtime when FormConfig.from_storage() called storage.load_config().
 
     @abstractmethod
-    def load_config(self, filename: str) -> dict: ...
+    def load_config(self, filename: str) -> dict:
+        pass
 
     @abstractmethod
-    def load_investor_type_config(self, filename: str) -> dict: ...
+    def load_investor_type_config(self, filename: str) -> dict:
+        pass

@@ -164,5 +164,5 @@ class ExecutionLogger:
             end = datetime.fromisoformat(summary["ended_at"].replace("Z", ""))
             summary["total_duration_seconds"] = round((end - start).total_seconds(), 3)
         except Exception:
-            pass
+            pass  # intentional
         return summary

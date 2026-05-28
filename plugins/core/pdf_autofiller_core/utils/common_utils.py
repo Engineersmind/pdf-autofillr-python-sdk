@@ -251,7 +251,7 @@ def retry_with_backoff(
             else:
                 logger.error(f"All {max_retries + 1} attempts failed")
 
-    raise last_exception  # type: ignore[misc]
+    raise last_exception or RuntimeError("All retries exhausted")
 
 
 class Timer:

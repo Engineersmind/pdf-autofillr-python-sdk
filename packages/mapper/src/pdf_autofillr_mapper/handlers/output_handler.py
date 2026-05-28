@@ -149,22 +149,6 @@ class OutputFileHandler:
                 logger.info(f"✅ Same file, skipping copy: {local_path}")
                 return dest_path
 
-            # Retry loop — handles Windows file locking (WinError 32)
-            # Java holds the handle briefly after writing; wait for release.
-            # max_attempts = 10
-            # for attempt in range(max_attempts):
-            #     try:
-            #         shutil.copy2(local_path, dest_path)
-            #         break
-            #     except PermissionError:
-            #         if attempt >= max_attempts - 1:
-            #             raise
-            #         logger.debug(
-            #             f"File locked (attempt {attempt + 1}/{max_attempts}), "
-            #             f"retrying in 0.5s: {local_path}"
-            #         )
-            #         time.sleep(0.5)
-
             max_attempts = 50
             for attempt in range(max_attempts):
                 try:

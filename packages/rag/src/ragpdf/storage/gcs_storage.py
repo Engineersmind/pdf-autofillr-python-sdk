@@ -65,7 +65,7 @@ class GCSStorage(StorageBackend):
             blob = self._bucket.blob(self._blob_name(key))
             existing = blob.download_as_text()
         except Exception:
-            pass
+            pass  # intentional
         blob = self._bucket.blob(self._blob_name(key))
         blob.upload_from_string(
             existing + json.dumps(data) + "\n", content_type="application/jsonl"

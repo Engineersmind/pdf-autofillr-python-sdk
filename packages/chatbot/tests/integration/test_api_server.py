@@ -115,13 +115,11 @@ def test_rate_limit_returns_429(fastapi_client):
     ):
         # Need to get the client and patch its rate_limiter
         import api_server
-        import chatbot.limits.rate_limiter as rl_mod
+        from chatbot.limits import rate_limiter as rl_mod
 
         old_client = api_server._client
         try:
             # Build a client with a rate limiter
-            import api_server
-
             api_server._client = None
             # Patch at the module level for this request
             with patch.object(

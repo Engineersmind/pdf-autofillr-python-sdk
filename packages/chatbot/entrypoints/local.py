@@ -60,7 +60,7 @@ def _silence_fitz_import() -> None:
     try:
         import fitz  # noqa: F401  — triggers the print inside fitz/__init__.py
     except ImportError:
-        pass
+        pass  # intentional
     finally:
         sys.stdout = _real_stdout
 

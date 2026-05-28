@@ -71,6 +71,7 @@ def _load_category(value: str) -> dict:
             file=sys.stderr,
         )
         sys.exit(1)
+    return {}
 
 
 def main():

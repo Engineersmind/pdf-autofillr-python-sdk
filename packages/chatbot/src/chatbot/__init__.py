@@ -54,7 +54,7 @@ def copy_sample_configs(destination: str = ".") -> None:
         pdf_autofillr_mapper.copy_sample_configs(destination)
         print("✅ Mapper config (mapper_config.ini) also copied.")
     except ImportError:
-        pass
+        pass  # intentional
     except Exception as e:
         print(f"   Note: could not copy mapper config: {e}")
 

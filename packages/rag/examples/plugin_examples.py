@@ -87,7 +87,6 @@ def example_c_local_chroma():
         corrector=NoOpCorrectorBackend(),
     )
     return client
-    return client
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -198,7 +197,7 @@ def example_f_postgres_storage():
 
     from ragpdf.storage.base import StorageBackend
 
-    class PostgresStorage(StorageBackend):
+    class _PostgresStorage(StorageBackend):
         """Example Postgres-backed storage using psycopg2."""
 
         def __init__(self, dsn: str):
@@ -250,6 +249,7 @@ def example_f_postgres_storage():
     #     corrector=NoOpCorrectorBackend(),
     # )
     print("PostgresStorage example defined (not connected in this example)")
+    return _PostgresStorage
 
 
 if __name__ == "__main__":

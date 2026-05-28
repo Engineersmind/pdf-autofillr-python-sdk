@@ -26,7 +26,7 @@ try:
 
     load_dotenv()
 except ImportError:
-    pass
+    pass  # intentional
 
 
 def green(s):

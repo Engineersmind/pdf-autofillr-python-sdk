@@ -47,7 +47,10 @@ class BasePlugin(ABC):
         """
         self.config = config or {}
         self._initialized = False
-        self._metadata = self.get_metadata()
+
+    @property
+    def _metadata(self) -> "PluginMetadata":
+        return self.get_metadata()
 
     @abstractmethod
     def get_metadata(self) -> PluginMetadata:

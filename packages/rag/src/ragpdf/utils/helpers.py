@@ -34,7 +34,7 @@ def generate_vector_id(existing_vectors):
         try:
             ids.append(int(v["vector_id"].split("_")[1]))
         except (IndexError, ValueError):
-            pass
+            pass  # intentional
     next_id = max(ids) + 1 if ids else 1
     return f"vec_{next_id:03d}"
 

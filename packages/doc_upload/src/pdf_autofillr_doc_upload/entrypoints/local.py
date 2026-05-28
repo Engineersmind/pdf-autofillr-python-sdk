@@ -99,9 +99,9 @@ def _silence_fitz_import() -> None:
                 _read_pdf,  # noqa: F401
             )  # noqa
         except Exception:
-            pass
+            pass  # intentional
     except ImportError:
-        pass
+        pass  # intentional
     finally:
         sys.stdout = _real
     sys.stdout = _FitzSilencer(sys.stdout)

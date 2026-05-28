@@ -11,6 +11,7 @@ Env vars::
 from __future__ import annotations
 
 import json
+from urllib.parse import urlparse
 
 from pdf_autofillr_doc_upload.storage.base import StorageBackend
 
@@ -104,7 +105,11 @@ class AzureStorage(StorageBackend):
         return data
 
     def download_document(self, source_path: str, local_dest: str) -> str:
-        if "blob.core.windows.net" in source_path or source_path.startswith("azure://"):
+        _parsed = urlparse(source_path)
+        if (
+            (_parsed.hostname or "").endswith(".blob.core.windows.net")
+            and _parsed.scheme == "https"
+        ) or source_path.startswith("azure://"):
             # Parse azure:// URI or HTTPS blob URL
             blob_name = source_path.split("/")[-1]
             client = self.service.get_blob_client(

@@ -78,7 +78,8 @@ class LocalVectorStore(VectorStoreBackend):
         # Already have a non-empty DB — nothing to do
         if os.path.exists(db_path):
             try:
-                raw = open(db_path, encoding="utf-8").read().strip()
+                with open(db_path, encoding="utf-8") as _f:
+                    raw = _f.read().strip()
                 if raw:
                     db = json.loads(raw)
                     if db.get("vectors"):

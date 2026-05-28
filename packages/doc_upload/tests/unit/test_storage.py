@@ -95,7 +95,9 @@ class TestLocalStorageDocument:
         storage = LocalStorage(data_path=str(tmp_path / "data"))
         result = storage.download_document(str(src), dst)
         assert result == dst
-        assert open(dst).read() == "document content"
+        with open(dst) as fh:
+            content = fh.read()
+        assert content == "document content"
 
     def test_upload_copies_file(self, tmp_path):
         from pdf_autofillr_doc_upload.storage.local_storage import LocalStorage
@@ -106,4 +108,6 @@ class TestLocalStorageDocument:
 
         storage = LocalStorage(data_path=str(tmp_path / "data"))
         assert storage.upload_file(str(src), dst) is True
-        assert json.loads(open(dst).read())["k"] == "v"
+        with open(dst) as fh:
+            data = json.loads(fh.read())
+        assert data["k"] == "v"

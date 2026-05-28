@@ -42,7 +42,7 @@ def _config_source() -> Path | None:
                 if p.exists():
                     return p
         except ImportError:
-            pass
+            pass  # intentional
     return None
 
 
@@ -537,7 +537,7 @@ def _load_bundled_vector_db() -> dict:
             )
             return data
     except Exception:
-        pass
+        pass  # intentional
 
     print(
         "  warning  ragpdf bundled vector_database.json not found — starting with empty vector DB"

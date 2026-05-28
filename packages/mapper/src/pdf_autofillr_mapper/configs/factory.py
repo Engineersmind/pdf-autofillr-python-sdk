@@ -6,6 +6,7 @@ Automatically detects storage type from file path and returns appropriate config
 
 import logging
 from typing import Any, Optional, Union
+from urllib.parse import urlparse
 
 from .aws import AWSStorageConfig
 from .azure import AzureStorageConfig
@@ -86,7 +87,9 @@ class StorageFactory:
         """
         if file_path.startswith("s3://"):
             return "aws"
-        elif file_path.startswith("azure://") or "blob.core.windows.net" in file_path:
+        elif file_path.startswith("azure://") or (
+            urlparse(file_path).hostname or ""
+        ).endswith(".blob.core.windows.net"):
             return "azure"
         elif file_path.startswith("gs://"):
             return "gcp"

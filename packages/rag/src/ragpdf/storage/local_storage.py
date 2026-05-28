@@ -56,7 +56,7 @@ class LocalStorage(StorageBackend):
                     try:
                         results.append(json.loads(line))
                     except json.JSONDecodeError:
-                        pass
+                        pass  # intentional
         return results
 
     def copy_file(self, source_key: str, dest_key: str) -> bool:

@@ -19,37 +19,46 @@ class StorageBackend(ABC):
     # ── Job / session state ────────────────────────────────────────────
 
     @abstractmethod
-    def get_job_state(self, job_id: str) -> dict | None: ...
+    def get_job_state(self, job_id: str) -> dict | None:
+        pass
 
     @abstractmethod
-    def save_job_state(self, job_id: str, state: dict) -> bool: ...
+    def save_job_state(self, job_id: str, state: dict) -> bool:
+        pass
 
     # ── Output data ────────────────────────────────────────────────────
 
     @abstractmethod
-    def get_output(self, job_id: str) -> dict | None: ...
+    def get_output(self, job_id: str) -> dict | None:
+        pass
 
     @abstractmethod
-    def save_output(self, job_id: str, data: dict) -> bool: ...
+    def save_output(self, job_id: str, data: dict) -> bool:
+        pass
 
     @abstractmethod
-    def get_output_flat(self, job_id: str) -> dict | None: ...
+    def get_output_flat(self, job_id: str) -> dict | None:
+        pass
 
     @abstractmethod
-    def save_output_flat(self, job_id: str, data: dict) -> bool: ...
+    def save_output_flat(self, job_id: str, data: dict) -> bool:
+        pass
 
     # ── Logs ───────────────────────────────────────────────────────────
 
     @abstractmethod
-    def save_execution_log(self, job_id: str, data: dict) -> bool: ...
+    def save_execution_log(self, job_id: str, data: dict) -> bool:
+        pass
 
     @abstractmethod
-    def get_execution_log(self, job_id: str) -> dict | None: ...
+    def get_execution_log(self, job_id: str) -> dict | None:
+        pass
 
     # ── Config loaders ─────────────────────────────────────────────────
 
     @abstractmethod
-    def load_schema(self, schema_path: str) -> dict: ...
+    def load_schema(self, schema_path: str) -> dict:
+        pass
 
     @abstractmethod
     def download_document(self, source_path: str, local_dest: str) -> str:
@@ -57,7 +66,7 @@ class StorageBackend(ABC):
         Fetch document from wherever it lives (local path, S3 URI, GCS URI, etc.)
         and write it to local_dest. Returns local_dest.
         """
-        ...
+        pass
 
     @abstractmethod
     def upload_file(self, local_path: str, dest_path: str) -> bool:
@@ -65,4 +74,4 @@ class StorageBackend(ABC):
         Upload a local file to the storage backend at dest_path.
         dest_path is a URI or relative path depending on backend.
         """
-        ...
+        pass

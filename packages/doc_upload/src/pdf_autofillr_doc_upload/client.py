@@ -187,7 +187,6 @@ class DocUploadClient:
         import uuid
 
         job_id = job_id or str(uuid.uuid4())
-        filled_doc_pdf_id = filled_doc_pdf_id or pdf_doc_id
         # pdf_path arg overrides settings value — mirrors chatbot_PDF_PATH behaviour
         effective_pdf_path = pdf_path or self.settings.pdf_path
         logger = ExecutionLogger(job_id=job_id)

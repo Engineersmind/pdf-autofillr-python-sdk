@@ -421,7 +421,7 @@ class AnalyticsService:
                             if dt_to and ets > dt_to:
                                 continue
                         except Exception:
-                            pass
+                            pass  # intentional
                     all_errors.append(
                         {
                             **err,

@@ -38,7 +38,7 @@ if hasattr(_sys.stdout, "reconfigure"):
     try:
         _sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     except Exception:
-        pass
+        pass  # intentional
 
 logging.basicConfig(level=logging.WARNING)
 logging.getLogger("pdf_autofillr_doc_upload").setLevel(
@@ -90,9 +90,9 @@ def _silence_fitz_import() -> None:
                 _read_pdf,  # noqa: F401
             )  # noqa
         except Exception:
-            pass
+            pass  # intentional
     except ImportError:
-        pass
+        pass  # intentional
     finally:
         sys.stdout = _real
     sys.stdout = _FitzSilencer(sys.stdout)

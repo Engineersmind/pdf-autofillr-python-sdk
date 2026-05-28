@@ -115,7 +115,7 @@ class ConversationEngine:
                 user_id, session_id, session.get("conversation_log", [])
             )
         except Exception:
-            pass
+            pass  # intentional
 
         session_complete = session["state"] == State.COMPLETE.value
 

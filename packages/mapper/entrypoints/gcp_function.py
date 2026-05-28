@@ -81,7 +81,10 @@ if GCP_AVAILABLE:
 
         except Exception as e:
             logger.error(f"Error processing request: {str(e)}", exc_info=True)
-            return jsonify({"error": str(e), "type": type(e).__name__}), 500
+            return (
+                jsonify({"error": "Internal server error", "type": type(e).__name__}),
+                500,
+            )
 
 
 def route_operation(operation: str, payload: dict[str, Any]) -> dict[str, Any]:

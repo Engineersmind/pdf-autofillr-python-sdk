@@ -5,7 +5,7 @@ from pdf_autofiller_core import StorageConfig, StorageInterface
 
 class MyCustomStorage(StorageInterface):
     def __init__(self, config: StorageConfig):
-        self.config = config
+        super().__init__(config)
 
     def read(self, path: str) -> bytes:
         with open(path, "rb") as f:

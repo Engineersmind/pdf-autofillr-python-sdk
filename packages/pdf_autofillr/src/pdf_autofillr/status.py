@@ -95,7 +95,7 @@ def run_status(dest_str: str = ".") -> None:
                     n = len(data.get("vectors", []))
                     note = f"  ({n} vectors{'  — will grow on use' if n == 0 else ''})"
             except Exception:
-                pass
+                pass  # intentional
         print(f"  {'✅' if exists else '✗ '} {label}{note}")
 
     # ── Env vars ──────────────────────────────────────────────────

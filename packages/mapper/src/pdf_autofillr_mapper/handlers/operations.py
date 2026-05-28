@@ -32,7 +32,6 @@ from pdf_autofillr_mapper.utils.storage_helper import get_storage_type
 try:
     from adapter_src.notifier import (
         NotificationLevel,
-        PipelineNotifier,
         PipelineStage,
         StageStatus,
     )
@@ -40,7 +39,6 @@ try:
     NOTIFICATIONS_AVAILABLE = True
 except ImportError:
     NOTIFICATIONS_AVAILABLE = False
-    PipelineNotifier = None
 
 logger = logging.getLogger(__name__)
 
@@ -1383,7 +1381,6 @@ async def handle_make_embed_file_operation(
     logger.info(f"🔀 Use Second Mapper (RAG): {use_second_mapper}")
 
     try:
-        import json
         import os
         import tempfile
 
@@ -1845,10 +1842,6 @@ async def handle_make_embed_file_operation(
                                 logger.warning(
                                     f"Failed to cache Phase 2 results: {cache_error}. Continuing anyway."
                                 )
-                        elif not phase2_needs_caching:
-                            logger.info(
-                                "⏭️  Phase 2 already cached - skipping cache update"
-                            )
                         else:
                             logger.info(
                                 "⚠️  No pdf_hash available, skipping Phase 2 cache"
@@ -2230,8 +2223,6 @@ async def handle_make_embed_file_operation(
                         logger.warning(
                             f"Failed to cache Phase 2 results: {cache_error}. Continuing anyway."
                         )
-                elif cache_hit:
-                    logger.info("⏭️  Cache hit - skipping Phase 2 cache update")
                 else:
                     logger.info("⚠️  No pdf_hash available, skipping Phase 2 cache")
 
@@ -2658,8 +2649,6 @@ async def handle_make_form_fields_data_points(
         extracted_json_path = extract_result["output_file"]
 
         # Load and process the extracted data directly
-        import json
-
         with open(extracted_json_path) as f:
             extracted_data = json.load(f)
 

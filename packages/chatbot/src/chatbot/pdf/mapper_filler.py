@@ -50,13 +50,6 @@ Two modes, auto-detected:
       Makes REST calls to a running mapper FastAPI server.
 """
 
-try:
-    from pdf_autofillr_mapper.inprocess_filler import (
-        InProcessMapperFiller,  # type: ignore[assignment]
-    )
-except ImportError:
-    InProcessMapperFiller = None  # type: ignore[assignment]
-
 logger = logging.getLogger(__name__)
 
 

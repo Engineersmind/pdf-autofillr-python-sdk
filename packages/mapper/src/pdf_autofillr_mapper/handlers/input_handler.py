@@ -18,6 +18,7 @@ Usage in operations:
 import logging
 import os
 from typing import Optional
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
@@ -116,8 +117,10 @@ class InputFileHandler:
             logger.debug(f"Detected GCS path: {source_path}")
             return self._download_gcp(source_path, local_path)
         elif source_path.startswith("azure://") or (
-            "blob.core.windows.net" in source_path
-            and source_path.startswith("https://")
+            urlparse(source_path).scheme == "https"
+            and (urlparse(source_path).hostname or "").endswith(
+                ".blob.core.windows.net"
+            )
         ):
             logger.debug(f"Detected Azure path: {source_path}")
             return self._download_azure(source_path, local_path)

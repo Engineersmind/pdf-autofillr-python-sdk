@@ -765,7 +765,7 @@ Guidelines:
                     if "interpreter shutdown" in str(_e) or "cannot schedule" in str(
                         _e
                     ):
-                        return
+                        return None
                     raise
                 return descriptions
 
@@ -1101,7 +1101,7 @@ Guidelines:
                         if "interpreter shutdown" in str(
                             _e
                         ) or "cannot schedule" in str(_e):
-                            return
+                            return None
                         raise
                     keys_data = self.prepare_updated_input_data_with_description(
                         enriched_data
@@ -1489,8 +1489,6 @@ Guidelines:
         Returns:
             Dictionary with processing results
         """
-        import asyncio
-
         from pdf_autofillr_mapper.core.config import get_processing_output_config
 
         logger.info(f"Starting S3-based field mapping from: {s3_path}")
@@ -1638,8 +1636,6 @@ Guidelines:
         with tempfile.NamedTemporaryFile(
             mode="w", suffix="_extracted.json", delete=False, encoding="utf-8"
         ) as ef:
-            import json
-
             json.dump(extracted_data, ef)
             extracted_path = ef.name
 
@@ -1679,4 +1675,4 @@ Guidelines:
                 try:
                     os.unlink(p)
                 except OSError:
-                    pass
+                    pass  # intentional

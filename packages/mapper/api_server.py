@@ -391,12 +391,15 @@ async def download_file(file_path: str):
     try:
         logger.info(f"API: Download request for {file_path}")
 
-        path = Path(file_path)
+        if ".." in file_path.replace("\\", "/").split("/"):
+            raise HTTPException(status_code=403, detail="Access denied")
 
-        if not path.is_absolute():
-            path = Path.cwd() / path
+        safe_file_path = file_path.lstrip("/\\")
+        path = (Path.cwd() / safe_file_path).resolve()
 
-        path = path.resolve()
+        allowed_root = Path.cwd().resolve()
+        if not str(path).startswith(str(allowed_root) + "/") and path != allowed_root:
+            raise HTTPException(status_code=403, detail="Access denied")
 
         if not path.exists():
             logger.error(f"File not found: {path}")
@@ -405,11 +408,6 @@ async def download_file(file_path: str):
         if not path.is_file():
             logger.error(f"Not a file: {path}")
             raise HTTPException(status_code=400, detail=f"Not a file: {file_path}")
-
-        # Optional: Add whitelist of allowed directories for extra security
-        # allowed_dirs = [Path("/path/to/output"), Path("/path/to/temp")]
-        # if not any(path.is_relative_to(allowed_dir) for allowed_dir in allowed_dirs):
-        #     raise HTTPException(status_code=403, detail="Access denied")
 
         logger.info(f"Serving file: {path}")
 

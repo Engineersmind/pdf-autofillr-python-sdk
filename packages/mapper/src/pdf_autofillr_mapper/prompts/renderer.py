@@ -27,6 +27,7 @@ _PROMPTS_DIR = Path(__file__).parent
 
 _env = jinja2.Environment(
     loader=jinja2.FileSystemLoader(str(_PROMPTS_DIR)),
+    autoescape=jinja2.select_autoescape(["html", "xml"]),
     variable_start_string="<<",
     variable_end_string=">>",
     block_start_string="<%",

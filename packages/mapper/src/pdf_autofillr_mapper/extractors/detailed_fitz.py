@@ -911,7 +911,7 @@ class DetailedFitzExtractor:
         text_stripped = text.strip()
 
         # Remove leading numbers/bullets for analysis
-        text_for_analysis = re.sub(r"^[\d\.\)\]\-\•\◦\▪\->]+\s*", "", text_stripped)
+        text_for_analysis = re.sub(r"^[\d\.\)\]\•\◦\▪\->-]+\s*", "", text_stripped)
 
         if not text_for_analysis:
             return {"is_all_caps": False, "is_title_case": False, "caps_ratio": 0}
@@ -1005,10 +1005,8 @@ class DetailedFitzExtractor:
         """
         # Extract bold and italic flags using bit shift operations
         is_bold = bool(flags & (1 << 4))  # bit 4 = bold (value 16)
-        bool(flags & (1 << 1))  # bit 1 = italic (value 2)
 
         avg_size = font_stats["average"]
-        font_stats["median"]
         max_size = font_stats["max"]
         min_size = font_stats["min"]
 
@@ -1916,7 +1914,7 @@ class DetailedFitzExtractor:
                 pass
 
         # Pattern 5: Symbol bullets "• ", "○ ", "■ ", "- ", "* "
-        if re.match(r"^[•○■▪▫►▸\->⇒✓✔⇨⇒◆◇*\-]\s+", text):
+        if re.match(r"^[•○■▪▫►▸\-⇒✓✔⇨◆◇*]\s+", text):
             return {
                 "is_bullet": True,
                 "pattern": "symbol",
@@ -2002,8 +2000,6 @@ class DetailedFitzExtractor:
                 continue
 
             original_type = element["heading_type"]
-            element["font_size"]
-            element["is_bold"]
             text = element["text"].strip()
             text_length = len(text)
 

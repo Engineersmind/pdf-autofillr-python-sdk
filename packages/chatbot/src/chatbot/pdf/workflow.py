@@ -439,7 +439,7 @@ class PDFWorkflowManager:
                     )
                     return True
             except Exception:
-                pass
+                pass  # intentional
             self._log_step(
                 user_id,
                 session_id,

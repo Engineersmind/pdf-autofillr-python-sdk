@@ -4,6 +4,7 @@ Azure Blob Storage configuration.
 
 import logging
 from typing import Any, Optional
+from urllib.parse import urlparse
 
 from .base import BaseStorageConfig
 
@@ -32,10 +33,15 @@ class AzureStorageConfig(BaseStorageConfig):
                 "filename": "blob.ext"
             }
         """
-        if file_path.startswith("https://") and "blob.core.windows.net" in file_path:
+        _parsed = urlparse(file_path)
+        if (
+            _parsed.scheme == "https"
+            and _parsed.hostname
+            and _parsed.hostname.endswith(".blob.core.windows.net")
+        ):
             # Parse full Azure URL
             # https://account.blob.core.windows.net/container/path/to/blob
-            parts = file_path.split("blob.core.windows.net/", 1)
+            parts = file_path.split(f"{_parsed.hostname}/", 1)
             if len(parts) == 2:
                 container_and_blob = parts[1].split("/", 1)
                 container = container_and_blob[0]

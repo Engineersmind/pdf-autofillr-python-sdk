@@ -219,7 +219,7 @@ pdf_filler = os.getenv("DOC_UPLOAD_PDF_FILLER", "none")
 
 if api_key and not api_key.startswith("sk-..."):
 
-    ok(f"LLM API key found ({api_key[:12]}...)")
+    ok("LLM API key found")
 
 else:
 

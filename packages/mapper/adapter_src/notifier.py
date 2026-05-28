@@ -325,8 +325,6 @@ class PipelineNotifier:
             payload["timing_breakdown"] = stage_breakdown
 
         if performance_metrics:
-            if not performance_metrics:
-                performance_metrics = {}
             performance_metrics.update(
                 {
                     "total_notifications_sent": self._notification_count,

@@ -252,7 +252,7 @@ class InProcessMapperFiller(PDFFillerInterface):
 
             except Exception:
 
-                pass
+                pass  # intentional
 
             time.sleep(self.poll_interval)
 

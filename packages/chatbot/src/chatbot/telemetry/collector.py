@@ -232,7 +232,7 @@ class TelemetryCollector:
                 try:
                     self._flush_nowait()
                 except Exception:
-                    pass
+                    pass  # intentional
 
         t = threading.Thread(target=_loop, daemon=True)
         t.start()
