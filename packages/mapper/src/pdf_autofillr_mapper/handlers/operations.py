@@ -18,7 +18,6 @@ import time
 from typing import Any, Optional
 
 # from packages.mapper.src.pdf_autofillr_mapper.storage import storage_config
-
 from pdf_autofillr_mapper.core.config import get_complete_file_config
 from pdf_autofillr_mapper.embedders.embed_keys import run_embed_java_stage
 from pdf_autofillr_mapper.extractors.detailed_fitz import DetailedFitzExtractor
@@ -809,7 +808,7 @@ async def handle_run_all_operation(
         # Stage 2: Map
         logger.info("\n[2/4] Starting MAP stage...")
         map_result = await handle_map_operation(
-            config=storage_config,  # Pass config instead of file paths
+            config=None,  # type: ignore[call-arg]
             mapping_config=mapping_config,
             user_id=user_id,
             session_id=session_id,
@@ -825,7 +824,7 @@ async def handle_run_all_operation(
         # Stage 3: Embed
         logger.info("\n[3/4] Starting EMBED stage...")
         embed_result = await handle_embed_operation(
-            config=storage_config,  # Pass config instead of file paths
+            config=None,  # type: ignore[call-arg]
             user_id=user_id,
             session_id=session_id,
             notifier=notifier,

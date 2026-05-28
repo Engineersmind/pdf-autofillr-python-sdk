@@ -51,7 +51,9 @@ Two modes, auto-detected:
 """
 
 try:
-    from pdf_autofillr_mapper.inprocess_filler import InProcessMapperFiller  # noqa: F401
+    from pdf_autofillr_mapper.inprocess_filler import (
+        InProcessMapperFiller,
+    )  # noqa: F401
 except ImportError:
     InProcessMapperFiller = None  # type: ignore[assignment]
 
