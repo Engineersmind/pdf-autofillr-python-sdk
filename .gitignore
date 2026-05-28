@@ -13,6 +13,12 @@ build/
 dist/
 **/build/
 **/dist/
+__pycache__/
+.mypy_cache/
+.ruff_cache/
+*.pyc
+*.pyo
+.pytest_cache/
 
 # ======================
 # Testing / coverage
