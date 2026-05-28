@@ -2,15 +2,13 @@
 """
 FormConfig — loads and validates all configuration files.
 """
+
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
-from typing import Optional
 
 from chatbot.core.states import INVESTOR_TYPE_FILES
-from chatbot.utils.dict_utils import flatten_dict
 
 
 class FormConfig:
@@ -38,7 +36,7 @@ class FormConfig:
         self._investor_type_keys = investor_type_keys
 
     @classmethod
-    def from_directory(cls, config_dir: str) -> "FormConfig":
+    def from_directory(cls, config_dir: str) -> FormConfig:
         """
         Load all config files from a directory.
 
@@ -60,7 +58,7 @@ class FormConfig:
                         f"Copy config_samples/ into your project as {config_dir}/"
                     )
                 return {}
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 return json.load(f)
 
         form_keys = load("form_keys.json")
@@ -75,7 +73,7 @@ class FormConfig:
         for inv_type, filename in INVESTOR_TYPE_FILES.items():
             path = type_keys_dir / filename
             if path.exists():
-                with open(path, "r", encoding="utf-8") as f:
+                with open(path, encoding="utf-8") as f:
                     investor_type_keys[inv_type] = json.load(f)
 
         return cls(
@@ -88,7 +86,7 @@ class FormConfig:
         )
 
     @classmethod
-    def from_storage(cls, storage) -> "FormConfig":
+    def from_storage(cls, storage) -> FormConfig:
         """Load config files from a storage backend (local or S3)."""
         form_keys = storage.load_config("form_keys.json")
         mandatory = storage.load_config("mandatory.json")
@@ -105,9 +103,11 @@ class FormConfig:
         investor_type_keys = {}
         for inv_type, filename in INVESTOR_TYPE_FILES.items():
             try:
-                investor_type_keys[inv_type] = storage.load_investor_type_config(filename)
+                investor_type_keys[inv_type] = storage.load_investor_type_config(
+                    filename
+                )
             except Exception:
-                pass
+                pass  # intentional
 
         return cls(
             form_keys=form_keys,
@@ -127,10 +127,10 @@ class FormConfig:
         type_of_investors = self.mandatory.get("Type of Investors", self.mandatory)
         return type_of_investors.get(investor_type, {})
 
-    def get_question(self, field_path: str) -> Optional[str]:
+    def get_question(self, field_path: str) -> str | None:
         """Return the human-readable question for a field path."""
         parts = field_path.split(".")
-        node = self.field_questions
+        node: dict | str | None = self.field_questions
         for part in parts:
             if isinstance(node, dict):
                 node = node.get(part)
@@ -141,7 +141,7 @@ class FormConfig:
     def get_label(self, field_path: str) -> str:
         """Return short display label for a field."""
         parts = field_path.split(".")
-        node = self.form_keys_labels
+        node: dict | str | None = self.form_keys_labels
         for part in parts:
             if isinstance(node, dict):
                 node = node.get(part)

@@ -8,17 +8,12 @@ pause. The user can:
   - yes / continue -> go back to DATA_COLLECTION
   - no / done / exit -> go to OPTIONAL_FIELDS_PROMPT to wrap up
 """
+
 from __future__ import annotations
-from typing import Optional, Tuple
 
 from chatbot.core.states import State
 from chatbot.handlers.base_handler import BaseHandler
-from chatbot.logging.debug_logger import DebugLogger
-from chatbot.utils.intent_detection import (
-    is_affirmative,
-    is_negative,
-    is_exit_intent,
-)
+from chatbot.utils.intent_detection import is_affirmative, is_exit_intent, is_negative
 
 
 class ContinuePromptHandler(BaseHandler):

@@ -4,16 +4,18 @@ Tests for PDFPipeline — the core orchestrator.
 Tests the new mapper_config= parameter and verifies the existing
 pipeline stages still work correctly after the refactor.
 """
-import os
+
 import json
-import pytest
 from pathlib import Path
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 
 @pytest.fixture
 def mapper_cfg():
     from pdf_autofillr_mapper.config.mapper_config import MapperConfig
+
     return MapperConfig(
         llm_model="gpt-4o",
         confidence_threshold=0.8,
@@ -24,16 +26,19 @@ def mapper_cfg():
 class TestPDFPipelineInit:
     def test_empty_init(self):
         from pdf_autofillr_mapper.orchestrator import PDFPipeline
+
         p = PDFPipeline()
         assert p.config == {}
 
     def test_config_dict_init(self):
         from pdf_autofillr_mapper.orchestrator import PDFPipeline
+
         p = PDFPipeline(config={"llm_model": "gpt-4"})
         assert p.config["llm_model"] == "gpt-4"
 
     def test_mapper_config_merges_into_config(self, mapper_cfg):
         from pdf_autofillr_mapper.orchestrator import PDFPipeline
+
         p = PDFPipeline(mapper_config=mapper_cfg)
         assert p.config["llm_model"] == "gpt-4o"
         assert p.config["confidence_threshold"] == 0.8
@@ -43,6 +48,7 @@ class TestPDFPipelineInit:
     def test_explicit_config_takes_priority_over_mapper_config(self, mapper_cfg):
         """Explicit config dict values should NOT be overridden by mapper_config defaults."""
         from pdf_autofillr_mapper.orchestrator import PDFPipeline
+
         p = PDFPipeline(
             config={"llm_model": "gpt-3.5-turbo"},
             mapper_config=mapper_cfg,
@@ -54,6 +60,7 @@ class TestPDFPipelineInit:
 class TestPDFPipelineExtract:
     async def test_raises_on_missing_pdf(self, tmp_path):
         from pdf_autofillr_mapper.orchestrator import PDFPipeline
+
         p = PDFPipeline()
         with pytest.raises(FileNotFoundError, match="PDF file not found"):
             await p.extract(pdf_path=str(tmp_path / "nonexistent.pdf"))
@@ -66,7 +73,9 @@ class TestPDFPipelineExtract:
 
         mock_extracted = {"pages": [], "fields": [{"name": "f1"}]}
 
-        with patch("pdf_autofillr_mapper.orchestrator.DetailedFitzExtractor") as MockExt:
+        with patch(
+            "pdf_autofillr_mapper.orchestrator.DetailedFitzExtractor"
+        ) as MockExt:
             instance = MockExt.return_value
             instance.extract.return_value = mock_extracted
 
@@ -82,6 +91,7 @@ class TestPDFPipelineExtract:
 class TestPDFPipelineMap:
     async def test_raises_on_missing_extracted_json(self, tmp_path):
         from pdf_autofillr_mapper.orchestrator import PDFPipeline
+
         p = PDFPipeline()
         schema = tmp_path / "schema.json"
         schema.write_text("{}")
@@ -93,6 +103,7 @@ class TestPDFPipelineMap:
 
     async def test_raises_on_missing_schema(self, tmp_path):
         from pdf_autofillr_mapper.orchestrator import PDFPipeline
+
         p = PDFPipeline()
         extracted = tmp_path / "extracted.json"
         extracted.write_text("{}")
@@ -132,6 +143,7 @@ class TestPDFPipelineMap:
 class TestPDFPipelineEmbed:
     async def test_raises_when_input_missing(self, tmp_path):
         from pdf_autofillr_mapper.orchestrator import PDFPipeline
+
         p = PDFPipeline()
         with pytest.raises(FileNotFoundError):
             await p.embed(
@@ -155,8 +167,10 @@ class TestPDFPipelineEmbed:
         embedded = tmp_path / "form_embedded.pdf"
         embedded.write_bytes(b"%PDF embedded")
 
-        with patch("pdf_autofillr_mapper.orchestrator.run_embed_java_stage",
-                   new=AsyncMock(return_value=str(embedded))):
+        with patch(
+            "pdf_autofillr_mapper.orchestrator.run_embed_java_stage",
+            new=AsyncMock(return_value=str(embedded)),
+        ):
             p = PDFPipeline()
             result = await p.embed(
                 original_pdf_path=str(pdf),
@@ -172,6 +186,7 @@ class TestPDFPipelineEmbed:
 class TestPDFPipelineFill:
     async def test_raises_when_embedded_pdf_missing(self, tmp_path):
         from pdf_autofillr_mapper.orchestrator import PDFPipeline
+
         p = PDFPipeline()
         data = tmp_path / "data.json"
         data.write_text("{}")
@@ -191,8 +206,10 @@ class TestPDFPipelineFill:
         filled = tmp_path / "form_filled.pdf"
         filled.write_bytes(b"%PDF filled")
 
-        with patch("pdf_autofillr_mapper.orchestrator.fill_with_java",
-                   new=AsyncMock(return_value=str(filled))):
+        with patch(
+            "pdf_autofillr_mapper.orchestrator.fill_with_java",
+            new=AsyncMock(return_value=str(filled)),
+        ):
             p = PDFPipeline()
             result = await p.fill(
                 embedded_pdf_path=str(embedded),
@@ -206,6 +223,7 @@ class TestPDFPipelineFill:
 class TestPDFPipelineRunAll:
     async def test_run_all_raises_on_missing_pdf(self, tmp_path):
         from pdf_autofillr_mapper.orchestrator import PDFPipeline
+
         p = PDFPipeline()
         data = tmp_path / "data.json"
         data.write_text("{}")
@@ -225,29 +243,44 @@ class TestPDFPipelineRunAll:
         data.write_text(json.dumps({"field1": ""}))
 
         extracted = str(tmp_path / "form_extracted.json")
-        mapped    = str(tmp_path / "form_mapped.json")
-        radio     = str(tmp_path / "form_radio.json")
-        embedded  = str(tmp_path / "form_embedded.pdf")
-        filled    = str(tmp_path / "form_filled.pdf")
+        mapped = str(tmp_path / "form_mapped.json")
+        radio = str(tmp_path / "form_radio.json")
+        embedded = str(tmp_path / "form_embedded.pdf")
+        filled = str(tmp_path / "form_filled.pdf")
 
         # Create files so move operations don't fail
         for f in [extracted, mapped, radio, embedded, filled]:
             Path(f).write_bytes(b"fake")
 
         p = PDFPipeline()
-        p.extract = AsyncMock(return_value={
-            "output_file": extracted, "execution_time_seconds": 1.0, "status": "success"
-        })
-        p.map = AsyncMock(return_value={
-            "output_files": {"mapping": mapped, "radio_groups": radio},
-            "execution_time_seconds": 2.0, "status": "success"
-        })
-        p.embed = AsyncMock(return_value={
-            "output_file": embedded, "execution_time_seconds": 0.5, "status": "success"
-        })
-        p.fill = AsyncMock(return_value={
-            "output_file": filled, "execution_time_seconds": 0.3, "status": "success"
-        })
+        p.extract = AsyncMock(
+            return_value={
+                "output_file": extracted,
+                "execution_time_seconds": 1.0,
+                "status": "success",
+            }
+        )
+        p.map = AsyncMock(
+            return_value={
+                "output_files": {"mapping": mapped, "radio_groups": radio},
+                "execution_time_seconds": 2.0,
+                "status": "success",
+            }
+        )
+        p.embed = AsyncMock(
+            return_value={
+                "output_file": embedded,
+                "execution_time_seconds": 0.5,
+                "status": "success",
+            }
+        )
+        p.fill = AsyncMock(
+            return_value={
+                "output_file": filled,
+                "execution_time_seconds": 0.3,
+                "status": "success",
+            }
+        )
 
         result = await p.run_all(
             input_pdf_path=str(pdf),

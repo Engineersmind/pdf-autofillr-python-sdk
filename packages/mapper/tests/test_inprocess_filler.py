@@ -1,12 +1,12 @@
 """
 Tests for InProcessMapperFiller — the zero-HTTP in-process integration.
 """
+
 import json
-import os
-import pytest
-import tempfile
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 @pytest.fixture
@@ -40,6 +40,7 @@ def embedded_pdf(tmp_path):
 class TestInProcessMapperFillerInit:
     def test_loads_config_from_directory(self, configs_dir):
         from pdf_autofillr_mapper.inprocess_filler import InProcessMapperFiller
+
         filler = InProcessMapperFiller(config_dir=configs_dir)
         assert filler._mapper_config.llm_model == "gpt-4o"
 
@@ -51,12 +52,14 @@ class TestInProcessMapperFillerInit:
         (cfg_dir / "form_keys.json").write_text("{}")
 
         from pdf_autofillr_mapper.inprocess_filler import InProcessMapperFiller
+
         filler = InProcessMapperFiller(config_dir=str(cfg_dir))
         assert filler._mapper_config.llm_model == "gpt-4o-mini"
 
     def test_accepts_explicit_mapper_config(self, configs_dir):
-        from pdf_autofillr_mapper.inprocess_filler import InProcessMapperFiller
         from pdf_autofillr_mapper.config.mapper_config import MapperConfig
+        from pdf_autofillr_mapper.inprocess_filler import InProcessMapperFiller
+
         cfg = MapperConfig(llm_model="claude-3-5-sonnet-20241022")
         filler = InProcessMapperFiller(mapper_config=cfg, config_dir=configs_dir)
         assert filler._mapper_config.llm_model == "claude-3-5-sonnet-20241022"
@@ -65,15 +68,19 @@ class TestInProcessMapperFillerInit:
 class TestInProcessMapperFillerInterface:
     def test_check_document_ready_true_when_exists(self, embedded_pdf, configs_dir):
         from pdf_autofillr_mapper.inprocess_filler import InProcessMapperFiller
+
         filler = InProcessMapperFiller(config_dir=configs_dir)
         assert filler.check_document_ready(embedded_pdf) is True
 
     def test_check_document_ready_false_when_missing(self, configs_dir):
         from pdf_autofillr_mapper.inprocess_filler import InProcessMapperFiller
+
         filler = InProcessMapperFiller(config_dir=configs_dir)
         assert filler.check_document_ready("/nonexistent/path.pdf") is False
 
-    @pytest.mark.skip(reason="requires valid PDF fixture - blank bytes rejected by PyMuPDF, tracked separately")
+    @pytest.mark.skip(
+        reason="requires valid PDF fixture - blank bytes rejected by PyMuPDF, tracked separately"
+    )
     def test_prepare_document_calls_pipeline_stages(self, configs_dir, tmp_path):
         """prepare_document should call extract -> map -> embed in sequence."""
         from pdf_autofillr_mapper.inprocess_filler import InProcessMapperFiller
@@ -82,21 +89,29 @@ class TestInProcessMapperFillerInterface:
         Path(fake_pdf).write_bytes(b"%PDF-1.4 blank")
         embedded_result = str(tmp_path / "blank_embedded.pdf")
 
-        with patch("pdf_autofillr_mapper.inprocess_filler.InProcessMapperFiller.__init__",
-                   return_value=None):
+        with patch(
+            "pdf_autofillr_mapper.inprocess_filler.InProcessMapperFiller.__init__",
+            return_value=None,
+        ):
             filler = InProcessMapperFiller.__new__(InProcessMapperFiller)
             filler._config_dir = configs_dir
             filler._mapper_config = MagicMock()
 
             mock_pipeline = MagicMock()
-            mock_pipeline.extract = AsyncMock(return_value={"output_file": str(tmp_path / "extracted.json")})
-            mock_pipeline.map = AsyncMock(return_value={
-                "output_files": {
-                    "mapping": str(tmp_path / "mapped.json"),
-                    "radio_groups": str(tmp_path / "radio.json"),
+            mock_pipeline.extract = AsyncMock(
+                return_value={"output_file": str(tmp_path / "extracted.json")}
+            )
+            mock_pipeline.map = AsyncMock(
+                return_value={
+                    "output_files": {
+                        "mapping": str(tmp_path / "mapped.json"),
+                        "radio_groups": str(tmp_path / "radio.json"),
+                    }
                 }
-            })
-            mock_pipeline.embed = AsyncMock(return_value={"output_file": embedded_result})
+            )
+            mock_pipeline.embed = AsyncMock(
+                return_value={"output_file": embedded_result}
+            )
             filler._pipeline = mock_pipeline
 
             # Create form_keys.json so _get_form_keys_path works
@@ -109,7 +124,9 @@ class TestInProcessMapperFillerInterface:
             mock_pipeline.embed.assert_called_once()
             assert result == embedded_result
 
-    def test_fill_document_writes_temp_json_and_calls_fill(self, embedded_pdf, configs_dir, tmp_path):
+    def test_fill_document_writes_temp_json_and_calls_fill(
+        self, embedded_pdf, configs_dir, tmp_path
+    ):
         """fill_document should write data_flat to temp JSON and call pipeline.fill."""
         from pdf_autofillr_mapper.inprocess_filler import InProcessMapperFiller
 
@@ -119,14 +136,18 @@ class TestInProcessMapperFillerInterface:
         }
         filled_path = str(tmp_path / "form_filled.pdf")
 
-        with patch("pdf_autofillr_mapper.inprocess_filler.InProcessMapperFiller.__init__",
-                   return_value=None):
+        with patch(
+            "pdf_autofillr_mapper.inprocess_filler.InProcessMapperFiller.__init__",
+            return_value=None,
+        ):
             filler = InProcessMapperFiller.__new__(InProcessMapperFiller)
             filler._config_dir = configs_dir
             filler._mapper_config = MagicMock()
 
             mock_pipeline = MagicMock()
-            mock_pipeline.fill = AsyncMock(return_value={"output_file": filled_path, "status": "success"})
+            mock_pipeline.fill = AsyncMock(
+                return_value={"output_file": filled_path, "status": "success"}
+            )
             filler._pipeline = mock_pipeline
 
             result = filler.fill_document(embedded_pdf, data_flat)
@@ -147,8 +168,10 @@ class TestInProcessMapperFillerInterface:
         empty_dir = str(tmp_path / "empty_configs")
         Path(empty_dir).mkdir()
 
-        with patch("pdf_autofillr_mapper.inprocess_filler.InProcessMapperFiller.__init__",
-                   return_value=None):
+        with patch(
+            "pdf_autofillr_mapper.inprocess_filler.InProcessMapperFiller.__init__",
+            return_value=None,
+        ):
             filler = InProcessMapperFiller.__new__(InProcessMapperFiller)
             filler._config_dir = empty_dir
             filler._mapper_config = MagicMock()

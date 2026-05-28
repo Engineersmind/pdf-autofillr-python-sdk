@@ -20,10 +20,10 @@ Or manually:
     report = FillReport.generate(...)
     print(FillReport.format_text(report))
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Optional
 
 
 class FillReport:
@@ -85,15 +85,14 @@ class FillReport:
 
         # Get mandatory fields for this investor type
         mandatory_raw = form_config.get_mandatory_fields_for_type(investor_type)
-        mandatory_fields = set(flatten_dict(mandatory_raw).keys()) if mandatory_raw else set()
+        mandatory_fields = (
+            set(flatten_dict(mandatory_raw).keys()) if mandatory_raw else set()
+        )
 
         optional_fields = all_config_fields - mandatory_fields
 
         # Determine which fields are filled (non-empty value)
-        filled_keys = {
-            k for k, v in filled_data.items()
-            if v not in (None, "", [], {})
-        }
+        filled_keys = {k for k, v in filled_data.items() if v not in (None, "", [], {})}
 
         # Intersection with config fields (ignore any extra keys from extraction)
         filled_in_config = filled_keys & all_config_fields
@@ -121,10 +120,14 @@ class FillReport:
                 "fill_rate_pct": pct(total_filled, total),
                 "mandatory_total": len(mandatory_fields),
                 "mandatory_filled": len(mandatory_filled),
-                "mandatory_fill_rate_pct": pct(len(mandatory_filled), len(mandatory_fields)),
+                "mandatory_fill_rate_pct": pct(
+                    len(mandatory_filled), len(mandatory_fields)
+                ),
                 "optional_total": len(optional_fields),
                 "optional_filled": len(optional_filled),
-                "optional_fill_rate_pct": pct(len(optional_filled), len(optional_fields)),
+                "optional_fill_rate_pct": pct(
+                    len(optional_filled), len(optional_fields)
+                ),
             },
             "fields": {
                 "filled": sorted(filled_in_config),

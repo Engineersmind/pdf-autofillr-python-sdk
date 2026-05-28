@@ -1,6 +1,5 @@
 """Basic tests for pdf-autofiller-plugins."""
 
-import pytest
 from pdf_autofiller_plugins import PluginManager, PluginRegistry
 
 

@@ -1,7 +1,6 @@
 # src/ragpdf/correctors/base.py
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
 
 
 @dataclass
@@ -14,6 +13,7 @@ class CorrectionResult:
         confidence           : Confidence score 0.0 – 1.0
         reasoning            : Brief explanation from the LLM
     """
+
     corrected_field_name: str
     confidence: float = 0.8
     reasoning: str = ""

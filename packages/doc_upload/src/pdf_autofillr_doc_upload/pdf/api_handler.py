@@ -9,10 +9,10 @@ Supports three operations:
   check_embed_file   — poll until embed file is ready
   fill_pdf           — fill the PDF with extracted data
 """
+
 from __future__ import annotations
 
 import time
-from typing import Optional, Tuple
 
 import requests
 
@@ -41,7 +41,7 @@ class PDFAPIHandler:
         operation: str,
         payload: dict,
         timeout: float = 200,
-    ) -> Tuple[bool, Optional[dict]]:
+    ) -> tuple[bool, dict | None]:
         start = time.time()
         headers = {
             "X-API-Key": self.api_key,
@@ -89,7 +89,10 @@ class PDFAPIHandler:
             duration = time.time() - start
             self.logger.log_error(
                 f"API request timeout: {operation}",
-                details={"timeout_seconds": timeout, "duration_seconds": round(duration, 3)},
+                details={
+                    "timeout_seconds": timeout,
+                    "duration_seconds": round(duration, 3),
+                },
             )
             return False, None
 
@@ -112,7 +115,9 @@ class PDFAPIHandler:
         investor_type: str,
         use_second_mapper: bool = True,
     ) -> bool:
-        self.logger.log(f"📤 make_embed_file  user={user_id}  pdf={pdf_doc_id}  type={investor_type}")
+        self.logger.log(
+            f"📤 make_embed_file  user={user_id}  pdf={pdf_doc_id}  type={investor_type}"
+        )
 
         try:
             user_id = int(user_id)
@@ -131,7 +136,9 @@ class PDFAPIHandler:
         }
 
         success, _ = self._make_request("make_embed_file", payload)
-        self.logger.log("✅ make_embed_file OK" if success else "❌ make_embed_file failed")
+        self.logger.log(
+            "✅ make_embed_file OK" if success else "❌ make_embed_file failed"
+        )
         return success
 
     # ── Step 2: check_embed_file (polling) ────────────────────────────
@@ -143,7 +150,7 @@ class PDFAPIHandler:
         investor_type: str,
         max_attempts: int = 48,
         wait_interval: int = 10,
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         self.logger.log(
             f"🔄 check_embed_file  max={max_attempts}×{wait_interval}s = {max_attempts*wait_interval}s"
         )
@@ -191,7 +198,9 @@ class PDFAPIHandler:
         session_id: str,
         use_profile_info: bool = True,
     ) -> bool:
-        self.logger.log(f"📝 fill_pdf  user={user_id}  pdf={pdf_doc_id}  session={session_id}")
+        self.logger.log(
+            f"📝 fill_pdf  user={user_id}  pdf={pdf_doc_id}  session={session_id}"
+        )
 
         try:
             user_id = int(user_id)

@@ -1,8 +1,9 @@
 # chatbot/telemetry/document_context.py
 """DocumentContext — document taxonomy metadata for telemetry."""
+
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -19,6 +20,7 @@ class DocumentContext:
             extra={'fund_name': 'Acme Capital Fund III', 'vintage_year': '2024'}
         )
     """
+
     category: str = ""
     sub_category: str = ""
     document_type: str = ""

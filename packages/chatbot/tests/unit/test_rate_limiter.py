@@ -4,8 +4,10 @@ Unit tests for RateLimiter.
 Covers the Issue 6 fix: daily session counter now correctly increments
 exactly once per session_id regardless of how many messages are sent.
 """
+
 import pytest
-from chatbot.limits.rate_limiter import RateLimiter, RateLimitConfig, RateLimitExceeded
+
+from chatbot.limits.rate_limiter import RateLimitConfig, RateLimiter, RateLimitExceeded
 
 
 @pytest.fixture
@@ -24,6 +26,7 @@ def limiter(cfg):
 
 # ── messages_per_session ──────────────────────────────────────────────
 
+
 def test_allows_messages_within_limit(limiter):
     for _ in range(5):
         limiter.check("u1", "s1")
@@ -39,6 +42,7 @@ def test_blocks_messages_over_limit(limiter):
 
 
 # ── sessions_per_user_per_day ──────────────────────────────────────────
+
 
 def test_allows_sessions_within_daily_limit(limiter):
     """Three distinct sessions for the same user should all pass."""
@@ -95,6 +99,7 @@ def test_different_users_have_independent_daily_counts(limiter):
 
 # ── llm_calls_per_session ─────────────────────────────────────────────
 
+
 def test_blocks_excess_llm_calls(limiter):
     for _ in range(10):
         limiter.increment_llm("s1")
@@ -104,6 +109,7 @@ def test_blocks_excess_llm_calls(limiter):
 
 
 # ── defaults ───────────────────────────────────────────────────────────
+
 
 def test_default_config():
     limiter = RateLimiter(backend="local")

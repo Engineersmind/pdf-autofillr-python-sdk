@@ -2,10 +2,10 @@
 """
 chatbotClient — single entry point for the chatbot SDK.
 """
+
 from __future__ import annotations
 
 import os
-from typing import Optional, Tuple
 
 from chatbot.config.form_config import FormConfig
 from chatbot.config.settings import Settings
@@ -43,13 +43,13 @@ class chatbotClient:
         self,
         storage: StorageBackend,
         form_config: FormConfig,
-        api_key: Optional[str] = None,
-        pdf_filler: Optional[PDFFillerInterface] = None,
-        telemetry: Optional[TelemetryConfig] = None,
-        document_context: Optional[DocumentContext] = None,
+        api_key: str | None = None,
+        pdf_filler: PDFFillerInterface | None = None,
+        telemetry: TelemetryConfig | None = None,
+        document_context: DocumentContext | None = None,
         prompt_builder=None,
-        settings: Optional[Settings] = None,
-        openai_api_key: Optional[str] = None,
+        settings: Settings | None = None,
+        openai_api_key: str | None = None,
     ):
         self.settings = settings or Settings()
         self.storage = storage
@@ -81,7 +81,7 @@ class chatbotClient:
         user_id: str,
         session_id: str,
         message: str,
-    ) -> Tuple[str, bool, Optional[dict]]:
+    ) -> tuple[str, bool, dict | None]:
         """
         Process one message turn for a user.
 
@@ -112,7 +112,7 @@ class chatbotClient:
         self,
         user_id: str,
         session_id: str,
-        pdf_path: Optional[str] = None,
+        pdf_path: str | None = None,
     ) -> None:
         """
         Explicitly create a session and optionally associate a PDF path.
@@ -124,19 +124,20 @@ class chatbotClient:
             pdf_path=pdf_path,
         )
 
-    def get_fill_report(self, user_id: str, session_id: str) -> Optional[dict]:
+    def get_fill_report(self, user_id: str, session_id: str) -> dict | None:
         """Return fill statistics report for a completed session."""
         return self.storage.get_fill_report(user_id, session_id)
 
-    def get_fill_report_text(self, user_id: str, session_id: str) -> Optional[str]:
+    def get_fill_report_text(self, user_id: str, session_id: str) -> str | None:
         """Return fill report as formatted text."""
         report = self.get_fill_report(user_id, session_id)
         if report is None:
             return None
         from chatbot.pdf.fill_report import FillReport
+
         return FillReport.format_text(report)
 
-    def get_session_data(self, user_id: str, session_id: str) -> Optional[dict]:
+    def get_session_data(self, user_id: str, session_id: str) -> dict | None:
         """Return final_output_flat for a completed session."""
         return self.storage.get_final_output_flat(user_id, session_id)
 

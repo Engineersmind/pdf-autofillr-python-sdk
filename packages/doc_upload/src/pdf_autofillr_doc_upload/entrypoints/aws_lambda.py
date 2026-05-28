@@ -26,6 +26,7 @@ Required env vars::
     DOC_UPLOAD_PDF_API_KEY
     AUTH_TOKEN                  optional — validates X-API-Key header
 """
+
 from __future__ import annotations
 
 import json
@@ -33,7 +34,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -45,9 +46,9 @@ _client = None
 
 def _build_client():
     from pdf_autofillr_doc_upload import DocUploadClient
-    from pdf_autofillr_doc_upload.storage.factory import StorageFactory
     from pdf_autofillr_doc_upload.extraction.extractor import Extractor
     from pdf_autofillr_doc_upload.extraction.llm_client import LLMClient
+    from pdf_autofillr_doc_upload.storage.factory import StorageFactory
 
     storage = StorageFactory.create()
     extractor = Extractor(llm_client=LLMClient())
@@ -77,12 +78,13 @@ def _parse_body(event: dict) -> dict:
         try:
             return json.loads(event["body"])
         except json.JSONDecodeError:
-            raise ValueError("Invalid JSON body")
+            raise ValueError("Invalid JSON body") from None
     return event
 
 
-def handler(event: Dict[str, Any], context: Any) -> dict:
+def handler(event: dict[str, Any], context: Any) -> dict:
     from pdf_autofillr_doc_upload.logging.logger import ExecutionLogger
+
     log = ExecutionLogger()
 
     try:
@@ -102,20 +104,25 @@ def handler(event: Dict[str, Any], context: Any) -> dict:
                 return _response(403, {"error": "Invalid API token"})
 
         # ── Required fields ────────────────────────────────────────
-        user_id          = body.get("user_id")
-        session_id       = body.get("session_id")
-        filled_doc_pdf_id= body.get("filled_doc_pdf_id")
-        pdf_doc_id       = body.get("pdf_doc_id")
-        pdf_location     = body.get("pdf_location")
-        investor_type    = body.get("investor_type", "Individual")
+        user_id = body.get("user_id")
+        session_id = body.get("session_id")
+        filled_doc_pdf_id = body.get("filled_doc_pdf_id")
+        pdf_doc_id = body.get("pdf_doc_id")
+        pdf_location = body.get("pdf_location")
+        investor_type = body.get("investor_type", "Individual")
 
         if not all([user_id, session_id, filled_doc_pdf_id, pdf_doc_id, pdf_location]):
-            return _response(400, {
-                "error": "Missing required fields: user_id, session_id, filled_doc_pdf_id, pdf_doc_id, pdf_location"
-            })
+            return _response(
+                400,
+                {
+                    "error": "Missing required fields: user_id, session_id, filled_doc_pdf_id, pdf_doc_id, pdf_location"
+                },
+            )
 
         # ── Env check ──────────────────────────────────────────────
-        bucket_base = os.environ.get("AWS_OUTPUT_BUCKET") or os.environ.get("STATIC_BUCKET")
+        bucket_base = os.environ.get("AWS_OUTPUT_BUCKET") or os.environ.get(
+            "STATIC_BUCKET"
+        )
         if not bucket_base:
             return _response(500, {"error": "AWS_OUTPUT_BUCKET not set"})
 
@@ -128,7 +135,7 @@ def handler(event: Dict[str, Any], context: Any) -> dict:
 
         # ── Run pipeline ───────────────────────────────────────────
         client = _get_client()
-        result = client.run(
+        client.run(
             document_path=pdf_location,
             schema_path=schema_s3_uri,
             job_id=session_id,

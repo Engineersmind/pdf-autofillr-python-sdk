@@ -10,6 +10,7 @@ Env vars:
     HOST               default 0.0.0.0
     chatbot_LOG_LEVEL  default info
 """
+
 from __future__ import annotations
 
 import os
@@ -31,6 +32,7 @@ def main():
         sys.exit(1)
 
     from dotenv import load_dotenv
+
     load_dotenv()
 
     from chatbot.entrypoints.fastapi_app import app

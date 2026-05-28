@@ -1,6 +1,5 @@
 # src/ragpdf/vector_stores/base.py
 from abc import ABC, abstractmethod
-from typing import Optional
 
 
 class VectorStoreBackend(ABC):
@@ -47,13 +46,21 @@ class VectorStoreBackend(ABC):
         """
 
     @abstractmethod
-    def add_vector(self, field_name: str, context: str, section_context: str,
-                   headers: list, embedding: list, **metadata) -> str:
+    def add_vector(
+        self,
+        field_name: str,
+        context: str,
+        section_context: str,
+        headers: list,
+        embedding: list,
+        **metadata
+    ) -> str:
         """Add a new vector. Returns vector_id."""
 
     @abstractmethod
-    def update_confidence(self, vector_id: str, is_positive: bool,
-                          error_info: Optional[dict] = None) -> Optional[float]:
+    def update_confidence(
+        self, vector_id: str, is_positive: bool, error_info: dict | None = None
+    ) -> float | None:
         """
         Update a vector's learned confidence score.
         is_positive=True  -> multiply by CONFIDENCE_GROWTH_RATE
@@ -69,7 +76,7 @@ class VectorStoreBackend(ABC):
     def count(self) -> int:
         """Total number of vectors in the store."""
 
-    def find_by_name(self, field_name: str) -> Optional[str]:
+    def find_by_name(self, field_name: str) -> str | None:
         """
         Find a vector_id by exact field_name match.
         Used by FeedbackPipeline to route errors to the responsible vector

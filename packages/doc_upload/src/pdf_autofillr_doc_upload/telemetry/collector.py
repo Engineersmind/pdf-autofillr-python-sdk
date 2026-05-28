@@ -13,6 +13,7 @@ Privacy:
   - job_id is one-way SHA-256 hashed before transmission.
   - Only metadata (counts, latencies, file extensions) is logged.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -22,7 +23,6 @@ import threading
 from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 from pdf_autofillr_doc_upload.telemetry.config import TelemetryConfig
 
@@ -48,7 +48,7 @@ class TelemetryCollector:
         collector.record_job_complete(job_id="abc", duration=2.3, fields_extracted=42)
     """
 
-    def __init__(self, config: Optional[TelemetryConfig] = None):
+    def __init__(self, config: TelemetryConfig | None = None):
         self.config = config or TelemetryConfig()
         self._enabled = self.config.enabled
         self._mode = self.config.mode
@@ -68,12 +68,14 @@ class TelemetryCollector:
     def record_job_start(self, job_id: str, file_ext: str = "") -> None:
         if not self._enabled:
             return
-        self._emit({
-            "event": "job_start",
-            "job_id_hash": _hash_id(job_id),
-            "file_ext": file_ext,
-            "ts": datetime.now(timezone.utc).isoformat(),
-        })
+        self._emit(
+            {
+                "event": "job_start",
+                "job_id_hash": _hash_id(job_id),
+                "file_ext": file_ext,
+                "ts": datetime.now(timezone.utc).isoformat(),
+            }
+        )
 
     def record_job_complete(
         self,
@@ -84,14 +86,16 @@ class TelemetryCollector:
     ) -> None:
         if not self._enabled:
             return
-        self._emit({
-            "event": "job_complete",
-            "job_id_hash": _hash_id(job_id),
-            "duration_seconds": round(duration_seconds, 3),
-            "fields_extracted": fields_extracted,
-            "success": success,
-            "ts": datetime.now(timezone.utc).isoformat(),
-        })
+        self._emit(
+            {
+                "event": "job_complete",
+                "job_id_hash": _hash_id(job_id),
+                "duration_seconds": round(duration_seconds, 3),
+                "fields_extracted": fields_extracted,
+                "success": success,
+                "ts": datetime.now(timezone.utc).isoformat(),
+            }
+        )
 
     def record_extraction(
         self,
@@ -102,14 +106,16 @@ class TelemetryCollector:
     ) -> None:
         if not self._enabled:
             return
-        self._emit({
-            "event": "extraction",
-            "job_id_hash": _hash_id(job_id),
-            "model": model,
-            "latency_seconds": round(latency_seconds, 3),
-            "document_chars": document_chars,
-            "ts": datetime.now(timezone.utc).isoformat(),
-        })
+        self._emit(
+            {
+                "event": "extraction",
+                "job_id_hash": _hash_id(job_id),
+                "model": model,
+                "latency_seconds": round(latency_seconds, 3),
+                "document_chars": document_chars,
+                "ts": datetime.now(timezone.utc).isoformat(),
+            }
+        )
 
     # ── Internal ───────────────────────────────────────────────────────
 

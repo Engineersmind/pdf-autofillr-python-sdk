@@ -1,7 +1,10 @@
 # chatbot/validation/field_validator.py
 """General field validation."""
+
 from __future__ import annotations
+
 import re
+
 from chatbot.validation.phone_validator import validate_phone
 
 EMAIL_RE = re.compile(r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$")

@@ -1,5 +1,6 @@
 # src/ragpdf/embeddings/sentence_transformer.py
 import logging
+
 from ragpdf.embeddings.base import EmbeddingBackend
 
 logger = logging.getLogger(__name__)
@@ -33,19 +34,23 @@ class SentenceTransformerBackend(EmbeddingBackend):
         if self._model is None:
             try:
                 from sentence_transformers import SentenceTransformer
-            except ImportError:
+            except ImportError as e:
                 raise ImportError(
                     "SentenceTransformerBackend requires sentence-transformers. "
                     "Install with: pip install ragpdf-sdk[transformers]"
-                )
+                ) from e
             self._model_name = model
             self._model = SentenceTransformer(model)
             logger.info(f"Loaded SentenceTransformer: {model}")
 
     def embed(self, text: str) -> list:
+        assert self._model is not None
         text = text.replace("\n", " ").strip()
         return self._model.encode(text, convert_to_numpy=True).tolist()
 
     def embed_batch(self, texts: list) -> list:
+        assert self._model is not None
         texts = [t.replace("\n", " ").strip() for t in texts]
-        return self._model.encode(texts, convert_to_numpy=True, show_progress_bar=False).tolist()
+        return self._model.encode(
+            texts, convert_to_numpy=True, show_progress_bar=False
+        ).tolist()

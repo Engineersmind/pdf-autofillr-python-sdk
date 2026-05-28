@@ -22,14 +22,14 @@ Usage::
         api_key="my-key",
     )
 """
+
 from __future__ import annotations
 
 import os
-from typing import Optional, Tuple
 
-from pdf_autofillr_doc_upload.pdf.interface import PDFFillerInterface
-from pdf_autofillr_doc_upload.pdf.api_handler import PDFAPIHandler
 from pdf_autofillr_doc_upload.logging.logger import ExecutionLogger
+from pdf_autofillr_doc_upload.pdf.api_handler import PDFAPIHandler
+from pdf_autofillr_doc_upload.pdf.interface import PDFFillerInterface
 
 
 class MapperPDFFiller(PDFFillerInterface):
@@ -44,14 +44,15 @@ class MapperPDFFiller(PDFFillerInterface):
 
     def __init__(
         self,
-        lambda_url: Optional[str] = None,
-        api_key: Optional[str] = None,
-        logger: Optional[ExecutionLogger] = None,
+        lambda_url: str | None = None,
+        api_key: str | None = None,
+        logger: ExecutionLogger | None = None,
     ):
         self._lambda_url = (
             lambda_url
             or os.getenv("DOC_UPLOAD_FILL_PDF_LAMBDA_URL")
             or os.getenv("FILL_PDF_LAMBDA_URL", "")
+            or ""
         ).rstrip("/")
         self._api_key = (
             api_key
@@ -59,12 +60,12 @@ class MapperPDFFiller(PDFFillerInterface):
             or os.getenv("PDF_API_KEY", "")
         )
         self._logger = logger or ExecutionLogger(job_id="pdf_filler")
-        self._handler: Optional[PDFAPIHandler] = None
+        self._handler: PDFAPIHandler | None = None
 
     def _get_handler(self) -> PDFAPIHandler:
         if self._handler is None:
             if not self._lambda_url:
-                raise EnvironmentError(
+                raise OSError(
                     "DOC_UPLOAD_FILL_PDF_LAMBDA_URL (or FILL_PDF_LAMBDA_URL) is required "
                     "for MapperPDFFiller. Set it in .env or pass lambda_url= explicitly."
                 )
@@ -100,7 +101,7 @@ class MapperPDFFiller(PDFFillerInterface):
         investor_type: str,
         max_attempts: int = 48,
         wait_interval: int = 10,
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         return self._get_handler().check_embed_file(
             user_id=user_id,
             pdf_doc_id=pdf_doc_id,

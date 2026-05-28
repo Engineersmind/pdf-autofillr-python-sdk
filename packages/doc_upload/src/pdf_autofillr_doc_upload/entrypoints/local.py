@@ -10,6 +10,7 @@ Or non-interactively::
 
     python -m entrypoints.local --document investor.pdf --schema configs/form_keys.json
 """
+
 from __future__ import annotations
 
 import argparse
@@ -39,7 +40,9 @@ load_dotenv()
 
 logging.basicConfig(level=logging.WARNING)
 logging.getLogger("pdf_autofillr_doc_upload").setLevel(
-    logging.DEBUG if os.getenv("DOC_UPLOAD_DEBUG_LOGGING", "").lower() == "true" else logging.WARNING
+    logging.DEBUG
+    if os.getenv("DOC_UPLOAD_DEBUG_LOGGING", "").lower() == "true"
+    else logging.WARNING
 )
 for _name in [
     "pdf_autofillr_mapper",
@@ -52,12 +55,16 @@ for _name in [
     "pdf_autofillr_mapper.utils.storage",
     "pdf_autofillr_mapper.chunkers",
     "pdf_autofillr_mapper.inprocess_filler",
-    "LiteLLM", "litellm", "pymupdf", "fitz",
+    "LiteLLM",
+    "litellm",
+    "pymupdf",
+    "fitz",
 ]:
     logging.getLogger(_name).setLevel(logging.ERROR)
 
 
 # ── Silence PyMuPDF advisory print ──────────────────────────────────────────
+
 
 class _FitzSilencer:
     _NOISE = "Consider using the pymupdf_layout package"
@@ -86,12 +93,15 @@ def _silence_fitz_import() -> None:
     sys.stdout = io.StringIO()
     try:
         import fitz  # noqa: F401
+
         try:
-            from pdf_autofillr_doc_upload.extraction.document_reader import _read_pdf  # noqa
+            from pdf_autofillr_doc_upload.extraction.document_reader import (
+                _read_pdf,  # noqa: F401
+            )  # noqa
         except Exception:
-            pass
+            pass  # intentional
     except ImportError:
-        pass
+        pass  # intentional
     finally:
         sys.stdout = _real
     sys.stdout = _FitzSilencer(sys.stdout)
@@ -102,11 +112,12 @@ _silence_fitz_import()
 
 # ── Client builder ───────────────────────────────────────────────────────────
 
+
 def _build_client():
     from pdf_autofillr_doc_upload import DocUploadClient
-    from pdf_autofillr_doc_upload.storage.factory import StorageFactory
     from pdf_autofillr_doc_upload.extraction.extractor import Extractor
     from pdf_autofillr_doc_upload.extraction.llm_client import LLMClient
+    from pdf_autofillr_doc_upload.storage.factory import StorageFactory
     from pdf_autofillr_doc_upload.telemetry.collector import TelemetryCollector
     from pdf_autofillr_doc_upload.telemetry.config import TelemetryConfig
 
@@ -131,8 +142,11 @@ def _build_client():
 
 # ── Argument parser ──────────────────────────────────────────────────────────
 
+
 def _parse_args():
-    p = argparse.ArgumentParser(prog="doc-upload-local", description="Extractor local runner")
+    p = argparse.ArgumentParser(
+        prog="doc-upload-local", description="Extractor local runner"
+    )
     p.add_argument("--document", "-d", default=None, help="Path to source document")
     p.add_argument("--schema", "-s", default=None, help="Path to schema JSON")
     p.add_argument("--output", "-o", default=None, help="Output JSON path")
@@ -145,6 +159,7 @@ def _parse_args():
 
 
 # ── Interactive REPL ─────────────────────────────────────────────────────────
+
 
 def run_interactive():
     print("\n" + "=" * 60)
@@ -190,12 +205,13 @@ def run_interactive():
 
     except (KeyboardInterrupt, EOFError):
         print("\nSession ended.")
-    except EnvironmentError as e:
+    except OSError as e:
         print(f"\n❌ Configuration error:\n{e}")
         sys.exit(1)
 
 
 # ── Non-interactive run ──────────────────────────────────────────────────────
+
 
 def run_with_args(args):
     client = _build_client()

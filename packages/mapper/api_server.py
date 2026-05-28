@@ -12,34 +12,30 @@ This provides HTTP API endpoints for the mapper module operations.
 
 """
 
-
-
-from fastapi import FastAPI, HTTPException, File, UploadFile, Form
-from fastapi.responses import JSONResponse, FileResponse
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
-import asyncio
-import os
 from pathlib import Path
+from typing import Optional
 
-from pdf_autofillr_mapper.handlers.operations import (
-    handle_extract_operation,
-    handle_map_operation,
-    handle_embed_operation,
-    handle_fill_operation,
-    handle_make_embed_file_operation,
-    handle_check_embed_file_operation,
-    handle_fill_pdf_operation,
-    handle_run_all_operation
-)
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel, Field
+
 from pdf_autofillr_mapper.configs.local import LocalStorageConfig
 from pdf_autofillr_mapper.core.logger import logger
-
+from pdf_autofillr_mapper.handlers.operations import (
+    handle_check_embed_file_operation,
+    handle_embed_operation,
+    handle_extract_operation,
+    handle_fill_operation,
+    handle_fill_pdf_operation,
+    handle_make_embed_file_operation,
+    handle_map_operation,
+    handle_run_all_operation,
+)
 
 app = FastAPI(
     title="PDF Autofiller Mapper API",
     description="API for PDF form field extraction, mapping, embedding, and filling",
-    version="1.0.10"
+    version="1.0.10",
 )
 
 
@@ -88,7 +84,9 @@ class MakeEmbedRequest(BaseModel):
     pdf_doc_id: Optional[int] = Field(100, description="PDF document ID")
     session_id: Optional[int] = Field(None, description="Session ID")
     investor_type: Optional[str] = Field("individual", description="Investor type")
-    use_second_mapper: Optional[bool] = Field(False, description="Use dual mapper with RAG")
+    use_second_mapper: Optional[bool] = Field(
+        False, description="Use dual mapper with RAG"
+    )
 
 
 class FillPDFRequest(BaseModel):
@@ -134,8 +132,8 @@ async def root():
             "fill_pdf": "/mapper/fill-pdf",
             "check_embed": "/mapper/check-embed-file",
             "run_all": "/mapper/run-all",
-            "download": "/download/{file_path}"
-        }
+            "download": "/download/{file_path}",
+        },
     }
 
 
@@ -159,14 +157,14 @@ async def extract(request: ExtractRequest):
             input_file=request.pdf_path,
             user_id=request.user_id,
             session_id=request.session_id,
-            pdf_doc_id=request.pdf_doc_id
+            pdf_doc_id=request.pdf_doc_id,
         )
 
         return JSONResponse(content=result)
 
     except Exception as e:
         logger.error(f"Extract failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/mapper/map")
@@ -180,6 +178,7 @@ async def map_fields(request: MapRequest):
         logger.info(f"API: Map request for {request.extracted_json_path}")
 
         from pdf_autofillr_mapper.core.config import get_mapping_config
+
         mapping_config = get_mapping_config()
 
         result = await handle_map_operation(
@@ -189,14 +188,14 @@ async def map_fields(request: MapRequest):
             user_id=request.user_id,
             session_id=request.session_id,
             pdf_doc_id=request.pdf_doc_id,
-            investor_type=request.investor_type
+            investor_type=request.investor_type,
         )
 
         return JSONResponse(content=result)
 
     except Exception as e:
         logger.error(f"Map failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/mapper/embed")
@@ -216,14 +215,14 @@ async def embed(request: EmbedRequest):
             radio_groups_path=request.radio_groups_path,
             user_id=request.user_id,
             session_id=request.session_id,
-            pdf_doc_id=request.pdf_doc_id
+            pdf_doc_id=request.pdf_doc_id,
         )
 
         return JSONResponse(content=result)
 
     except Exception as e:
         logger.error(f"Embed failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/mapper/fill")
@@ -241,14 +240,14 @@ async def fill(request: FillRequest):
             input_json_path=request.input_json_path,
             user_id=request.user_id,
             session_id=request.session_id,
-            pdf_doc_id=request.pdf_doc_id
+            pdf_doc_id=request.pdf_doc_id,
         )
 
         return JSONResponse(content=result)
 
     except Exception as e:
         logger.error(f"Fill failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/mapper/make-embed-file")
@@ -265,6 +264,7 @@ async def make_embed_file(request: MakeEmbedRequest):
         config = LocalStorageConfig(local_input_pdf=request.pdf_path)
 
         from pdf_autofillr_mapper.core.config import get_mapping_config
+
         mapping_config = get_mapping_config()
 
         result = await handle_make_embed_file_operation(
@@ -274,14 +274,14 @@ async def make_embed_file(request: MakeEmbedRequest):
             session_id=request.session_id,
             investor_type=request.investor_type,
             mapping_config=mapping_config,
-            use_second_mapper=request.use_second_mapper
+            use_second_mapper=request.use_second_mapper,
         )
 
         return JSONResponse(content=result)
 
     except Exception as e:
         logger.error(f"Make embed file failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/mapper/fill-pdf")
@@ -296,21 +296,21 @@ async def fill_pdf(request: FillPDFRequest):
 
         config = LocalStorageConfig(
             local_embedded_pdf=request.embedded_pdf_path,
-            local_input_json=request.input_json_path
+            local_input_json=request.input_json_path,
         )
 
         result = await handle_fill_pdf_operation(
             config=config,
             user_id=request.user_id,
             session_id=request.session_id,
-            pdf_doc_id=request.pdf_doc_id
+            pdf_doc_id=request.pdf_doc_id,
         )
 
         return JSONResponse(content=result)
 
     except Exception as e:
         logger.error(f"Fill PDF failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/mapper/check-embed-file")
@@ -326,16 +326,14 @@ async def check_embed_file(request: CheckEmbedRequest):
         config = LocalStorageConfig(local_embedded_pdf=request.pdf_path)
 
         result = await handle_check_embed_file_operation(
-            config=config,
-            user_id=request.user_id,
-            session_id=request.session_id
+            config=config, user_id=request.user_id, session_id=request.session_id
         )
 
         return JSONResponse(content=result)
 
     except Exception as e:
         logger.error(f"Check embed file failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/mapper/run-all")
@@ -349,6 +347,7 @@ async def run_all(request: RunAllRequest):
         logger.info(f"API: Run all request for {request.pdf_path}")
 
         from pdf_autofillr_mapper.core.config import get_mapping_config
+
         mapping_config = get_mapping_config()
 
         result = await handle_run_all_operation(
@@ -357,14 +356,14 @@ async def run_all(request: RunAllRequest):
             mapping_config=mapping_config,
             user_id=request.user_id,
             session_id=request.session_id,
-            pdf_doc_id=request.pdf_doc_id
+            pdf_doc_id=request.pdf_doc_id,
         )
 
         return JSONResponse(content=result)
 
     except Exception as e:
         logger.error(f"Run all failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/download/{file_path:path}")
@@ -392,12 +391,15 @@ async def download_file(file_path: str):
     try:
         logger.info(f"API: Download request for {file_path}")
 
-        path = Path(file_path)
+        if ".." in file_path.replace("\\", "/").split("/"):
+            raise HTTPException(status_code=403, detail="Access denied")
 
-        if not path.is_absolute():
-            path = Path.cwd() / path
+        safe_file_path = file_path.lstrip("/\\")
+        path = (Path.cwd() / safe_file_path).resolve()
 
-        path = path.resolve()
+        allowed_root = Path.cwd().resolve()
+        if not str(path).startswith(str(allowed_root) + "/") and path != allowed_root:
+            raise HTTPException(status_code=403, detail="Access denied")
 
         if not path.exists():
             logger.error(f"File not found: {path}")
@@ -407,24 +409,17 @@ async def download_file(file_path: str):
             logger.error(f"Not a file: {path}")
             raise HTTPException(status_code=400, detail=f"Not a file: {file_path}")
 
-        # Optional: Add whitelist of allowed directories for extra security
-        # allowed_dirs = [Path("/path/to/output"), Path("/path/to/temp")]
-        # if not any(path.is_relative_to(allowed_dir) for allowed_dir in allowed_dirs):
-        #     raise HTTPException(status_code=403, detail="Access denied")
-
         logger.info(f"Serving file: {path}")
 
         return FileResponse(
-            path=str(path),
-            filename=path.name,
-            media_type='application/octet-stream'
+            path=str(path), filename=path.name, media_type="application/octet-stream"
         )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Download failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # ============================================================================
@@ -437,11 +432,7 @@ async def global_exception_handler(request, exc):
     """Global exception handler"""
     logger.error(f"Unhandled exception: {exc}")
     return JSONResponse(
-        status_code=500,
-        content={
-            "error": "Internal Server Error",
-            "detail": str(exc)
-        }
+        status_code=500, content={"error": "Internal Server Error", "detail": str(exc)}
     )
 
 
@@ -457,9 +448,4 @@ if __name__ == "__main__":
     logger.info("API will be available at: http://localhost:8000")
     logger.info("API docs at: http://localhost:8000/docs")
 
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=8000,
-        log_level="info"
-    )
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")

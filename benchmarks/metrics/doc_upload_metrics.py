@@ -33,5 +33,4 @@ def format_support_coverage(formats_tested: list[str]) -> float:
     % of supported formats present in the test suite.
     Supported: pdf, docx, pptx, xlsx, csv, json, txt, md, html, xml
     """
-    SUPPORTED = {"pdf","docx","pptx","xlsx","csv","json","txt","md","html","xml"}
     raise NotImplementedError

@@ -7,11 +7,10 @@ Env vars::
     GCP_CONFIG_BUCKET
     GCP_PROJECT_ID   (optional)
 """
+
 from __future__ import annotations
 
 import json
-import tempfile
-from typing import Optional
 
 from pdf_autofillr_doc_upload.storage.base import StorageBackend
 
@@ -25,13 +24,16 @@ def _parse_gcs_uri(uri: str):
 class GCSStorage(StorageBackend):
     """Google Cloud Storage backend."""
 
-    def __init__(self, output_bucket: str, config_bucket: str, project: Optional[str] = None):
+    def __init__(
+        self, output_bucket: str, config_bucket: str, project: str | None = None
+    ):
         from google.cloud import storage as gcs
+
         self.output_bucket = output_bucket
         self.config_bucket = config_bucket
         self.client = gcs.Client(project=project)
 
-    def _get_json(self, bucket: str, key: str) -> Optional[dict]:
+    def _get_json(self, bucket: str, key: str) -> dict | None:
         try:
             blob = self.client.bucket(bucket).blob(key)
             return json.loads(blob.download_as_text())
@@ -57,28 +59,42 @@ class GCSStorage(StorageBackend):
         return f"jobs/{job_id}/{filename}"
 
     def get_job_state(self, job_id):
-        return self._get_json(self.output_bucket, self._job_key(job_id, "job_state.json"))
+        return self._get_json(
+            self.output_bucket, self._job_key(job_id, "job_state.json")
+        )
 
     def save_job_state(self, job_id, state):
-        return self._put_json(self.output_bucket, self._job_key(job_id, "job_state.json"), state)
+        return self._put_json(
+            self.output_bucket, self._job_key(job_id, "job_state.json"), state
+        )
 
     def get_output(self, job_id):
         return self._get_json(self.output_bucket, self._job_key(job_id, "output.json"))
 
     def save_output(self, job_id, data):
-        return self._put_json(self.output_bucket, self._job_key(job_id, "output.json"), data)
+        return self._put_json(
+            self.output_bucket, self._job_key(job_id, "output.json"), data
+        )
 
     def get_output_flat(self, job_id):
-        return self._get_json(self.output_bucket, self._job_key(job_id, "output_flat.json"))
+        return self._get_json(
+            self.output_bucket, self._job_key(job_id, "output_flat.json")
+        )
 
     def save_output_flat(self, job_id, data):
-        return self._put_json(self.output_bucket, self._job_key(job_id, "output_flat.json"), data)
+        return self._put_json(
+            self.output_bucket, self._job_key(job_id, "output_flat.json"), data
+        )
 
     def save_execution_log(self, job_id, data):
-        return self._put_json(self.output_bucket, self._job_key(job_id, "execution_log.json"), data)
+        return self._put_json(
+            self.output_bucket, self._job_key(job_id, "execution_log.json"), data
+        )
 
     def get_execution_log(self, job_id):
-        return self._get_json(self.output_bucket, self._job_key(job_id, "execution_log.json"))
+        return self._get_json(
+            self.output_bucket, self._job_key(job_id, "execution_log.json")
+        )
 
     def load_schema(self, schema_path: str) -> dict:
         if schema_path.startswith("gs://"):
@@ -97,6 +113,7 @@ class GCSStorage(StorageBackend):
             blob.download_to_filename(local_dest)
         else:
             import shutil
+
             shutil.copy2(source_path, local_dest)
         return local_dest
 

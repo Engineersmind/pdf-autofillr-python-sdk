@@ -1,9 +1,11 @@
-import re
 import json
 import logging
+import re
+
 from pdf_autofillr_mapper.groupers.base_grouper import BaseGrouper
 
 logger = logging.getLogger(__name__)
+
 
 class GroupByLLM(BaseGrouper):
     def __init__(self, extracted_data: dict, **kwargs):
@@ -12,7 +14,7 @@ class GroupByLLM(BaseGrouper):
         self.threshold = self.params.get("threshold", 2)
         self.llm = self.params.get("llm", None)
         self.keys_data = self.params.get("keys_data", {})
-        
+
         # Initialize cumulative LLM usage tracking
         self.total_llm_calls = 0
         self.total_prompt_tokens = 0
@@ -30,7 +32,9 @@ class GroupByLLM(BaseGrouper):
         # Step 2: Expand to nearby GIDs based on threshold
         context_gid_set = set()
         for gid in radio_gids:
-            context_gid_set.update(range(gid - self.threshold, gid + self.threshold + 1))
+            context_gid_set.update(
+                range(gid - self.threshold, gid + self.threshold + 1)
+            )
 
         # Step 3: Collect lines from text_elements if gid in context set
         collected_lines = []
@@ -90,84 +94,96 @@ class GroupByLLM(BaseGrouper):
     {text}
     """
         logger.info("Starting field grouping using LLM")
-        
+
         try:
             if not self.llm:
                 raise ValueError("LLM is not initialized")
-            
+
             # Use UnifiedLLMClient - returns LLMResponse with usage tracking
             messages = [{"role": "user", "content": prompt}]
             llm_response = self.llm.complete(messages)
-            
+
             # Extract response and track cumulative usage
             usage = llm_response.usage
             self.total_llm_calls += 1
             self.total_prompt_tokens += usage.prompt_tokens
             self.total_completion_tokens += usage.completion_tokens
             self.total_cost_usd += usage.cost_usd
-            
-            logger.info(f"Field grouping LLM call - Tokens: {usage.total_tokens} (prompt: {usage.prompt_tokens}, completion: {usage.completion_tokens}), Cost: ${usage.cost_usd:.6f}")
-            
-            cleaned_json = re.sub(r"^```json\n?|```$", "", llm_response.content.strip(), flags=re.MULTILINE)
-            
+
+            logger.info(
+                f"Field grouping LLM call - Tokens: {usage.total_tokens} (prompt: {usage.prompt_tokens}, completion: {usage.completion_tokens}), Cost: ${usage.cost_usd:.6f}"
+            )
+
+            cleaned_json = re.sub(
+                r"^```json\n?|```$",
+                "",
+                llm_response.content.strip(),
+                flags=re.MULTILINE,
+            )
+
             if not cleaned_json.strip():
                 raise ValueError("LLM response is empty after cleaning")
-            
+
             try:
                 parsed = json.loads(cleaned_json)
             except json.JSONDecodeError as e:
-                logger.error(f"Failed to parse LLM output as JSON. Output was: {repr(cleaned_json)}")
+                logger.error(
+                    f"Failed to parse LLM output as JSON. Output was: {repr(cleaned_json)}"
+                )
                 raise RuntimeError(f"LLM response is not valid JSON: {str(e)}") from e
-            
+
             logger.info(f"Successfully grouped fields into {len(parsed)} groups")
             return parsed
-            
+
         except (ValueError, RuntimeError):
             raise
         except Exception as e:
-            logger.error(f"Unexpected error during field grouping: {str(e)}", exc_info=True)
+            logger.error(
+                f"Unexpected error during field grouping: {str(e)}", exc_info=True
+            )
             raise RuntimeError(f"Field grouping failed: {str(e)}") from e
-
-
 
     def group(self):
         """
         Perform field grouping
-        
+
         Returns:
             dict: Grouped fields with LLM usage stats
-            
+
         Raises:
             RuntimeError: If grouping fails
         """
         try:
             # Step 1: Extract relevant text lines around fields
             lines = self.get_context_lines()
-            
+
             if not lines:
                 logger.warning(f"No {self.field_type} fields found to group")
                 return {"groups": {}, "llm_usage": self._get_llm_usage_stats()}
-            
+
             # Step 2: Use LLM to group fields from text
             groups = self.group_fields_from_text(lines)
-            
+
             # Step 3: Log cumulative LLM stats
             self._log_cumulative_stats()
-            
-            return {
-                "groups": groups,
-                "llm_usage": self._get_llm_usage_stats()
-            }
-            
+
+            return {"groups": groups, "llm_usage": self._get_llm_usage_stats()}
+
         except Exception as e:
             logger.error(f"Field grouping failed: {str(e)}", exc_info=True)
-            raise RuntimeError(f"Failed to group {self.field_type} fields: {str(e)}") from e
-    
+            raise RuntimeError(
+                f"Failed to group {self.field_type} fields: {str(e)}"
+            ) from e
+
     def _get_llm_usage_stats(self):
         """Get cumulative LLM usage statistics"""
         total_tokens = self.total_prompt_tokens + self.total_completion_tokens
-        avg_cost_per_call = self.total_cost_usd / self.total_llm_calls if self.total_llm_calls > 0 else 0.0
-        
+        avg_cost_per_call = (
+            self.total_cost_usd / self.total_llm_calls
+            if self.total_llm_calls > 0
+            else 0.0
+        )
+
         return {
             "model": self.llm.model if self.llm else "unknown",
             "total_calls": self.total_llm_calls,
@@ -175,9 +191,9 @@ class GroupByLLM(BaseGrouper):
             "total_completion_tokens": self.total_completion_tokens,
             "total_tokens": total_tokens,
             "total_cost_usd": self.total_cost_usd,
-            "avg_cost_per_call": avg_cost_per_call
+            "avg_cost_per_call": avg_cost_per_call,
         }
-    
+
     def _log_cumulative_stats(self):
         """Log cumulative LLM usage statistics"""
         stats = self._get_llm_usage_stats()

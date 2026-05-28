@@ -5,11 +5,11 @@ This tests the complete Extract -> Map -> Embed pipeline without the Fill stage.
 Tests are done directly with handlers, not through entrypoints.
 """
 
-import pytest
-import asyncio
 import json
 from pathlib import Path
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import patch
+
+import pytest
 
 from pdf_autofillr_mapper.handlers.operations import handle_make_embed_file_operation
 
@@ -35,26 +35,29 @@ class TestMakeEmbedFileOperation:
     def _create_mapped_file(self, mapped_path):
         """Create a real mapped.json on disk so convert_semantic_to_java_format can open it."""
         mapped_path = Path(mapped_path)
-        mapped_path.write_text(json.dumps({
-            "field1": {"fid": "field1", "value": "", "confidence": 0.9},
-            "field2": {"fid": "field2", "value": "", "confidence": 0.85},
-        }))
+        mapped_path.write_text(
+            json.dumps(
+                {
+                    "field1": {"fid": "field1", "value": "", "confidence": 0.9},
+                    "field2": {"fid": "field2", "value": "", "confidence": 0.85},
+                }
+            )
+        )
 
     def _create_extracted_file(self, extracted_path):
         """Create a real extracted.json on disk."""
         extracted_path = Path(extracted_path)
-        extracted_path.write_text(json.dumps({
-            "fields": [{"name": "field1", "type": "text", "value": ""}],
-            "metadata": {"page_count": 1}
-        }))
+        extracted_path.write_text(
+            json.dumps(
+                {
+                    "fields": [{"name": "field1", "type": "text", "value": ""}],
+                    "metadata": {"page_count": 1},
+                }
+            )
+        )
 
     async def test_make_embed_file_basic_flow(
-        self,
-        mock_storage_config,
-        user_id,
-        pdf_doc_id,
-        session_id,
-        temp_dir
+        self, mock_storage_config, user_id, pdf_doc_id, session_id, temp_dir
     ):
         """Test basic make_embed_file operation flow."""
         # Arrange: Set up local paths for the pipeline
@@ -67,25 +70,32 @@ class TestMakeEmbedFileOperation:
         self._create_mapped_file(mapped_path)
 
         # Mock the sub-operations
-        with patch('pdf_autofillr_mapper.handlers.operations.handle_extract_operation') as mock_extract, \
-             patch('pdf_autofillr_mapper.handlers.operations.run_semantic_api_mapper') as mock_map, \
-             patch('pdf_autofillr_mapper.handlers.operations.convert_semantic_to_java_format') as mock_convert, \
-             patch('pdf_autofillr_mapper.handlers.operations.handle_embed_operation') as mock_embed:
+        with patch(
+            "pdf_autofillr_mapper.handlers.operations.handle_extract_operation"
+        ) as mock_extract, patch(
+            "pdf_autofillr_mapper.handlers.operations.run_semantic_api_mapper"
+        ) as mock_map, patch(
+            "pdf_autofillr_mapper.handlers.operations.convert_semantic_to_java_format"
+        ) as mock_convert, patch(
+            "pdf_autofillr_mapper.handlers.operations.handle_embed_operation"
+        ) as mock_embed:
 
             # Configure mocks
             mock_extract.return_value = {
                 "output_file": str(extracted_path),
                 "status": "success",
                 "pdf_hash": "test_hash_123",
-                "execution_time": 1.5
+                "execution_time": 1.5,
             }
-            mock_map.return_value = self._map_result(mapped_path, temp_dir, execution_time=2.0)
+            mock_map.return_value = self._map_result(
+                mapped_path, temp_dir, execution_time=2.0
+            )
             mock_convert.return_value = str(temp_dir / "java_mapping.json")
             mock_embed.return_value = {
                 "output_file": str(embedded_path),
                 "status": "success",
                 "embedded_keys": ["field1", "field2"],
-                "execution_time": 1.0
+                "execution_time": 1.0,
             }
 
             # Act: Run the operation
@@ -94,7 +104,7 @@ class TestMakeEmbedFileOperation:
                 user_id=user_id,
                 pdf_doc_id=pdf_doc_id,
                 session_id=session_id,
-                investor_type='individual'
+                investor_type="individual",
             )
 
             # Assert
@@ -108,12 +118,7 @@ class TestMakeEmbedFileOperation:
             mock_embed.assert_called_once()
 
     async def test_make_embed_file_with_cache_hit(
-        self,
-        mock_storage_config,
-        user_id,
-        pdf_doc_id,
-        session_id,
-        temp_dir
+        self, mock_storage_config, user_id, pdf_doc_id, session_id, temp_dir
     ):
         """Test make_embed_file operation with cache hit (skip MAP stage)."""
         # Arrange
@@ -126,30 +131,36 @@ class TestMakeEmbedFileOperation:
         self._create_mapped_file(cached_mapped_path)
 
         # Create cached mapping file
-        cached_mapped_path.write_text(json.dumps({
-            "mapped_fields": {"field1": "value1"},
-            "confidence": 0.9
-        }))
+        cached_mapped_path.write_text(
+            json.dumps({"mapped_fields": {"field1": "value1"}, "confidence": 0.9})
+        )
 
-        with patch('pdf_autofillr_mapper.handlers.operations.handle_extract_operation') as mock_extract, \
-             patch('pdf_autofillr_mapper.handlers.operations.run_semantic_api_mapper') as mock_map, \
-             patch('pdf_autofillr_mapper.handlers.operations.convert_semantic_to_java_format') as mock_convert, \
-             patch('pdf_autofillr_mapper.handlers.operations.handle_embed_operation') as mock_embed:
+        with patch(
+            "pdf_autofillr_mapper.handlers.operations.handle_extract_operation"
+        ) as mock_extract, patch(
+            "pdf_autofillr_mapper.handlers.operations.run_semantic_api_mapper"
+        ) as mock_map, patch(
+            "pdf_autofillr_mapper.handlers.operations.convert_semantic_to_java_format"
+        ) as mock_convert, patch(
+            "pdf_autofillr_mapper.handlers.operations.handle_embed_operation"
+        ) as mock_embed:
 
             # Configure mocks
             mock_extract.return_value = {
                 "output_file": str(extracted_path),
                 "status": "success",
                 "pdf_hash": "test_hash_123",
-                "execution_time": 1.5
+                "execution_time": 1.5,
             }
-            mock_map.return_value = self._map_result(cached_mapped_path, temp_dir, execution_time=0.1)
+            mock_map.return_value = self._map_result(
+                cached_mapped_path, temp_dir, execution_time=0.1
+            )
             mock_convert.return_value = str(temp_dir / "java_mapping.json")
             mock_embed.return_value = {
                 "output_file": str(embedded_path),
                 "status": "success",
                 "embedded_keys": ["field1"],
-                "execution_time": 1.0
+                "execution_time": 1.0,
             }
 
             # Act
@@ -157,7 +168,7 @@ class TestMakeEmbedFileOperation:
                 config=mock_storage_config,
                 user_id=user_id,
                 pdf_doc_id=pdf_doc_id,
-                session_id=session_id
+                session_id=session_id,
             )
 
             # Assert
@@ -166,15 +177,13 @@ class TestMakeEmbedFileOperation:
             assert "embed" in result["pipeline_results"]
 
     async def test_make_embed_file_extract_failure(
-        self,
-        mock_storage_config,
-        user_id,
-        pdf_doc_id,
-        session_id
+        self, mock_storage_config, user_id, pdf_doc_id, session_id
     ):
         """Test make_embed_file operation when extract stage fails."""
         # Arrange
-        with patch('pdf_autofillr_mapper.handlers.operations.handle_extract_operation') as mock_extract:
+        with patch(
+            "pdf_autofillr_mapper.handlers.operations.handle_extract_operation"
+        ) as mock_extract:
             # Simulate extract failure
             mock_extract.side_effect = Exception("Extraction failed")
 
@@ -184,31 +193,32 @@ class TestMakeEmbedFileOperation:
                     config=mock_storage_config,
                     user_id=user_id,
                     pdf_doc_id=pdf_doc_id,
-                    session_id=session_id
+                    session_id=session_id,
                 )
 
-            assert "Extraction failed" in str(exc_info.value) or "extract" in str(exc_info.value).lower()
+            assert (
+                "Extraction failed" in str(exc_info.value)
+                or "extract" in str(exc_info.value).lower()
+            )
 
     async def test_make_embed_file_map_failure(
-        self,
-        mock_storage_config,
-        user_id,
-        pdf_doc_id,
-        session_id,
-        temp_dir
+        self, mock_storage_config, user_id, pdf_doc_id, session_id, temp_dir
     ):
         """Test make_embed_file operation when map stage fails."""
         # Arrange
         extracted_path = temp_dir / "extracted.json"
         self._create_extracted_file(extracted_path)
 
-        with patch('pdf_autofillr_mapper.handlers.operations.handle_extract_operation') as mock_extract, \
-             patch('pdf_autofillr_mapper.handlers.operations.run_semantic_api_mapper') as mock_map:
+        with patch(
+            "pdf_autofillr_mapper.handlers.operations.handle_extract_operation"
+        ) as mock_extract, patch(
+            "pdf_autofillr_mapper.handlers.operations.run_semantic_api_mapper"
+        ) as mock_map:
 
             mock_extract.return_value = {
                 "output_file": str(extracted_path),
                 "status": "success",
-                "pdf_hash": "test_hash_123"
+                "pdf_hash": "test_hash_123",
             }
 
             # Simulate map failure
@@ -220,18 +230,16 @@ class TestMakeEmbedFileOperation:
                     config=mock_storage_config,
                     user_id=user_id,
                     pdf_doc_id=pdf_doc_id,
-                    session_id=session_id
+                    session_id=session_id,
                 )
 
-            assert "Mapping failed" in str(exc_info.value) or "map" in str(exc_info.value).lower()
+            assert (
+                "Mapping failed" in str(exc_info.value)
+                or "map" in str(exc_info.value).lower()
+            )
 
     async def test_make_embed_file_embed_failure(
-        self,
-        mock_storage_config,
-        user_id,
-        pdf_doc_id,
-        session_id,
-        temp_dir
+        self, mock_storage_config, user_id, pdf_doc_id, session_id, temp_dir
     ):
         """Test make_embed_file operation when embed stage fails."""
         # Arrange
@@ -241,15 +249,20 @@ class TestMakeEmbedFileOperation:
         self._create_extracted_file(extracted_path)
         self._create_mapped_file(mapped_path)
 
-        with patch('pdf_autofillr_mapper.handlers.operations.handle_extract_operation') as mock_extract, \
-             patch('pdf_autofillr_mapper.handlers.operations.run_semantic_api_mapper') as mock_map, \
-             patch('pdf_autofillr_mapper.handlers.operations.convert_semantic_to_java_format') as mock_convert, \
-             patch('pdf_autofillr_mapper.handlers.operations.handle_embed_operation') as mock_embed:
+        with patch(
+            "pdf_autofillr_mapper.handlers.operations.handle_extract_operation"
+        ) as mock_extract, patch(
+            "pdf_autofillr_mapper.handlers.operations.run_semantic_api_mapper"
+        ) as mock_map, patch(
+            "pdf_autofillr_mapper.handlers.operations.convert_semantic_to_java_format"
+        ) as mock_convert, patch(
+            "pdf_autofillr_mapper.handlers.operations.handle_embed_operation"
+        ) as mock_embed:
 
             mock_extract.return_value = {
                 "output_file": str(extracted_path),
                 "status": "success",
-                "pdf_hash": "test_hash_123"
+                "pdf_hash": "test_hash_123",
             }
             mock_map.return_value = self._map_result(mapped_path, temp_dir)
             mock_convert.return_value = str(temp_dir / "java_mapping.json")
@@ -263,10 +276,13 @@ class TestMakeEmbedFileOperation:
                     config=mock_storage_config,
                     user_id=user_id,
                     pdf_doc_id=pdf_doc_id,
-                    session_id=session_id
+                    session_id=session_id,
                 )
 
-            assert "Embedding failed" in str(exc_info.value) or "embed" in str(exc_info.value).lower()
+            assert (
+                "Embedding failed" in str(exc_info.value)
+                or "embed" in str(exc_info.value).lower()
+            )
 
     async def test_make_embed_file_with_notifications(
         self,
@@ -275,7 +291,7 @@ class TestMakeEmbedFileOperation:
         pdf_doc_id,
         session_id,
         mock_notifier,
-        temp_dir
+        temp_dir,
     ):
         """Test make_embed_file operation with notifications enabled."""
         # Arrange
@@ -286,22 +302,27 @@ class TestMakeEmbedFileOperation:
         self._create_extracted_file(extracted_path)
         self._create_mapped_file(mapped_path)
 
-        with patch('pdf_autofillr_mapper.handlers.operations.handle_extract_operation') as mock_extract, \
-             patch('pdf_autofillr_mapper.handlers.operations.run_semantic_api_mapper') as mock_map, \
-             patch('pdf_autofillr_mapper.handlers.operations.convert_semantic_to_java_format') as mock_convert, \
-             patch('pdf_autofillr_mapper.handlers.operations.handle_embed_operation') as mock_embed:
+        with patch(
+            "pdf_autofillr_mapper.handlers.operations.handle_extract_operation"
+        ) as mock_extract, patch(
+            "pdf_autofillr_mapper.handlers.operations.run_semantic_api_mapper"
+        ) as mock_map, patch(
+            "pdf_autofillr_mapper.handlers.operations.convert_semantic_to_java_format"
+        ) as mock_convert, patch(
+            "pdf_autofillr_mapper.handlers.operations.handle_embed_operation"
+        ) as mock_embed:
 
             mock_extract.return_value = {
                 "output_file": str(extracted_path),
                 "status": "success",
-                "pdf_hash": "test_hash_123"
+                "pdf_hash": "test_hash_123",
             }
             mock_map.return_value = self._map_result(mapped_path, temp_dir)
             mock_convert.return_value = str(temp_dir / "java_mapping.json")
             mock_embed.return_value = {
                 "output_file": str(embedded_path),
                 "status": "success",
-                "embedded_keys": ["field1", "field2"]
+                "embedded_keys": ["field1", "field2"],
             }
 
             # Act
@@ -310,7 +331,7 @@ class TestMakeEmbedFileOperation:
                 user_id=user_id,
                 pdf_doc_id=pdf_doc_id,
                 session_id=session_id,
-                notifier=mock_notifier
+                notifier=mock_notifier,
             )
 
             # Assert
@@ -319,12 +340,7 @@ class TestMakeEmbedFileOperation:
             # Note: This depends on the actual implementation
 
     async def test_make_embed_file_with_dual_mapper(
-        self,
-        mock_storage_config,
-        user_id,
-        pdf_doc_id,
-        session_id,
-        temp_dir
+        self, mock_storage_config, user_id, pdf_doc_id, session_id, temp_dir
     ):
         """Test make_embed_file operation with dual mapper enabled."""
         # Arrange
@@ -335,18 +351,26 @@ class TestMakeEmbedFileOperation:
         self._create_extracted_file(extracted_path)
         self._create_mapped_file(mapped_path)
 
-        with patch('pdf_autofillr_mapper.handlers.operations.handle_extract_operation') as mock_extract, \
-             patch('pdf_autofillr_mapper.handlers.operations.run_semantic_api_mapper') as mock_map, \
-             patch('pdf_autofillr_mapper.handlers.operations.convert_semantic_to_java_format') as mock_convert, \
-             patch('pdf_autofillr_mapper.headers.get_form_fields_points.get_form_fields_points') as mock_headers, \
-             patch('pdf_autofillr_mapper.handlers.operations.handle_embed_operation') as mock_embed:
+        with patch(
+            "pdf_autofillr_mapper.handlers.operations.handle_extract_operation"
+        ) as mock_extract, patch(
+            "pdf_autofillr_mapper.handlers.operations.run_semantic_api_mapper"
+        ) as mock_map, patch(
+            "pdf_autofillr_mapper.handlers.operations.convert_semantic_to_java_format"
+        ) as mock_convert, patch(
+            "pdf_autofillr_mapper.headers.get_form_fields_points.get_form_fields_points"
+        ) as mock_headers, patch(
+            "pdf_autofillr_mapper.handlers.operations.handle_embed_operation"
+        ) as mock_embed:
 
             mock_extract.return_value = {
                 "output_file": str(extracted_path),
                 "status": "success",
-                "pdf_hash": "test_hash_123"
+                "pdf_hash": "test_hash_123",
             }
-            mock_map.return_value = self._map_result(mapped_path, temp_dir, dual_mapper_used=True)
+            mock_map.return_value = self._map_result(
+                mapped_path, temp_dir, dual_mapper_used=True
+            )
             mock_convert.return_value = str(temp_dir / "java_mapping.json")
             mock_headers.return_value = {
                 "status": "success",
@@ -357,7 +381,7 @@ class TestMakeEmbedFileOperation:
             mock_embed.return_value = {
                 "output_file": str(embedded_path),
                 "status": "success",
-                "embedded_keys": ["field1", "field2"]
+                "embedded_keys": ["field1", "field2"],
             }
 
             # Act
@@ -366,7 +390,7 @@ class TestMakeEmbedFileOperation:
                 user_id=user_id,
                 pdf_doc_id=pdf_doc_id,
                 session_id=session_id,
-                use_second_mapper=True
+                use_second_mapper=True,
             )
 
             # Assert
@@ -374,12 +398,7 @@ class TestMakeEmbedFileOperation:
             assert "map" in result["pipeline_results"]
 
     async def test_make_embed_file_execution_time(
-        self,
-        mock_storage_config,
-        user_id,
-        pdf_doc_id,
-        session_id,
-        temp_dir
+        self, mock_storage_config, user_id, pdf_doc_id, session_id, temp_dir
     ):
         """Test that make_embed_file operation tracks execution time."""
         # Arrange
@@ -390,24 +409,31 @@ class TestMakeEmbedFileOperation:
         self._create_extracted_file(extracted_path)
         self._create_mapped_file(mapped_path)
 
-        with patch('pdf_autofillr_mapper.handlers.operations.handle_extract_operation') as mock_extract, \
-             patch('pdf_autofillr_mapper.handlers.operations.run_semantic_api_mapper') as mock_map, \
-             patch('pdf_autofillr_mapper.handlers.operations.convert_semantic_to_java_format') as mock_convert, \
-             patch('pdf_autofillr_mapper.handlers.operations.handle_embed_operation') as mock_embed:
+        with patch(
+            "pdf_autofillr_mapper.handlers.operations.handle_extract_operation"
+        ) as mock_extract, patch(
+            "pdf_autofillr_mapper.handlers.operations.run_semantic_api_mapper"
+        ) as mock_map, patch(
+            "pdf_autofillr_mapper.handlers.operations.convert_semantic_to_java_format"
+        ) as mock_convert, patch(
+            "pdf_autofillr_mapper.handlers.operations.handle_embed_operation"
+        ) as mock_embed:
 
             mock_extract.return_value = {
                 "output_file": str(extracted_path),
                 "status": "success",
                 "pdf_hash": "test_hash_123",
-                "execution_time": 1.5
+                "execution_time": 1.5,
             }
-            mock_map.return_value = self._map_result(mapped_path, temp_dir, execution_time=2.0)
+            mock_map.return_value = self._map_result(
+                mapped_path, temp_dir, execution_time=2.0
+            )
             mock_convert.return_value = str(temp_dir / "java_mapping.json")
             mock_embed.return_value = {
                 "output_file": str(embedded_path),
                 "status": "success",
                 "embedded_keys": ["field1", "field2"],
-                "execution_time": 1.0
+                "execution_time": 1.0,
             }
 
             # Act
@@ -415,7 +441,7 @@ class TestMakeEmbedFileOperation:
                 config=mock_storage_config,
                 user_id=user_id,
                 pdf_doc_id=pdf_doc_id,
-                session_id=session_id
+                session_id=session_id,
             )
 
             # Assert

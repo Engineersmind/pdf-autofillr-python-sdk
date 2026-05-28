@@ -1,8 +1,9 @@
 # src/ragpdf/models/predictor.py
 import logging
+
+from ragpdf.config.settings import PREDICTION_THRESHOLD, TOP_K
 from ragpdf.embeddings.base import EmbeddingBackend
 from ragpdf.vector_stores.base import VectorStoreBackend
-from ragpdf.config.settings import PREDICTION_THRESHOLD, TOP_K
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,9 @@ class FieldPredictor:
       4. Return prediction with confidence, top-k, and similarity margin
     """
 
-    def __init__(self, embedding_backend: EmbeddingBackend, vector_store: VectorStoreBackend):
+    def __init__(
+        self, embedding_backend: EmbeddingBackend, vector_store: VectorStoreBackend
+    ):
         self.embedding_backend = embedding_backend
         self.vector_store = vector_store
 

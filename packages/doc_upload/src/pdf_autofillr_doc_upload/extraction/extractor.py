@@ -9,18 +9,21 @@ clean, reusable class with:
   - Schema enforcement so the output always matches the provided structure
   - Address normalisation (line1/line2 split)
 """
+
 from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from pdf_autofillr_doc_upload.extraction.document_reader import DocumentReader
 from pdf_autofillr_doc_upload.extraction.llm_client import LLMClient
 
 logger = logging.getLogger(__name__)
 
-_SYSTEM_PROMPT = "You are a JSON extraction engine. Return only valid JSON, no markdown fences."
+_SYSTEM_PROMPT = (
+    "You are a JSON extraction engine. Return only valid JSON, no markdown fences."
+)
 
 
 def _build_prompt(document_text: str, schema: dict) -> str:
@@ -53,7 +56,9 @@ def _enforce_schema(llm_data: Any, schema: Any) -> Any:
     if isinstance(schema, dict):
         fixed = {}
         for k, sub in schema.items():
-            fixed[k] = _enforce_schema(llm_data.get(k) if isinstance(llm_data, dict) else None, sub)
+            fixed[k] = _enforce_schema(
+                llm_data.get(k) if isinstance(llm_data, dict) else None, sub
+            )
         return fixed
     if isinstance(schema, bool):
         return bool(llm_data) if isinstance(llm_data, bool) else False
@@ -122,8 +127,8 @@ class Extractor:
 
     def __init__(
         self,
-        llm_client: Optional[LLMClient] = None,
-        reader: Optional[DocumentReader] = None,
+        llm_client: LLMClient | None = None,
+        reader: DocumentReader | None = None,
     ):
         self.llm = llm_client or LLMClient()
         self.reader = reader or DocumentReader()

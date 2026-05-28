@@ -3,6 +3,7 @@ Chatbot — programmatic session.
 
 Requires: pip install "pdf-autofillr[chatbot]"
 """
+
 from chatbot import chatbotClient
 
 client = chatbotClient.from_env()
@@ -19,11 +20,11 @@ print(f"First message: {session.greeting}")
 # Send messages (simulating user input)
 messages = [
     "I'd like to fill out the LP subscription form",
-    "Jane Smith",           # name
+    "Jane Smith",  # name
     "Individual investor",  # type
-    "500,000",              # commitment
-    "jane@example.com",     # email
-    "yes",                  # confirm and fill
+    "500,000",  # commitment
+    "jane@example.com",  # email
+    "yes",  # confirm and fill
 ]
 
 for msg in messages:

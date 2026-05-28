@@ -5,7 +5,8 @@ Great for local production deployments.
 Install:
     pip install ragpdf-sdk[transformers,chroma]
 """
-from ragpdf import RAGPDFClient, LocalStorage, SentenceTransformerBackend
+
+from ragpdf import LocalStorage, RAGPDFClient, SentenceTransformerBackend
 from ragpdf.vector_stores import ChromaStore
 
 client = RAGPDFClient(

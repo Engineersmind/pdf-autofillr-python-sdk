@@ -5,11 +5,11 @@ Verifies that when MAPPER_API_URL is not set, MapperPDFFiller
 correctly instantiates InProcessMapperFiller and the full
 prepare -> check_ready -> fill flow works end-to-end with mocks.
 """
+
 import json
-import os
+from unittest.mock import MagicMock, patch
+
 import pytest
-from pathlib import Path
-from unittest.mock import MagicMock, patch, AsyncMock
 
 
 @pytest.fixture
@@ -17,10 +17,14 @@ def configs_dir(tmp_path):
     """Minimal configs/ directory with form_keys.json + mapper_config.ini."""
     cfg = tmp_path / "configs"
     cfg.mkdir()
-    (cfg / "form_keys.json").write_text(json.dumps({
-        "investor_full_legal_name_id": "",
-        "investor_email_id": "",
-    }))
+    (cfg / "form_keys.json").write_text(
+        json.dumps(
+            {
+                "investor_full_legal_name_id": "",
+                "investor_email_id": "",
+            }
+        )
+    )
     (cfg / "mapper_config.ini").write_text("[mapping]\nllm_model = gpt-4o\n")
     return str(cfg)
 
@@ -39,6 +43,7 @@ def mock_inprocess(configs_dir):
         MockIP.return_value = mock_impl
 
         from chatbot.pdf.mapper_filler import MapperPDFFiller
+
         filler = MapperPDFFiller(mapper_api_url="", config_dir=configs_dir)
         yield filler, mock_impl, MockIP
 
@@ -53,6 +58,7 @@ class TestInProcessIntegration:
         with patch("chatbot.pdf.mapper_filler.InProcessMapperFiller") as MockIP:
             MockIP.return_value = MagicMock()
             from chatbot.pdf.mapper_filler import MapperPDFFiller
+
             f = MapperPDFFiller(mapper_api_url="", config_dir=configs_dir)
             f._get_impl()
         MockIP.assert_called_once_with(config_dir=configs_dir)
@@ -68,7 +74,6 @@ class TestInProcessIntegration:
         args, kwargs = mock_impl.prepare_document.call_args
         assert args[0] == "/blank.pdf"
         assert args[1] == "Individual"
-
 
         # Step 5 — check ready
         ready = filler.check_document_ready(doc_id)
@@ -98,6 +103,7 @@ class TestWorkflowManagerWithInProcess:
 
     def test_trigger_prepare_async_calls_prepare(self, tmp_path, mock_inprocess):
         import time
+
         from chatbot.pdf.workflow import PDFWorkflowManager
         from chatbot.storage.local_storage import LocalStorage
 
@@ -114,8 +120,10 @@ class TestWorkflowManagerWithInProcess:
 
         manager = PDFWorkflowManager(filler=filler, storage=storage, settings=settings)
         manager.trigger_prepare_async(
-            user_id="u1", session_id="s1",
-            pdf_path="/blank.pdf", investor_type="Individual",
+            user_id="u1",
+            session_id="s1",
+            pdf_path="/blank.pdf",
+            investor_type="Individual",
         )
         # Give background thread time to run
         time.sleep(0.2)
@@ -128,6 +136,7 @@ class TestWorkflowManagerWithInProcess:
 
     def test_fill_worker_calls_all_three_steps(self, tmp_path, mock_inprocess):
         import time
+
         from chatbot.pdf.workflow import PDFWorkflowManager
         from chatbot.storage.local_storage import LocalStorage
 
@@ -146,8 +155,10 @@ class TestWorkflowManagerWithInProcess:
 
         manager = PDFWorkflowManager(filler=filler, storage=storage, settings=settings)
         manager.trigger_async(
-            user_id="u1", session_id="s1",
-            pdf_path="/blank.pdf", investor_type="Individual",
+            user_id="u1",
+            session_id="s1",
+            pdf_path="/blank.pdf",
+            investor_type="Individual",
             data_flat={"field1": "value1"},
         )
         time.sleep(0.5)

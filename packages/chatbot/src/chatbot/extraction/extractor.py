@@ -2,14 +2,14 @@
 """
 Extractor — tries LLM extraction, falls back to regex if it fails.
 """
+
 from __future__ import annotations
 
 import logging
 import time
-from typing import Optional, Tuple
 
-from chatbot.extraction.llm_extractor import LLMExtractor
 from chatbot.extraction.fallback_extractor import FallbackExtractor
+from chatbot.extraction.llm_extractor import LLMExtractor
 
 logger = logging.getLogger(__name__)
 
@@ -30,10 +30,10 @@ class Extractor:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         prompt_builder=None,
-        model: Optional[str] = None,
-        openai_api_key: Optional[str] = None,
+        model: str | None = None,
+        openai_api_key: str | None = None,
     ):
         api_key = api_key or openai_api_key
         self.llm = LLMExtractor(
@@ -49,9 +49,9 @@ class Extractor:
         conversation_history: str,
         live_fill_flat: dict,
         meta_form_keys: dict,
-        mandatory_flat: Optional[dict] = None,
-        investor_type: Optional[str] = None,
-    ) -> Tuple[dict, float, str]:
+        mandatory_flat: dict | None = None,
+        investor_type: str | None = None,
+    ) -> tuple[dict, float, str]:
         """
         Extract structured field values from user input.
 
@@ -76,6 +76,8 @@ class Extractor:
         except Exception as e:
             logger.warning("LLM extraction failed, using fallback: %s", e)
 
-        result = self.fallback.extract(user_input=user_input, live_fill_flat=live_fill_flat)
+        result = self.fallback.extract(
+            user_input=user_input, live_fill_flat=live_fill_flat
+        )
         latency = time.time() - start
         return result, latency, "fallback"

@@ -4,8 +4,10 @@ Example 4 — Pinecone vector store plugin.
 Install:
     pip install ragpdf-sdk[transformers,pinecone]
 """
+
 import os
-from ragpdf import RAGPDFClient, LocalStorage, SentenceTransformerBackend
+
+from ragpdf import LocalStorage, RAGPDFClient, SentenceTransformerBackend
 from ragpdf.vector_stores import PineconeStore
 
 client = RAGPDFClient(

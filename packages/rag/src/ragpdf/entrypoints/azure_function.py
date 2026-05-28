@@ -17,9 +17,13 @@ Local test:
     # POST http://localhost:7071/api/ragpdf
     # Body: {"api_name": "get_system_info"}
 """
+
 import json
 import logging
+from typing import Any
+
 import azure.functions as func
+
 from ragpdf import RAGPDFClient
 
 logger = logging.getLogger(__name__)
@@ -33,9 +37,14 @@ def _get_client():
     return _client
 
 
-def _response(status_code: int, message: str, data: dict = None) -> func.HttpResponse:
-    import os
-    body = {"status": "success" if status_code == 200 else "failure", "message": message}
+def _response(
+    status_code: int, message: str, data: dict[Any, Any] | None = None
+) -> func.HttpResponse:
+
+    body: dict[str, Any] = {
+        "status": "success" if status_code == 200 else "failure",
+        "message": message,
+    }
     if data:
         body["data"] = data
     return func.HttpResponse(
@@ -47,6 +56,7 @@ def _response(status_code: int, message: str, data: dict = None) -> func.HttpRes
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     import os
+
     try:
         api_key = req.headers.get("x-api-key", "")
         expected = os.getenv("RAGPDF_API_KEY", "")
@@ -58,22 +68,45 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         c = _get_client()
 
         if api_name == "get_rag_predictions":
-            return _response(200, "OK", c.get_predictions(
-                user_id=body["user_id"], session_id=body["session_id"], pdf_id=body["pdf_id"],
-                fields=body["fields"], pdf_hash=body["pdf_hash"], pdf_category=body["pdf_category"],
-            ))
+            return _response(
+                200,
+                "OK",
+                c.get_predictions(
+                    user_id=body["user_id"],
+                    session_id=body["session_id"],
+                    pdf_id=body["pdf_id"],
+                    fields=body["fields"],
+                    pdf_hash=body["pdf_hash"],
+                    pdf_category=body["pdf_category"],
+                ),
+            )
         elif api_name == "saving_filled_pdf":
-            return _response(200, "OK", c.save_filled_pdf(
-                user_id=body["user_id"], session_id=body["session_id"], pdf_id=body["filled_doc_pdf_id"],
-                llm_predictions=body["llm_predictions"], final_predictions=body["final_predictions"],
-            ))
+            return _response(
+                200,
+                "OK",
+                c.save_filled_pdf(
+                    user_id=body["user_id"],
+                    session_id=body["session_id"],
+                    pdf_id=body["filled_doc_pdf_id"],
+                    llm_predictions=body["llm_predictions"],
+                    final_predictions=body["final_predictions"],
+                ),
+            )
         elif api_name == "user_feedback":
-            return _response(200, "OK", c.submit_feedback(
-                user_id=body["user_id"], session_id=body["session_id"], pdf_id=body["pdf_id"],
-                errors=body.get("errors", []), timestamp=body.get("timestamp"),
-            ))
+            return _response(
+                200,
+                "OK",
+                c.submit_feedback(
+                    user_id=body["user_id"],
+                    session_id=body["session_id"],
+                    pdf_id=body["pdf_id"],
+                    errors=body.get("errors", []),
+                    timestamp=body.get("timestamp"),
+                ),
+            )
         elif api_name == "get_metrics":
-            mt = body.pop("metric_type"); body.pop("api_name", None)
+            mt = body.pop("metric_type")
+            body.pop("api_name", None)
             return _response(200, "OK", c.get_metrics(mt, **body))
         elif api_name == "get_system_info":
             return _response(200, "OK", c.get_system_info())

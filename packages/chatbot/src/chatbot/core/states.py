@@ -38,31 +38,31 @@ INVESTOR_TYPES = [
 
 # Map investor type display name -> form_keys filename
 INVESTOR_TYPE_FILES = {
-    "Individual":               "form_keys_individual.json",
-    "Partnership":              "form_keys_partnership.json",
-    "Corporation":              "form_keys_corporation.json",
-    "LLC":                      "form_keys_llc.json",
-    "Trust":                    "form_keys_trust.json",
+    "Individual": "form_keys_individual.json",
+    "Partnership": "form_keys_partnership.json",
+    "Corporation": "form_keys_corporation.json",
+    "LLC": "form_keys_llc.json",
+    "Trust": "form_keys_trust.json",
     "Non-Profit Organisations": "form_keys_non_profit_organisations.json",
-    "Fund/Fund of Funds":       "form_keys_fund_or_fund_of_funds.json",
-    "IRA":                      "form_keys_ira.json",
-    "Government Bodies":        "form_keys_government_bodies.json",
-    "Education Institutions":   "form_keys_education_institutions.json",
+    "Fund/Fund of Funds": "form_keys_fund_or_fund_of_funds.json",
+    "IRA": "form_keys_ira.json",
+    "Government Bodies": "form_keys_government_bodies.json",
+    "Education Institutions": "form_keys_education_institutions.json",
 }
 
 # Investor type -> boolean field auto-set in live_fill_flat
 # Mirrors Lambda's auto-fill of e.g. investor_type.individual_check = True
 INVESTOR_TYPE_BOOLEAN_FIELD = {
-    "Individual":               "investor_type.individual_check",
-    "Partnership":              "investor_type.partnership_check",
-    "Corporation":              "investor_type.corporation_check",
-    "LLC":                      "investor_type.llc_check",
-    "Trust":                    "investor_type.trust_check",
+    "Individual": "investor_type.individual_check",
+    "Partnership": "investor_type.partnership_check",
+    "Corporation": "investor_type.corporation_check",
+    "LLC": "investor_type.llc_check",
+    "Trust": "investor_type.trust_check",
     "Non-Profit Organisations": "investor_type.non_profit_check",
-    "Fund/Fund of Funds":       "investor_type.fund_check",
-    "IRA":                      "investor_type.ira_check",
-    "Government Bodies":        "investor_type.government_check",
-    "Education Institutions":   "investor_type.education_check",
+    "Fund/Fund of Funds": "investor_type.fund_check",
+    "IRA": "investor_type.ira_check",
+    "Government Bodies": "investor_type.government_check",
+    "Education Institutions": "investor_type.education_check",
 }
 
 # Fields that are split internally for PDF filling but NEVER shown to user
@@ -76,4 +76,11 @@ INTERNAL_SPLIT_FIELD_PREFIXES = (
 FORM_PF_FIELD_PREFIX = "form_pf"
 
 # Countries considered US for form_pf purposes
-US_COUNTRY_VALUES = {"united states", "us", "usa", "u.s.a", "u.s.", "united states of america"}
+US_COUNTRY_VALUES = {
+    "united states",
+    "us",
+    "usa",
+    "u.s.a",
+    "u.s.",
+    "united states of america",
+}

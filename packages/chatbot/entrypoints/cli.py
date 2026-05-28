@@ -25,6 +25,7 @@ Options:
     --report                  Print fill report at end
     --log-level   LEVEL       (default: WARNING)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -37,11 +38,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
 def _build_client():
-    from chatbot import chatbotClient, FormConfig
+    from chatbot import FormConfig, chatbotClient
     from chatbot.storage.factory import StorageFactory
 
     storage = StorageFactory.create()
@@ -51,6 +53,7 @@ def _build_client():
     pdf_filler = None
     if os.getenv("chatbot_PDF_FILLER", "none").lower() in ("mapper", "managed"):
         from chatbot.pdf.mapper_filler import MapperPDFFiller
+
         pdf_filler = MapperPDFFiller(
             mapper_api_url=os.getenv("MAPPER_API_URL", ""),
             mapper_api_key=os.getenv("MAPPER_API_KEY", ""),
@@ -80,7 +83,9 @@ def _run_single(args, client, session_id):
     pdf_path = args.pdf_path or os.getenv("chatbot_PDF_PATH", "")
     if pdf_path:
         client.create_session(args.user_id, session_id, pdf_path=pdf_path)
-    response, complete, data = client.send_message(args.user_id, session_id, args.message)
+    response, complete, data = client.send_message(
+        args.user_id, session_id, args.message
+    )
     print(response)
     if complete:
         if args.output and data:
@@ -94,6 +99,7 @@ def _run_single(args, client, session_id):
 
 def _run_interactive(args, client, session_id):
     import time
+
     pdf_path = args.pdf_path or os.getenv("chatbot_PDF_PATH", "")
     print("\n" + "=" * 60)
     print("  chatbot — Interactive CLI")
@@ -116,7 +122,9 @@ def _run_interactive(args, client, session_id):
         if user_input.lower() in ("exit", "quit", "q"):
             print("Session ended.")
             break
-        response, complete, data = client.send_message(args.user_id, session_id, user_input)
+        response, complete, data = client.send_message(
+            args.user_id, session_id, user_input
+        )
         print(f"\nBot: {response}\n")
 
     if complete:
@@ -153,7 +161,7 @@ def main():
             _run_single(args, client, session_id)
         else:
             _run_interactive(args, client, session_id)
-    except EnvironmentError as e:
+    except OSError as e:
         print(f"\n❌ Configuration error:\n{e}", file=sys.stderr)
         sys.exit(1)
 

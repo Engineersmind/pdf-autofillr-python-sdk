@@ -16,26 +16,27 @@ Options:
     --report               Print execution summary at end
     --log-level    LEVEL   DEBUG | INFO | WARNING | ERROR (default: WARNING)
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import logging
-import os
 import sys
 import uuid
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
 def _build_client():
     from pdf_autofillr_doc_upload import DocUploadClient
-    from pdf_autofillr_doc_upload.storage.factory import StorageFactory
     from pdf_autofillr_doc_upload.extraction.extractor import Extractor
     from pdf_autofillr_doc_upload.extraction.llm_client import LLMClient
+    from pdf_autofillr_doc_upload.storage.factory import StorageFactory
 
     storage = StorageFactory.create()
     extractor = Extractor(llm_client=LLMClient())
@@ -77,7 +78,7 @@ def main():
 
     if args.report:
         log = client.storage.get_execution_log(job_id) or {}
-        summary = log.get("summary", {})
+        log.get("summary", {})
         print(f"\nJob ID  : {job_id}")
         print(f"Fields  : {len(result['output_flat'])}")
         print(f"Success : {result['success']}")

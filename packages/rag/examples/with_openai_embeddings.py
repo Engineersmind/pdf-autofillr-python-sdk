@@ -5,8 +5,16 @@ Higher quality embeddings via text-embedding-3-small/large.
 Install:
     pip install ragpdf-sdk[openai]
 """
+
 import os
-from ragpdf import RAGPDFClient, LocalStorage, LocalVectorStore, OpenAIEmbeddingBackend, OpenAICorrectorBackend
+
+from ragpdf import (
+    LocalStorage,
+    LocalVectorStore,
+    OpenAICorrectorBackend,
+    OpenAIEmbeddingBackend,
+    RAGPDFClient,
+)
 
 client = RAGPDFClient(
     storage=LocalStorage("./data/rag"),

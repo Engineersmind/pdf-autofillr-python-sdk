@@ -1,14 +1,12 @@
 # tests/unit/test_extractor.py
 """Unit tests for Extractor — LLM is mocked, no network calls."""
+
 from __future__ import annotations
 
 import json
 import os
 import tempfile
-from unittest.mock import MagicMock, patch
-
-import pytest
-
+from unittest.mock import MagicMock
 
 SAMPLE_SCHEMA = {
     "investor_full_legal_name_id": "",
@@ -34,7 +32,9 @@ SAMPLE_LLM_OUTPUT = {
 
 
 def _write_tmp_txt(content: str) -> str:
-    f = tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8")
+    f = tempfile.NamedTemporaryFile(
+        mode="w", suffix=".txt", delete=False, encoding="utf-8"
+    )
     f.write(content)
     f.flush()
     f.close()
@@ -67,17 +67,19 @@ class TestExtractorWithMockedLLM:
 
         mock_llm = MagicMock(spec=LLMClient)
         # LLM only returns name, not email
-        mock_llm.complete.return_value = json.dumps({
-            "filled_form_keys": {
-                "investor_full_legal_name_id": "Jane",
-                "investor_email_id": "",
-                "address_registered": {
-                    "address_registered_line1_id": "",
-                    "address_registered_city_id": "",
-                    "address_registered_country_id": "",
-                },
+        mock_llm.complete.return_value = json.dumps(
+            {
+                "filled_form_keys": {
+                    "investor_full_legal_name_id": "Jane",
+                    "investor_email_id": "",
+                    "address_registered": {
+                        "address_registered_line1_id": "",
+                        "address_registered_city_id": "",
+                        "address_registered_country_id": "",
+                    },
+                }
             }
-        })
+        )
 
         extractor = Extractor(llm_client=mock_llm)
         path = _write_tmp_txt("Name: Jane")
@@ -111,11 +113,13 @@ class TestExtractorWithMockedLLM:
 class TestFlattenDict:
     def test_flat_passthrough(self):
         from pdf_autofillr_doc_upload.extraction.extractor import flatten_dict
+
         d = {"a": 1, "b": "two"}
         assert flatten_dict(d) == {"a": 1, "b": "two"}
 
     def test_nested_one_level(self):
         from pdf_autofillr_doc_upload.extraction.extractor import flatten_dict
+
         d = {"address": {"city": "London", "zip": "NW1"}}
         flat = flatten_dict(d)
         assert flat["address.city"] == "London"
@@ -123,6 +127,7 @@ class TestFlattenDict:
 
     def test_nested_two_levels(self):
         from pdf_autofillr_doc_upload.extraction.extractor import flatten_dict
+
         d = {"wiring": {"address": {"city": "NYC"}}}
         flat = flatten_dict(d)
         assert flat["wiring.address.city"] == "NYC"

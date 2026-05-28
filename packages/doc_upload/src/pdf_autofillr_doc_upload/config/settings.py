@@ -42,11 +42,11 @@ DOC_UPLOAD_TELEMETRY_PATH   Local telemetry JSONL dir       (default: ./doc_uplo
 DOC_UPLOAD_LOG_LEVEL        DEBUG | INFO | WARNING | ERROR  (default: INFO)
 DOC_UPLOAD_DEBUG_LOGGING    true | false                    (default: false)
 """
+
 from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -55,8 +55,9 @@ class DocUploadSettings:
     llm_model: str = field(
         default_factory=lambda: os.getenv("DOC_UPLOAD_LLM_MODEL", "openai/gpt-4.1-mini")
     )
-    llm_api_key: Optional[str] = field(
-        default_factory=lambda: os.getenv("DOC_UPLOAD_LLM_API_KEY") or os.getenv("OPENAI_API_KEY")
+    llm_api_key: str | None = field(
+        default_factory=lambda: os.getenv("DOC_UPLOAD_LLM_API_KEY")
+        or os.getenv("OPENAI_API_KEY")
     )
     llm_temperature: float = field(
         default_factory=lambda: float(os.getenv("DOC_UPLOAD_LLM_TEMPERATURE", "0"))
@@ -89,15 +90,9 @@ class DocUploadSettings:
     # Path or URI to the blank PDF to fill.
     # Local examples:  C:/path/to/blank_form.pdf   ./data/input/blank_form.pdf
     # Cloud examples:  s3://bucket/blank_form.pdf  gs://bucket/blank_form.pdf
-    pdf_path: str = field(
-        default_factory=lambda: os.getenv("DOC_UPLOAD_PDF_PATH", "")
-    )
-    mapper_api_url: str = field(
-        default_factory=lambda: os.getenv("MAPPER_API_URL", "")
-    )
-    mapper_api_key: str = field(
-        default_factory=lambda: os.getenv("MAPPER_API_KEY", "")
-    )
+    pdf_path: str = field(default_factory=lambda: os.getenv("DOC_UPLOAD_PDF_PATH", ""))
+    mapper_api_url: str = field(default_factory=lambda: os.getenv("MAPPER_API_URL", ""))
+    mapper_api_key: str = field(default_factory=lambda: os.getenv("MAPPER_API_KEY", ""))
     pdf_poll_interval: int = field(
         default_factory=lambda: int(os.getenv("DOC_UPLOAD_PDF_POLL_INTERVAL", "10"))
     )
@@ -113,7 +108,9 @@ class DocUploadSettings:
         default_factory=lambda: os.getenv("DOC_UPLOAD_TELEMETRY", "off").lower()
     )
     telemetry_path: str = field(
-        default_factory=lambda: os.getenv("DOC_UPLOAD_TELEMETRY_PATH", "./doc_upload_telemetry")
+        default_factory=lambda: os.getenv(
+            "DOC_UPLOAD_TELEMETRY_PATH", "./doc_upload_telemetry"
+        )
     )
 
     # ── Logging ───────────────────────────────────────────────────────
@@ -121,10 +118,11 @@ class DocUploadSettings:
         default_factory=lambda: os.getenv("DOC_UPLOAD_LOG_LEVEL", "INFO")
     )
     debug_logging: bool = field(
-        default_factory=lambda: os.getenv("DOC_UPLOAD_DEBUG_LOGGING", "false").lower() == "true"
+        default_factory=lambda: os.getenv("DOC_UPLOAD_DEBUG_LOGGING", "false").lower()
+        == "true"
     )
 
     @classmethod
-    def from_env(cls) -> "DocUploadSettings":
+    def from_env(cls) -> DocUploadSettings:
         """Load all settings from environment variables."""
         return cls()

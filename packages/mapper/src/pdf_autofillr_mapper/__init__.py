@@ -22,10 +22,11 @@ Quick start::
     ))
     print(result["final_output"])  # path to filled PDF
 """
+
 from __future__ import annotations
 
-from pdf_autofillr_mapper.orchestrator import PDFPipeline
 from pdf_autofillr_mapper.config.mapper_config import MapperConfig
+from pdf_autofillr_mapper.orchestrator import PDFPipeline
 
 __version__ = "1.0.10"
 __all__ = ["PDFPipeline", "MapperConfig", "copy_sample_configs"]
@@ -60,4 +61,6 @@ def copy_sample_configs(destination: str = ".") -> None:
     dst.mkdir(parents=True, exist_ok=True)
     shutil.copytree(str(src), str(dst), dirs_exist_ok=True)
     print(f"Mapper configs copied to: {dst.resolve()}")
-    print("  Edit configs/mapper_config.ini to configure LLM model, storage paths, etc.")
+    print(
+        "  Edit configs/mapper_config.ini to configure LLM model, storage paths, etc."
+    )

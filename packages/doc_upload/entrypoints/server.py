@@ -7,6 +7,7 @@ Usage::
     doc-upload-server
     python -m entrypoints.server
 """
+
 from __future__ import annotations
 
 import os

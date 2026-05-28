@@ -8,6 +8,7 @@ Usage::
     doc-upload-cli --document doc.docx --output filled.json --report
     doc-upload-cli --help
 """
+
 from __future__ import annotations
 
 import os
@@ -27,6 +28,7 @@ import uuid
 from pathlib import Path
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
@@ -37,17 +39,24 @@ def _setup_logging(log_level: str = "WARNING") -> None:
 
     file_handler = logging.FileHandler(log_file, encoding="utf-8")
     file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(logging.Formatter(
-        "%(asctime)s %(name)s %(levelname)s %(message)s"
-    ))
+    file_handler.setFormatter(
+        logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
+    )
 
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
     root.addHandler(file_handler)
 
     for name in [
-        "LiteLLM", "litellm", "httpx", "httpcore", "openai",
-        "pdf_autofillr_doc_upload", "ragpdf", "urllib3", "asyncio",
+        "LiteLLM",
+        "litellm",
+        "httpx",
+        "httpcore",
+        "openai",
+        "pdf_autofillr_doc_upload",
+        "ragpdf",
+        "urllib3",
+        "asyncio",
     ]:
         logging.getLogger(name).setLevel(logging.WARNING)
 
@@ -72,9 +81,9 @@ def _setup_logging(log_level: str = "WARNING") -> None:
 
 def _build_client():
     from pdf_autofillr_doc_upload import DocUploadClient
-    from pdf_autofillr_doc_upload.storage.factory import StorageFactory
     from pdf_autofillr_doc_upload.extraction.extractor import Extractor
     from pdf_autofillr_doc_upload.extraction.llm_client import LLMClient
+    from pdf_autofillr_doc_upload.storage.factory import StorageFactory
 
     storage = StorageFactory.create()
     extractor = Extractor(llm_client=LLMClient())
@@ -114,7 +123,7 @@ def main():
         print(f"\n✅ Output saved to: {args.output}", file=sys.stderr)
 
     if args.report:
-        log = client.storage.get_execution_log(job_id) or {}
+        client.storage.get_execution_log(job_id) or {}
         print(f"\nJob ID  : {job_id}")
         print(f"Fields  : {len(result['output_flat'])}")
         print(f"Success : {result['success']}")

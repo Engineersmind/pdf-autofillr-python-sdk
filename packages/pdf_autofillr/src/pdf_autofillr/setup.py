@@ -7,8 +7,8 @@ import os
 import shutil
 from pathlib import Path
 
-
 # ── Package detection ─────────────────────────────────────────────────────────
+
 
 def _installed(pkg: str) -> bool:
     try:
@@ -33,20 +33,21 @@ def detect_combo() -> set[str]:
 
 def _config_source() -> Path | None:
     """Find the config_samples directory shipped with chatbot or doc_upload."""
-    for pkg_name, attr in [("chatbot", None), ("pdf_autofillr_doc_upload", None)]:
+    for pkg_name, _attr in [("chatbot", None), ("pdf_autofillr_doc_upload", None)]:
         try:
             mod = __import__(pkg_name)
-            pkg_dir = Path(mod.__file__).parent
+            pkg_dir = Path(mod.__file__ or "").parent
             for candidate in ["config_samples", "configs"]:
                 p = pkg_dir / candidate
                 if p.exists():
                     return p
         except ImportError:
-            pass
+            pass  # intentional
     return None
 
 
 # ── Directory creation ────────────────────────────────────────────────────────
+
 
 def _make_dirs(combo: set[str], dest: Path) -> list[str]:
     created = []
@@ -299,21 +300,26 @@ def build_env_example(combo: set[str]) -> str:
 
 # ── mapper_config.ini content ─────────────────────────────────────────────────
 
+
 def build_mapper_ini(combo: set[str]) -> str:
     has_rag = "rag" in combo
-    rag_section = """
+    rag_section = (
+        """
 [rag]
 # Set enabled=true AND RAG_ENABLED=true in .env to activate RAG
 enabled = true
 mode = inprocess
 api_url =
 api_key =
-""" if has_rag else """
+"""
+        if has_rag
+        else """
 [rag]
 # RAG is not in your installed combination.
 # To add: pip install "pdf-autofillr[chatbot,rag]" and re-run pdf-autofillr setup
 enabled = false
 """
+    )
     return f"""\
 # pdf-autofillr-mapper configuration
 # Non-secret settings only. API keys go in .env.
@@ -374,29 +380,38 @@ teams_webhook_url =
 
 # ── README_QUICKSTART.md ──────────────────────────────────────────────────────
 
+
 def build_quickstart(combo: set[str]) -> str:
     label = " + ".join(sorted(combo)) or "standalone"
     has_chatbot = "chatbot" in combo
     has_doc = "doc_upload" in combo
     has_rag = "rag" in combo
 
-    folder_lines = ["```", "data/", "├── input/", "│   └── blank_form.pdf   <- PUT YOUR BLANK PDF HERE"]
+    folder_lines = [
+        "```",
+        "data/",
+        "├── input/",
+        "│   └── blank_form.pdf   <- PUT YOUR BLANK PDF HERE",
+    ]
     if has_chatbot:
         folder_lines += [
-            "├── chatbot/", "│   └── {user_id}/sessions/{session_id}/",
+            "├── chatbot/",
+            "│   └── {user_id}/sessions/{session_id}/",
             "│       ├── final_output_flat.json   <- all collected fields",
             "│       ├── fill_report.json          <- which fields were filled",
             "│       └── filled.pdf                <- the filled PDF",
         ]
     if has_doc:
         folder_lines += [
-            "├── doc_upload/", "│   └── jobs/{job_id}/",
+            "├── doc_upload/",
+            "│   └── jobs/{job_id}/",
             "│       ├── output_flat.json   <- extracted fields",
             "│       └── filled.pdf         <- the filled PDF",
         ]
     if "mapper" in combo:
         folder_lines += [
-            "├── mapper/", "│   ├── output/{user_id}/pdfs/{pdf_id}/",
+            "├── mapper/",
+            "│   ├── output/{user_id}/pdfs/{pdf_id}/",
             "│   │   ├── blank_form_extracted.json",
             "│   │   ├── blank_form_mapped.json",
             "│   │   └── blank_form_filled.pdf",
@@ -404,7 +419,8 @@ def build_quickstart(combo: set[str]) -> str:
         ]
     if has_rag:
         folder_lines += [
-            "└── rag/", "    ├── vectors/vector_database.json   <- grows automatically",
+            "└── rag/",
+            "    ├── vectors/vector_database.json   <- grows automatically",
             "    ├── predictions/{user_id}/{session_id}/{pdf_id}/",
             "    └── metrics/time_series/",
         ]
@@ -412,11 +428,17 @@ def build_quickstart(combo: set[str]) -> str:
 
     next_steps = []
     if has_chatbot:
-        next_steps.append("- **Start chatbot:** `chatbot-server` or `python api_server.py` in chatbot/")
+        next_steps.append(
+            "- **Start chatbot:** `chatbot-server` or `python api_server.py` in chatbot/"
+        )
     if has_doc:
-        next_steps.append("- **Start doc_upload:** `doc-upload-server` or `python entrypoints/fastapi_app.py` in doc_upload/")
+        next_steps.append(
+            "- **Start doc_upload:** `doc-upload-server` or `python entrypoints/fastapi_app.py` in doc_upload/"
+        )
     if "mapper" in combo and not has_chatbot and not has_doc:
-        next_steps.append("- **Start mapper:** `pdf-mapper-server` or `python api_server.py` in mapper/")
+        next_steps.append(
+            "- **Start mapper:** `pdf-mapper-server` or `python api_server.py` in mapper/"
+        )
     if has_rag:
         next_steps.append("- **Start RAG server (HTTP mode):** `ragpdf-server` in rag/")
 
@@ -467,6 +489,7 @@ This is the empty PDF form that will be filled with investor data.
 
 # ── RAG data helpers ──────────────────────────────────────────────────────────
 
+
 def _write_json(path: str, data, force: bool = False):
     if os.path.exists(path) and not force:
         print(f"  skip     {path}  (exists)")
@@ -492,7 +515,9 @@ def _load_bundled_vector_db() -> dict:
         with db_file.open("r", encoding="utf-8") as f:
             data = json.load(f)
         n = len(data.get("vectors", []))
-        print(f"  loaded   bundled vector_database.json  ({n} vectors, 1536-dim OpenAI)")
+        print(
+            f"  loaded   bundled vector_database.json  ({n} vectors, 1536-dim OpenAI)"
+        )
         return data
     except Exception:
         pass
@@ -500,18 +525,23 @@ def _load_bundled_vector_db() -> dict:
     # Fallback: __file__ path (editable installs)
     try:
         import ragpdf as pkg_mod
+
         pkg_dir = os.path.dirname(pkg_mod.__file__)
         db_path = os.path.join(pkg_dir, "data", "vector_database.json")
         if os.path.exists(db_path):
-            with open(db_path, "r", encoding="utf-8") as f:
+            with open(db_path, encoding="utf-8") as f:
                 data = json.load(f)
             n = len(data.get("vectors", []))
-            print(f"  loaded   bundled vector_database.json  ({n} vectors, 1536-dim OpenAI)")
+            print(
+                f"  loaded   bundled vector_database.json  ({n} vectors, 1536-dim OpenAI)"
+            )
             return data
     except Exception:
-        pass
+        pass  # intentional
 
-    print("  warning  ragpdf bundled vector_database.json not found — starting with empty vector DB")
+    print(
+        "  warning  ragpdf bundled vector_database.json not found — starting with empty vector DB"
+    )
     print("           Predictions accumulate automatically after the first form fill.")
     return {"metadata": {"total_count": 0, "last_updated": ""}, "vectors": []}
 
@@ -524,57 +554,122 @@ def _create_ragpdf_data(combo: set[str], dest: Path, force: bool = False):
     base = str(dest / "data" / "rag")
 
     # Folder skeleton already created by _make_dirs — just write files
-    _write_json(f"{base}/input/fields/lp_subscription_fields.json", [
-        {"field_id": "f001", "field_name": "Investor Name",
-         "context": "Full legal name of the investor as it appears on government-issued identification",
-         "section_context": "Investor Identity", "headers": ["Section 1", "Personal Information"]},
-        {"field_id": "f002", "field_name": "Email",
-         "context": "Email address for all fund correspondence and legal notices",
-         "section_context": "Contact Details", "headers": ["Section 2", "Contact"]},
-        {"field_id": "f003", "field_name": "Tax ID / SSN / EIN",
-         "context": "Social Security Number or Employer Identification Number for tax reporting purposes",
-         "section_context": "Tax Information", "headers": ["Section 3", "Tax Details"]},
-        {"field_id": "f004", "field_name": "Commitment Amount",
-         "context": "Total capital commitment amount in United States dollars",
-         "section_context": "Investment Details", "headers": ["Section 4", "Subscription Amount"]},
-        {"field_id": "f005", "field_name": "Investor Type",
-         "context": "Type of investor entity: individual, trust, corporation, limited partnership, or other",
-         "section_context": "Investor Classification", "headers": ["Section 1", "Entity Type"]},
-        {"field_id": "f006", "field_name": "Address Line 1",
-         "context": "Street address line 1 of principal place of residence or business",
-         "section_context": "Address", "headers": ["Section 2", "Address Details"]},
-        {"field_id": "f007", "field_name": "Date of Birth / Incorporation",
-         "context": "Date of birth for individuals or date of incorporation for entities",
-         "section_context": "Personal Information", "headers": ["Section 1", "KYC Details"]},
-        {"field_id": "f008", "field_name": "Accredited Investor",
-         "context": "Confirmation of accredited investor status under SEC Rule 501 of Regulation D",
-         "section_context": "Investor Qualification", "headers": ["Section 5", "Accreditation"]},
-        {"field_id": "f009", "field_name": "Bank Account Number",
-         "context": "Bank account number for capital call wire transfers and distributions",
-         "section_context": "Banking Details", "headers": ["Section 6", "Wire Instructions"]},
-        {"field_id": "f010", "field_name": "Signature Date",
-         "context": "Date on which the subscription agreement is executed and signed by the investor",
-         "section_context": "Execution", "headers": ["Signature Page"]},
-        {"field_id": "f011", "field_name": "Country of Citizenship",
-         "context": "Country of citizenship for individuals or country of incorporation, required for FATCA and CRS",
-         "section_context": "Regulatory Compliance", "headers": ["Section 7", "FATCA / CRS"]},
-        {"field_id": "f012", "field_name": "Beneficial Owner",
-         "context": "Name of the ultimate beneficial owner who owns or controls 25 percent or more of the investing entity",
-         "section_context": "AML / KYC", "headers": ["Section 8", "AML Compliance"]},
-    ], force)
+    _write_json(
+        f"{base}/input/fields/lp_subscription_fields.json",
+        [
+            {
+                "field_id": "f001",
+                "field_name": "Investor Name",
+                "context": "Full legal name of the investor as it appears on government-issued identification",
+                "section_context": "Investor Identity",
+                "headers": ["Section 1", "Personal Information"],
+            },
+            {
+                "field_id": "f002",
+                "field_name": "Email",
+                "context": "Email address for all fund correspondence and legal notices",
+                "section_context": "Contact Details",
+                "headers": ["Section 2", "Contact"],
+            },
+            {
+                "field_id": "f003",
+                "field_name": "Tax ID / SSN / EIN",
+                "context": "Social Security Number or Employer Identification Number for tax reporting purposes",
+                "section_context": "Tax Information",
+                "headers": ["Section 3", "Tax Details"],
+            },
+            {
+                "field_id": "f004",
+                "field_name": "Commitment Amount",
+                "context": "Total capital commitment amount in United States dollars",
+                "section_context": "Investment Details",
+                "headers": ["Section 4", "Subscription Amount"],
+            },
+            {
+                "field_id": "f005",
+                "field_name": "Investor Type",
+                "context": "Type of investor entity: individual, trust, corporation, limited partnership, or other",
+                "section_context": "Investor Classification",
+                "headers": ["Section 1", "Entity Type"],
+            },
+            {
+                "field_id": "f006",
+                "field_name": "Address Line 1",
+                "context": "Street address line 1 of principal place of residence or business",
+                "section_context": "Address",
+                "headers": ["Section 2", "Address Details"],
+            },
+            {
+                "field_id": "f007",
+                "field_name": "Date of Birth / Incorporation",
+                "context": "Date of birth for individuals or date of incorporation for entities",
+                "section_context": "Personal Information",
+                "headers": ["Section 1", "KYC Details"],
+            },
+            {
+                "field_id": "f008",
+                "field_name": "Accredited Investor",
+                "context": "Confirmation of accredited investor status under SEC Rule 501 of Regulation D",
+                "section_context": "Investor Qualification",
+                "headers": ["Section 5", "Accreditation"],
+            },
+            {
+                "field_id": "f009",
+                "field_name": "Bank Account Number",
+                "context": "Bank account number for capital call wire transfers and distributions",
+                "section_context": "Banking Details",
+                "headers": ["Section 6", "Wire Instructions"],
+            },
+            {
+                "field_id": "f010",
+                "field_name": "Signature Date",
+                "context": "Date on which the subscription agreement is executed and signed by the investor",
+                "section_context": "Execution",
+                "headers": ["Signature Page"],
+            },
+            {
+                "field_id": "f011",
+                "field_name": "Country of Citizenship",
+                "context": "Country of citizenship for individuals or country of incorporation, required for FATCA and CRS",
+                "section_context": "Regulatory Compliance",
+                "headers": ["Section 7", "FATCA / CRS"],
+            },
+            {
+                "field_id": "f012",
+                "field_name": "Beneficial Owner",
+                "context": "Name of the ultimate beneficial owner who owns or controls 25 percent or more of the investing entity",
+                "section_context": "AML / KYC",
+                "headers": ["Section 8", "AML Compliance"],
+            },
+        ],
+        force,
+    )
 
-    _write_json(f"{base}/input/pdf_category.json", {
-        "category": "Private Markets",
-        "sub_category": "Private Equity",
-        "document_type": "LP Subscription Agreement"
-    }, force)
+    _write_json(
+        f"{base}/input/pdf_category.json",
+        {
+            "category": "Private Markets",
+            "sub_category": "Private Equity",
+            "document_type": "LP Subscription Agreement",
+        },
+        force,
+    )
 
-    _write_json(f"{base}/input/sample_errors.json", [
-        {"error_type": "wrong_field_name", "field_name": "tax_identification_number",
-         "field_type": "text", "value": "123-45-6789",
-         "feedback": "This field is the combined SSN/EIN field, not just tax ID",
-         "page_number": 3, "corners": [[120, 340], [480, 340], [480, 360], [120, 360]]}
-    ], force)
+    _write_json(
+        f"{base}/input/sample_errors.json",
+        [
+            {
+                "error_type": "wrong_field_name",
+                "field_name": "tax_identification_number",
+                "field_type": "text",
+                "value": "123-45-6789",
+                "feedback": "This field is the combined SSN/EIN field, not just tax ID",
+                "page_number": 3,
+                "corners": [[120, 340], [480, 340], [480, 360], [120, 360]],
+            }
+        ],
+        force,
+    )
 
     # ── vectors/vector_database.json ─────────────────────────────────────────
     # Load the real 137-vector DB bundled with ragpdf (1536-dim OpenAI embeddings).
@@ -583,53 +678,119 @@ def _create_ragpdf_data(combo: set[str], dest: Path, force: bool = False):
     vector_db = _load_bundled_vector_db()
     _write_json(f"{base}/vectors/vector_database.json", vector_db, force)
 
-    _write_json(f"{base}/pdf_hash_mapping/mapping.json", {
-        "aabbcc112233": {
-            "pdf_hash": "aabbcc112233", "pdf_id": "pdf_001",
-            "category": "Private Markets", "sub_category": "Private Equity",
-            "document_type": "LP Subscription Agreement",
-            "pdf_count": 3, "total_submissions": 3,
-            "submissions": [
-                {"submission_id": "user_01_session_01_pdf_001_1_1736496000",
-                 "user_id": "user_01", "session_id": "session_01", "pdf_id": "pdf_001",
-                 "frequency": 1, "timestamp": "2026-01-10T08:00:00Z", "total_fields": 12,
-                 "accuracy_llm": 1.0, "accuracy_rag": 1.0, "accuracy_ensemble": 1.0, "errors_reported": 0},
-                {"submission_id": "user_02_session_03_pdf_001_2_1738694400",
-                 "user_id": "user_02", "session_id": "session_03", "pdf_id": "pdf_001",
-                 "frequency": 2, "timestamp": "2026-02-04T12:00:00Z", "total_fields": 12,
-                 "accuracy_llm": 0.9167, "accuracy_rag": 0.9167, "accuracy_ensemble": 0.9167, "errors_reported": 1},
-                {"submission_id": "user_01_session_05_pdf_001_3_1741132800",
-                 "user_id": "user_01", "session_id": "session_05", "pdf_id": "pdf_001",
-                 "frequency": 3, "timestamp": "2026-03-05T09:00:00Z", "total_fields": 12,
-                 "accuracy_llm": 1.0, "accuracy_rag": 1.0, "accuracy_ensemble": 1.0, "errors_reported": 0},
-            ],
-            "aggregated_stats": {
-                "avg_accuracy_llm": 0.9722, "avg_accuracy_rag": 0.9722, "avg_accuracy_ensemble": 0.9722,
-                "avg_coverage_llm": 0.9167, "avg_coverage_rag": 0.9167,
-                "total_errors": 1, "consistency_score": 0.9444, "improvement_trend": "stable"
-            },
-            "first_seen": "2026-01-10T08:00:00Z", "last_seen": "2026-03-05T09:00:00Z"
-        }
-    }, force)
+    _write_json(
+        f"{base}/pdf_hash_mapping/mapping.json",
+        {
+            "aabbcc112233": {
+                "pdf_hash": "aabbcc112233",
+                "pdf_id": "pdf_001",
+                "category": "Private Markets",
+                "sub_category": "Private Equity",
+                "document_type": "LP Subscription Agreement",
+                "pdf_count": 3,
+                "total_submissions": 3,
+                "submissions": [
+                    {
+                        "submission_id": "user_01_session_01_pdf_001_1_1736496000",
+                        "user_id": "user_01",
+                        "session_id": "session_01",
+                        "pdf_id": "pdf_001",
+                        "frequency": 1,
+                        "timestamp": "2026-01-10T08:00:00Z",
+                        "total_fields": 12,
+                        "accuracy_llm": 1.0,
+                        "accuracy_rag": 1.0,
+                        "accuracy_ensemble": 1.0,
+                        "errors_reported": 0,
+                    },
+                    {
+                        "submission_id": "user_02_session_03_pdf_001_2_1738694400",
+                        "user_id": "user_02",
+                        "session_id": "session_03",
+                        "pdf_id": "pdf_001",
+                        "frequency": 2,
+                        "timestamp": "2026-02-04T12:00:00Z",
+                        "total_fields": 12,
+                        "accuracy_llm": 0.9167,
+                        "accuracy_rag": 0.9167,
+                        "accuracy_ensemble": 0.9167,
+                        "errors_reported": 1,
+                    },
+                    {
+                        "submission_id": "user_01_session_05_pdf_001_3_1741132800",
+                        "user_id": "user_01",
+                        "session_id": "session_05",
+                        "pdf_id": "pdf_001",
+                        "frequency": 3,
+                        "timestamp": "2026-03-05T09:00:00Z",
+                        "total_fields": 12,
+                        "accuracy_llm": 1.0,
+                        "accuracy_rag": 1.0,
+                        "accuracy_ensemble": 1.0,
+                        "errors_reported": 0,
+                    },
+                ],
+                "aggregated_stats": {
+                    "avg_accuracy_llm": 0.9722,
+                    "avg_accuracy_rag": 0.9722,
+                    "avg_accuracy_ensemble": 0.9722,
+                    "avg_coverage_llm": 0.9167,
+                    "avg_coverage_rag": 0.9167,
+                    "total_errors": 1,
+                    "consistency_score": 0.9444,
+                    "improvement_trend": "stable",
+                },
+                "first_seen": "2026-01-10T08:00:00Z",
+                "last_seen": "2026-03-05T09:00:00Z",
+            }
+        },
+        force,
+    )
 
-    _write_json(f"{base}/metrics/time_series/global/time_series.json", {
-        "level": "global", "identifier": "global",
-        "entries": [
-            {"timestamp": "2026-01-10T08:00:00Z",
-             "submission_id": "user_01_session_01_pdf_001_1_1736496000",
-             "user_id": "user_01", "session_id": "session_01", "pdf_id": "pdf_001",
-             "metrics": {"total_fields": 12, "predicted_llm": 11, "predicted_rag": 10,
-                         "predicted_ensemble": 11, "coverage_llm": 0.9167, "coverage_rag": 0.8333,
-                         "coverage_ensemble": 0.9167, "accuracy_llm": 1.0, "accuracy_rag": 1.0,
-                         "accuracy_ensemble": 1.0, "avg_conf_llm": 0.891, "avg_conf_rag": 0.876,
-                         "avg_conf_ensemble": 0.884, "agreement_rate": 0.909, "conflict_rate": 0.091,
-                         "rag_recovery": 0.0, "llm_recovery": 0.1,
-                         "errors_llm": 0, "errors_rag": 0, "errors_ensemble": 0}},
-        ],
-        "metadata": {"total_entries": 1,
-                     "first_entry": "2026-01-10T08:00:00Z",
-                     "last_entry": "2026-01-10T08:00:00Z"}
-    }, force)
+    _write_json(
+        f"{base}/metrics/time_series/global/time_series.json",
+        {
+            "level": "global",
+            "identifier": "global",
+            "entries": [
+                {
+                    "timestamp": "2026-01-10T08:00:00Z",
+                    "submission_id": "user_01_session_01_pdf_001_1_1736496000",
+                    "user_id": "user_01",
+                    "session_id": "session_01",
+                    "pdf_id": "pdf_001",
+                    "metrics": {
+                        "total_fields": 12,
+                        "predicted_llm": 11,
+                        "predicted_rag": 10,
+                        "predicted_ensemble": 11,
+                        "coverage_llm": 0.9167,
+                        "coverage_rag": 0.8333,
+                        "coverage_ensemble": 0.9167,
+                        "accuracy_llm": 1.0,
+                        "accuracy_rag": 1.0,
+                        "accuracy_ensemble": 1.0,
+                        "avg_conf_llm": 0.891,
+                        "avg_conf_rag": 0.876,
+                        "avg_conf_ensemble": 0.884,
+                        "agreement_rate": 0.909,
+                        "conflict_rate": 0.091,
+                        "rag_recovery": 0.0,
+                        "llm_recovery": 0.1,
+                        "errors_llm": 0,
+                        "errors_rag": 0,
+                        "errors_ensemble": 0,
+                    },
+                },
+            ],
+            "metadata": {
+                "total_entries": 1,
+                "first_entry": "2026-01-10T08:00:00Z",
+                "last_entry": "2026-01-10T08:00:00Z",
+            },
+        },
+        force,
+    )
 
     # ── vectors/source/vector_source.json ─────────────────────────────────────
     # Copy the bundled field definitions (no embeddings) into the source/ folder.
@@ -640,16 +801,21 @@ def _create_ragpdf_data(combo: set[str], dest: Path, force: bool = False):
     dest_source = os.path.join(source_dir, "vector_source.json")
     if not os.path.exists(dest_source) or force:
         try:
-            pkg_file = importlib.resources.files("ragpdf") / "data" / "vector_source.json"
+            pkg_file = (
+                importlib.resources.files("ragpdf") / "data" / "vector_source.json"
+            )
             with importlib.resources.as_file(pkg_file) as p:
                 shutil.copy(str(p), dest_source)
             print(f"  created  {dest_source}")
         except Exception as e:
             print(f"  warning  could not copy vector_source.json: {e}")
-            print(f"           Run: ragpdf init-vectors --source /path/to/vector_source.json")
+            print(
+                "           Run: ragpdf init-vectors --source /path/to/vector_source.json"
+            )
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
+
 
 def run_setup(dest_str: str = ".") -> None:
     dest = Path(dest_str).resolve()
@@ -674,7 +840,9 @@ def run_setup(dest_str: str = ".") -> None:
         shutil.copytree(str(config_src), str(configs_dst), dirs_exist_ok=True)
         print(f"✅ Configs copied to {configs_dst}")
     else:
-        print("⚠  Could not find config_samples — install chatbot or doc_upload to get them")
+        print(
+            "⚠  Could not find config_samples — install chatbot or doc_upload to get them"
+        )
 
     if "mapper" in combo:
         ini_path = configs_dst / "mapper_config.ini"

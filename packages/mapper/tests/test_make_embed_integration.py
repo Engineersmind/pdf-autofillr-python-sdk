@@ -10,19 +10,12 @@ To run these tests:
 3. Run: pytest tests/test_make_embed_integration.py -v -s
 """
 
-import pytest
-import asyncio
-import os
 import json
+import os
 import shutil
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 
-# Import the operation handler
-from pdf_autofillr_mapper.handlers.operations import handle_make_embed_file_operation
-
-# Import INI configuration
-from pdf_autofillr_mapper.utils.ini_config import reload_ini_config, get_ini_config
+import pytest
 
 # Import local storage config
 from pdf_autofillr_mapper.configs.local import LocalStorageConfig
@@ -30,12 +23,23 @@ from pdf_autofillr_mapper.configs.local import LocalStorageConfig
 # Import settings for cache configuration
 from pdf_autofillr_mapper.core.config import settings
 
+# Import the operation handler
+from pdf_autofillr_mapper.handlers.operations import handle_make_embed_file_operation
+
+# Import INI configuration
+from pdf_autofillr_mapper.utils.ini_config import get_ini_config, reload_ini_config
+
 
 @pytest.fixture
 def test_data_dir():
     """Get test data directory path."""
     # From tests/test_make_embed_integration.py -> tests/ -> mapper/ -> modules/ -> project_root/
-    return Path(__file__).parent.parent.parent.parent / "data" / "modules" / "mapper_sample"
+    return (
+        Path(__file__).parent.parent.parent.parent
+        / "data"
+        / "modules"
+        / "mapper_sample"
+    )
 
 
 @pytest.fixture
@@ -48,14 +52,16 @@ def test_config_path(test_data_dir):
 def sample_input_pdf(load_test_config):
     """Path to sample input PDF (from INI config)."""
     ini_config = load_test_config
-    pdf_path = ini_config.get('local', 'local_input_pdf', fallback=None)
+    pdf_path = ini_config.get("local", "local_input_pdf", fallback=None)
 
     if not pdf_path:
         pytest.skip("local_input_pdf not configured in config.ini [local] section")
 
     pdf_path = Path(pdf_path)
     if not pdf_path.exists():
-        pytest.skip(f"Sample PDF not found at {pdf_path}. Please add the PDF file or update config.ini")
+        pytest.skip(
+            f"Sample PDF not found at {pdf_path}. Please add the PDF file or update config.ini"
+        )
 
     return str(pdf_path)
 
@@ -64,18 +70,22 @@ def sample_input_pdf(load_test_config):
 def sample_input_json(load_test_config):
     """Path to sample input JSON (from INI config)."""
     ini_config = load_test_config
-    json_path = ini_config.get('local', 'local_input_json', fallback=None)
+    json_path = ini_config.get("local", "local_input_json", fallback=None)
 
     # If not set, try local_global_json as fallback
     if not json_path:
-        json_path = ini_config.get('local', 'local_global_json', fallback=None)
+        json_path = ini_config.get("local", "local_global_json", fallback=None)
 
     if not json_path:
-        pytest.skip("local_input_json or local_global_json not configured in config.ini [local] section")
+        pytest.skip(
+            "local_input_json or local_global_json not configured in config.ini [local] section"
+        )
 
     json_path = Path(json_path)
     if not json_path.exists():
-        pytest.skip(f"Sample JSON not found at {json_path}. Please add the JSON file or update config.ini")
+        pytest.skip(
+            f"Sample JSON not found at {json_path}. Please add the JSON file or update config.ini"
+        )
 
     return str(json_path)
 
@@ -84,7 +94,7 @@ def sample_input_json(load_test_config):
 def output_dir(load_test_config):
     """Create and return output directory for test results (from INI config)."""
     ini_config = load_test_config
-    output = ini_config.get('local', 'output_base_path', fallback=None)
+    output = ini_config.get("local", "output_base_path", fallback=None)
 
     if not output:
         pytest.skip("output_base_path not configured in config.ini [local] section")
@@ -98,7 +108,7 @@ def output_dir(load_test_config):
 def cache_registry_path(load_test_config):
     """Path to hash cache registry (from INI config)."""
     ini_config = load_test_config
-    cache_path = ini_config.get('local', 'cache_registry_path', fallback=None)
+    cache_path = ini_config.get("local", "cache_registry_path", fallback=None)
 
     if not cache_path:
         pytest.skip("cache_registry_path not configured in config.ini [local] section")
@@ -152,7 +162,9 @@ def load_test_config(test_config_path):
 
 
 @pytest.mark.asyncio
-async def test_make_embed_file_complete(local_config, clean_output_dir, load_test_config, cache_registry_path):
+async def test_make_embed_file_complete(
+    local_config, clean_output_dir, load_test_config, cache_registry_path
+):
     """
     Test complete make_embed_file operation with Extract -> Map -> Embed pipeline.
 
@@ -174,15 +186,15 @@ async def test_make_embed_file_complete(local_config, clean_output_dir, load_tes
     mapping_config = {
         "llm_provider": "claude",
         "confidence_threshold": 0.7,
-        "chunking_strategy": "page"
+        "chunking_strategy": "page",
     }
 
     # Read use_second_mapper from loaded config
     mapping_section = load_test_config.get_mapping_config()
-    use_second_mapper = mapping_section.get('use_second_mapper', False)
+    use_second_mapper = mapping_section.get("use_second_mapper", False)
 
     print(f"\n{'='*70}")
-    print(f"MAKE EMBED FILE INTEGRATION TEST")
+    print("MAKE EMBED FILE INTEGRATION TEST")
     print(f"{'='*70}")
     print(f"📂 Input PDF: {local_config.local_input_pdf}")
     print(f"📂 Input JSON: {local_config.local_input_json}")
@@ -193,13 +205,13 @@ async def test_make_embed_file_complete(local_config, clean_output_dir, load_tes
     # Check if cache exists before test
     cache_existed_before = os.path.exists(cache_registry_path)
     if cache_existed_before:
-        print(f"ℹ️  Cache registry exists (will test cache hit scenario)")
+        print("ℹ️  Cache registry exists (will test cache hit scenario)")
     else:
-        print(f"ℹ️  No cache registry (will test cache miss scenario)")
+        print("ℹ️  No cache registry (will test cache miss scenario)")
 
     # ========== CACHE SETUP (simulating AWS Lambda entry point) ==========
+
     from pdf_autofillr_mapper.utils.hash_cache import populate_cached_files_to_config
-    import tempfile
 
     # Use /tmp for cache registry (like AWS Lambda does)
     tmp_cache_registry = None
@@ -212,10 +224,12 @@ async def test_make_embed_file_complete(local_config, clean_output_dir, load_tes
             try:
                 # 1. Copy hash_registry.json to /tmp (simulate S3 download)
                 shutil.copy2(cache_registry_path, tmp_cache_registry)
-                print(f"\n[Cache] Copied hash_registry.json to /tmp (simulating S3 download)")
+                print(
+                    "\n[Cache] Copied hash_registry.json to /tmp (simulating S3 download)"
+                )
 
                 # 2. Read cache to get PDF hash (we'll let operation do extraction)
-                with open(tmp_cache_registry, 'r') as f:
+                with open(tmp_cache_registry) as f:
                     cache_data = json.load(f)
 
                 if cache_data:
@@ -227,7 +241,7 @@ async def test_make_embed_file_complete(local_config, clean_output_dir, load_tes
                     cache_hit = await populate_cached_files_to_config(
                         pdf_hash=pdf_hash,
                         cache_registry_path=tmp_cache_registry,  # Use /tmp path!
-                        config=local_config
+                        config=local_config,
                     )
 
                     if cache_hit:
@@ -239,11 +253,12 @@ async def test_make_embed_file_complete(local_config, clean_output_dir, load_tes
             except Exception as cache_err:
                 print(f"[Cache] Error setting up cache: {cache_err}")
                 import traceback
+
                 traceback.print_exc()
         else:
             # First run - just create empty tmp cache registry
-            print(f"\n[Cache] No cache exists, will create at /tmp")
-            with open(tmp_cache_registry, 'w') as f:
+            print("\n[Cache] No cache exists, will create at /tmp")
+            with open(tmp_cache_registry, "w") as f:
                 json.dump({}, f)
 
     # Override cache_registry_path to use /tmp (like AWS Lambda)
@@ -251,10 +266,12 @@ async def test_make_embed_file_complete(local_config, clean_output_dir, load_tes
     if tmp_cache_registry:
         original_cache_setting = settings.cache_registry_path
         settings.cache_registry_path = tmp_cache_registry
-        print(f"[Cache] ✅ Overrode settings.cache_registry_path -> {tmp_cache_registry}")
+        print(
+            f"[Cache] ✅ Overrode settings.cache_registry_path -> {tmp_cache_registry}"
+        )
 
-    print(f"\n🚀 Running operation...")
-    start_time = __import__('time').time()
+    print("\n🚀 Running operation...")
+    start_time = __import__("time").time()
 
     print(f"🔧 use_second_mapper: {use_second_mapper} (from config.ini)")
 
@@ -267,63 +284,72 @@ async def test_make_embed_file_complete(local_config, clean_output_dir, load_tes
         investor_type=investor_type,
         mapping_config=mapping_config,
         use_second_mapper=use_second_mapper,
-        notifier=None
+        notifier=None,
     )
 
-    end_time = __import__('time').time()
+    end_time = __import__("time").time()
     elapsed = end_time - start_time
 
     # Restore original settings
     if original_cache_setting is not None:
         settings.cache_registry_path = original_cache_setting
-        print(f"[Cache] Restored settings.cache_registry_path")
+        print("[Cache] Restored settings.cache_registry_path")
 
     # ========== CACHE UPLOAD (simulating AWS Lambda S3 upload) ==========
     if tmp_cache_registry and os.path.exists(tmp_cache_registry):
         try:
-            print(f"\n[Cache Upload] Uploading cache registry to permanent storage...")
+            print("\n[Cache Upload] Uploading cache registry to permanent storage...")
 
             os.makedirs(os.path.dirname(cache_registry_path), exist_ok=True)
             shutil.copy2(tmp_cache_registry, cache_registry_path)
 
-            print(f"[Cache Upload] ✅ Uploaded hash_registry.json to {cache_registry_path}")
+            print(
+                f"[Cache Upload] ✅ Uploaded hash_registry.json to {cache_registry_path}"
+            )
 
-            with open(cache_registry_path, 'r') as f:
+            with open(cache_registry_path) as f:
                 cache_data = json.load(f)
                 for pdf_hash_key, entry in cache_data.items():
-                    print(f"[Cache Upload] Hash {pdf_hash_key[:16]}... cached with {entry.get('usage_count', 1)} usage(s)")
-                    ref_files = entry.get('reference_files', {})
+                    print(
+                        f"[Cache Upload] Hash {pdf_hash_key[:16]}... cached with {entry.get('usage_count', 1)} usage(s)"
+                    )
+                    ref_files = entry.get("reference_files", {})
                     for file_type, file_path in ref_files.items():
                         exists = "✓" if os.path.exists(file_path) else "✗"
                         print(f"  {exists} {file_type}: {file_path}")
         except Exception as upload_err:
             print(f"[Cache Upload] ❌ Error: {upload_err}")
             import traceback
+
             traceback.print_exc()
 
     print(f"\n{'='*70}")
-    print(f"RESULTS")
+    print("RESULTS")
     print(f"{'='*70}")
 
     # Validate result structure
     assert result is not None, "Result should not be None"
     assert result["operation"] == "make_embed_file", "Operation type mismatch"
-    assert result["status"] == "success", f"Operation failed: {result.get('error', 'Unknown error')}"
+    assert (
+        result["status"] == "success"
+    ), f"Operation failed: {result.get('error', 'Unknown error')}"
     assert "pipeline_results" in result, "Missing pipeline_results"
 
-    print(f"✅ Operation completed successfully")
+    print("✅ Operation completed successfully")
     print(f"⏱️  Total execution time: {elapsed:.2f}s")
 
     # === VALIDATE EXTRACT STAGE ===
-    print(f"\n--- Extract Stage ---")
+    print("\n--- Extract Stage ---")
     extract_result = result["pipeline_results"]["extract"]
     assert extract_result["status"] == "success", "Extract stage failed"
     assert "output_file" in extract_result, "Missing extract output file"
 
     extracted_json_path = extract_result["output_file"]
-    assert os.path.exists(extracted_json_path), f"Extracted JSON not found: {extracted_json_path}"
+    assert os.path.exists(
+        extracted_json_path
+    ), f"Extracted JSON not found: {extracted_json_path}"
 
-    with open(extracted_json_path, 'r') as f:
+    with open(extracted_json_path) as f:
         extracted_data = json.load(f)
         assert isinstance(extracted_data, dict), "Extracted data should be a dictionary"
         assert len(extracted_data) > 0, "Extracted JSON is empty"
@@ -336,7 +362,7 @@ async def test_make_embed_file_complete(local_config, clean_output_dir, load_tes
         print(f"🔑 PDF hash: {pdf_hash[:16]}...")
 
     # === VALIDATE MAP STAGE ===
-    print(f"\n--- Map Stage ---")
+    print("\n--- Map Stage ---")
     map_result = result["pipeline_results"]["map"]
     assert "mapping_path" in map_result, "Missing mapping path"
     assert "radio_groups_path" in map_result, "Missing radio groups path"
@@ -344,10 +370,14 @@ async def test_make_embed_file_complete(local_config, clean_output_dir, load_tes
     mapping_json_path = map_result["mapping_path"]
     radio_groups_path = map_result["radio_groups_path"]
 
-    assert os.path.exists(mapping_json_path), f"Mapping JSON not found: {mapping_json_path}"
-    assert os.path.exists(radio_groups_path), f"Radio groups not found: {radio_groups_path}"
+    assert os.path.exists(
+        mapping_json_path
+    ), f"Mapping JSON not found: {mapping_json_path}"
+    assert os.path.exists(
+        radio_groups_path
+    ), f"Radio groups not found: {radio_groups_path}"
 
-    with open(mapping_json_path, 'r') as f:
+    with open(mapping_json_path) as f:
         mapping_data = json.load(f)
         assert isinstance(mapping_data, dict), "Mapping data should be a dictionary"
         assert len(mapping_data) > 0, "Mapping JSON is empty"
@@ -357,16 +387,18 @@ async def test_make_embed_file_complete(local_config, clean_output_dir, load_tes
 
     # Check if MAP stage used cache
     if "status" in map_result and map_result["status"] == "cache_hit":
-        print(f"🎯 MAP stage used cache (skipped LLM calls)")
+        print("🎯 MAP stage used cache (skipped LLM calls)")
 
     # === VALIDATE EMBED STAGE ===
-    print(f"\n--- Embed Stage ---")
+    print("\n--- Embed Stage ---")
     embed_result = result["pipeline_results"]["embed"]
     assert embed_result["status"] == "success", "Embed stage failed"
     assert "output_file" in embed_result, "Missing embed output file"
 
     embedded_pdf_path = embed_result["output_file"]
-    assert os.path.exists(embedded_pdf_path), f"Embedded PDF not found: {embedded_pdf_path}"
+    assert os.path.exists(
+        embedded_pdf_path
+    ), f"Embedded PDF not found: {embedded_pdf_path}"
 
     embedded_size = os.path.getsize(embedded_pdf_path)
     assert embedded_size > 0, "Embedded PDF is empty"
@@ -374,7 +406,7 @@ async def test_make_embed_file_complete(local_config, clean_output_dir, load_tes
     print(f"📄 Output: {embedded_pdf_path}")
 
     # === VALIDATE DIRECTORY STRUCTURE ===
-    print(f"\n--- Directory Structure ---")
+    print("\n--- Directory Structure ---")
     output_base = Path(clean_output_dir)
     user_dir = output_base / "users" / str(user_id)
     pdf_dir = user_dir / "pdfs" / str(pdf_doc_id)
@@ -384,7 +416,9 @@ async def test_make_embed_file_complete(local_config, clean_output_dir, load_tes
 
     # Check extraction directory
     extraction_dir = pdf_dir / "extraction"
-    assert extraction_dir.exists(), f"Extraction directory not created: {extraction_dir}"
+    assert (
+        extraction_dir.exists()
+    ), f"Extraction directory not created: {extraction_dir}"
     extracted_files = list(extraction_dir.glob("*_extracted.json"))
     assert len(extracted_files) > 0, "No extracted JSON files found"
     print(f"✅ Extraction: {extraction_dir} ({len(extracted_files)} files)")
@@ -396,7 +430,9 @@ async def test_make_embed_file_complete(local_config, clean_output_dir, load_tes
     radio_files = list(mapping_dir.glob("*_radio_groups.json"))
     assert len(mapped_files) > 0, "No mapping JSON files found"
     assert len(radio_files) > 0, "No radio groups JSON files found"
-    print(f"✅ Mapping: {mapping_dir} ({len(mapped_files)} mapped, {len(radio_files)} radio)")
+    print(
+        f"✅ Mapping: {mapping_dir} ({len(mapped_files)} mapped, {len(radio_files)} radio)"
+    )
 
     # Check embedding directory
     embedding_dir = pdf_dir / "embedding"
@@ -406,9 +442,9 @@ async def test_make_embed_file_complete(local_config, clean_output_dir, load_tes
     print(f"✅ Embedding: {embedding_dir} ({len(embedded_files)} files)")
 
     # === VALIDATE CACHE (if caching is enabled) ===
-    print(f"\n--- Cache Validation ---")
+    print("\n--- Cache Validation ---")
     if os.path.exists(cache_registry_path):
-        with open(cache_registry_path, 'r') as f:
+        with open(cache_registry_path) as f:
             cache_data = json.load(f)
             cache_entries = len(cache_data)
             print(f"✅ Cache registry exists with {cache_entries} entries")
@@ -418,17 +454,17 @@ async def test_make_embed_file_complete(local_config, clean_output_dir, load_tes
                 print(f"✅ PDF hash {pdf_hash[:16]}... is cached")
                 print(f"   Cached at: {cache_entry.get('timestamp', 'unknown')}")
                 if not cache_existed_before:
-                    print(f"   (Newly cached in this run)")
+                    print("   (Newly cached in this run)")
             elif pdf_hash:
                 print(f"⚠️  PDF hash {pdf_hash[:16]}... not in cache yet")
     else:
-        print(f"ℹ️  No cache registry (caching may be disabled)")
+        print("ℹ️  No cache registry (caching may be disabled)")
 
     # === SUMMARY ===
     print(f"\n{'='*70}")
-    print(f"✅ ALL VALIDATIONS PASSED")
+    print("✅ ALL VALIDATIONS PASSED")
     print(f"{'='*70}")
-    print(f"Pipeline: Extract -> Map -> Embed")
+    print("Pipeline: Extract -> Map -> Embed")
     print(f"Execution time: {elapsed:.2f}s")
     print(f"Output directory: {pdf_dir}")
     print(f"{'='*70}\n")

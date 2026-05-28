@@ -1,5 +1,5 @@
 # tests/unit/test_helpers.py
-from ragpdf.utils.helpers import generate_vector_id, calculate_avg
+from ragpdf.utils.helpers import calculate_avg, generate_vector_id
 
 
 def test_generate_vector_id_empty():
@@ -19,4 +19,4 @@ def test_calculate_avg_normal():
     assert calculate_avg([0.8, 0.9, 1.0]) == pytest.approx(0.9, rel=1e-4)
 
 
-import pytest
+import pytest  # noqa: E402

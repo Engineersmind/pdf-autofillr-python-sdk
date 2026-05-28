@@ -13,6 +13,12 @@ build/
 dist/
 **/build/
 **/dist/
+__pycache__/
+.mypy_cache/
+.ruff_cache/
+*.pyc
+*.pyo
+.pytest_cache/
 
 # ======================
 # Testing / coverage
@@ -88,13 +94,105 @@ packages/rag/data/vectors/vector_database.json
 # ======================
 packages/*/.github/
 packages/rag/.github/
+data/
 
 # ======================
 # Local secrets — never commit
 # ======================
 pat.txt
+pytest.ini
 
 # ======================
 # OLD LEGACY CODE — not used, but keeping for reference until we decide to delete
 # ======================
 packages/mapper/pdf_autofillr_mapper-1.0.9/
+
+# ======================
+# Additional cache / build
+# ======================
+*.whl
+wheels/
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+*.egg-link
+*.pyw
+
+# ======================
+# Black cache
+# ======================
+.black_cache/
+**/.black_cache/
+
+# ======================
+# Additional test/coverage
+# ======================
+.coverage.*
+.tox/
+.nox/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# ======================
+# Additional venv
+# ======================
+env.bak/
+venv.bak/
+.python-version
+
+# ======================
+# Additional secrets
+# ======================
+.env.*
+!.env.example
+secrets/
+
+# ======================
+# Additional IDE
+# ======================
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# ======================
+# Additional OS
+# ======================
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+desktop.ini
+
+# ======================
+# Logs folder
+# ======================
+logs/
+**/logs/
+
+# ======================
+# Jupyter
+# ======================
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+*.ipynb
+
+# ======================
+# Profiling
+# ======================
+*.prof
+*.lprof
+
+# ======================
+# Misc additions
+# ======================
+final_check.txt
+*.local.ini
+*.local.cfg

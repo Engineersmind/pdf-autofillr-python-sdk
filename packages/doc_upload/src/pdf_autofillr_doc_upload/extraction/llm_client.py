@@ -15,11 +15,11 @@ Model string format (LiteLLM convention):
     groq/llama-3.1-8b-instant                       needs GROQ_API_KEY
     ollama/llama3.1                                 needs Ollama running locally
 """
+
 from __future__ import annotations
 
 import logging
 import os
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -41,15 +41,19 @@ class LLMClient:
 
     def __init__(
         self,
-        model: Optional[str] = None,
-        api_key: Optional[str] = None,
+        model: str | None = None,
+        api_key: str | None = None,
         temperature: float = 0.0,
         max_tokens: int = 4096,
         timeout: float = 120.0,
         max_retries: int = 3,
     ):
         self.model = model or os.getenv("DOC_UPLOAD_LLM_MODEL", DEFAULT_MODEL)
-        self.api_key = api_key or os.getenv("DOC_UPLOAD_LLM_API_KEY") or os.getenv("OPENAI_API_KEY")
+        self.api_key = (
+            api_key
+            or os.getenv("DOC_UPLOAD_LLM_API_KEY")
+            or os.getenv("OPENAI_API_KEY")
+        )
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.timeout = timeout
@@ -72,7 +76,7 @@ class LLMClient:
             "model": self.model,
             "messages": [
                 {"role": "system", "content": system_prompt},
-                {"role": "user",   "content": user_prompt},
+                {"role": "user", "content": user_prompt},
             ],
             "temperature": self.temperature,
             "max_tokens": self.max_tokens,

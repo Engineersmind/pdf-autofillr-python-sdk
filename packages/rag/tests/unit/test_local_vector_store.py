@@ -1,5 +1,6 @@
 # tests/unit/test_local_vector_store.py
 import pytest
+
 from ragpdf.vector_stores.local_vector_store import LocalVectorStore
 
 
@@ -15,7 +16,9 @@ def test_empty_store_returns_no_match(store):
 
 def test_add_and_find(store):
     emb = [1.0] + [0.0] * 383
-    vid = store.add_vector("investor_name", "name context", "identity", ["header1"], emb)
+    vid = store.add_vector(
+        "investor_name", "name context", "identity", ["header1"], emb
+    )
     assert vid.startswith("vec_")
     result = store.find_similar(emb, threshold=0.5, top_k=5)
     assert result["matched"] is True
@@ -43,6 +46,6 @@ def test_update_confidence_negative(store):
 
 def test_count(store):
     assert store.count() == 0
-    store.add_vector("f1", "", "", [], [0.1]*384)
-    store.add_vector("f2", "", "", [], [0.2]*384)
+    store.add_vector("f1", "", "", [], [0.1] * 384)
+    store.add_vector("f2", "", "", [], [0.2] * 384)
     assert store.count() == 2

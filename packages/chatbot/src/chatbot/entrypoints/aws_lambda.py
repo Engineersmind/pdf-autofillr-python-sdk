@@ -22,6 +22,7 @@ Recommended env vars:
     chatbot_PDF_FILLER=mapper   (optional)
     MAPPER_API_URL=...          (optional — for HTTP mapper mode)
 """
+
 from __future__ import annotations
 
 import json
@@ -29,6 +30,7 @@ import logging
 import os
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 logger = logging.getLogger(__name__)
@@ -38,7 +40,7 @@ _client = None
 
 
 def _build_client():
-    from chatbot import chatbotClient, FormConfig
+    from chatbot import FormConfig, chatbotClient
     from chatbot.storage.factory import StorageFactory
 
     storage = StorageFactory.create()
@@ -48,6 +50,7 @@ def _build_client():
     pdf_filler = None
     if os.getenv("chatbot_PDF_FILLER", "none").lower() in ("mapper", "managed"):
         from chatbot.pdf.mapper_filler import MapperPDFFiller
+
         pdf_filler = MapperPDFFiller(
             mapper_api_url=os.getenv("MAPPER_API_URL", ""),
             mapper_api_key=os.getenv("MAPPER_API_KEY", ""),
@@ -67,10 +70,10 @@ def handler(event, context):
         if _client is None:
             _client = _build_client()
 
-        user_id    = event["user_id"]
+        user_id = event["user_id"]
         session_id = event["session_id"]
-        message    = event.get("message", "")
-        pdf_path   = event.get("pdf_path") or os.getenv("chatbot_PDF_PATH", "")
+        message = event.get("message", "")
+        pdf_path = event.get("pdf_path") or os.getenv("chatbot_PDF_PATH", "")
 
         if pdf_path:
             _client.create_session(user_id, session_id, pdf_path=pdf_path)
@@ -79,13 +82,16 @@ def handler(event, context):
 
         return {
             "statusCode": 200,
-            "body": json.dumps({
-                "user_id": user_id,
-                "session_id": session_id,
-                "response": response,
-                "session_complete": complete,
-                "filled_data": data if complete else None,
-            }, default=str),
+            "body": json.dumps(
+                {
+                    "user_id": user_id,
+                    "session_id": session_id,
+                    "response": response,
+                    "session_complete": complete,
+                    "filled_data": data if complete else None,
+                },
+                default=str,
+            ),
         }
 
     except (KeyError, ValueError) as e:

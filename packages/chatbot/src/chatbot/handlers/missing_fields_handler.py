@@ -1,10 +1,16 @@
 # chatbot/handlers/missing_fields_handler.py
 from __future__ import annotations
-from chatbot.core.states import State, US_COUNTRY_VALUES
+
+from chatbot.core.states import US_COUNTRY_VALUES, State
 from chatbot.handlers.base_handler import BaseHandler
 from chatbot.utils.field_utils import format_field_name
 
-LEGITIMATE_BOOLEAN_GROUPS = ["share_class", "investor_eligibility", "form_pf", "subscriber_type"]
+LEGITIMATE_BOOLEAN_GROUPS = [
+    "share_class",
+    "investor_eligibility",
+    "form_pf",
+    "subscriber_type",
+]
 FORM_PF_SKIP_TYPES = {"Individual", "IRA"}
 
 # pep_check IS shown in the missing list AND asked via sequential fill yes/no
@@ -28,13 +34,19 @@ class MissingFieldsHandler(BaseHandler):
                 extracted, _, _ = self.extractor.extract(
                     user_input=user_input,
                     conversation_history=self._build_history(session),
-                    live_fill_flat={k: live_fill[k] for k in missing_now if k in live_fill},
+                    live_fill_flat={
+                        k: live_fill[k] for k in missing_now if k in live_fill
+                    },
                     meta_form_keys=self.form_config.meta_form_keys,
                     mandatory_flat=mandatory_flat,
                     investor_type=investor_type,
                 )
                 for key, value in extracted.items():
-                    if key in live_fill and live_fill.get(key) in (None, "") and value not in (None, ""):
+                    if (
+                        key in live_fill
+                        and live_fill.get(key) in (None, "")
+                        and value not in (None, "")
+                    ):
                         live_fill[key] = value
                 session["live_fill_flat"] = live_fill
 
@@ -42,11 +54,16 @@ class MissingFieldsHandler(BaseHandler):
         text_missing = self._get_missing_text(live_fill, mandatory_flat)
 
         if text_missing:
-            debug and debug.log("missing_fields", f"Still missing {len(text_missing)} text fields (attempt 1)")
+            debug and debug.log(
+                "missing_fields",
+                f"Still missing {len(text_missing)} text fields (attempt 1)",
+            )
             session["fields_being_asked"] = text_missing
             field_key = text_missing[0]
             question = self.form_config.get_question(field_key)
-            label = self.form_config.get_label(field_key) or format_field_name(field_key)
+            label = self.form_config.get_label(field_key) or format_field_name(
+                field_key
+            )
             msg = question or f"Please provide the {label.lower()}."
             self._log_turn(session, user_input, msg, state)
             return msg, State.SEQUENTIAL_FILL
@@ -67,9 +84,13 @@ class MissingFieldsHandler(BaseHandler):
                 self._log_turn(session, user_input, msg, state)
                 return msg, State.BOOLEAN_GROUP_SELECT
             else:
-                lines = [f"Choose all applicable options for the Investor's {format_field_name(next_group_name)} (comma-separated). Select 'None' if not applicable.\n"]
+                lines = [
+                    f"Choose all applicable options for the Investor's {format_field_name(next_group_name)} (comma-separated). Select 'None' if not applicable.\n"
+                ]
                 for i, key in enumerate(next_group_fields, 1):
-                    question = self.form_config.get_question(key) or format_field_name(key)
+                    question = self.form_config.get_question(key) or format_field_name(
+                        key
+                    )
                     lines.append(f"{i}. {question}")
                 msg = "\n".join(lines)
                 self._log_turn(session, user_input, msg, state)
@@ -113,7 +134,11 @@ class MissingFieldsHandler(BaseHandler):
                 continue
             if group_name in asked:
                 continue
-            fields = [k for k in mandatory_flat if k.startswith(f"{group_name}.") and live_fill.get(k) is None]
+            fields = [
+                k
+                for k in mandatory_flat
+                if k.startswith(f"{group_name}.") and live_fill.get(k) is None
+            ]
             if not fields:
                 continue
             if any(live_fill.get(f) in (True, False) for f in fields):
@@ -125,24 +150,24 @@ class MissingFieldsHandler(BaseHandler):
     # Labels matching Lambda output exactly
     SECTION_LABELS = {
         "address_registered": "Registered Address",
-        "address_mailing":    "Mailing Address",
-        "wiring_details":     "Wiring Details",
-        "co_investor":        "Co-Investor Details",
-        "custodian_details":  "Custodian Details",
-        "form_pf":            "Form PF (Investor Type)",
+        "address_mailing": "Mailing Address",
+        "wiring_details": "Wiring Details",
+        "co_investor": "Co-Investor Details",
+        "custodian_details": "Custodian Details",
+        "form_pf": "Form PF (Investor Type)",
         "investor_eligibility": "Investor Eligibility",
-        "share_class":        "Share Class",
+        "share_class": "Share Class",
     }
 
     FIELD_LABELS = {
-        "investor_telephone_id":     "Telephone Number",
-        "investor_email_id":         "Email Address",
-        "investor_ssn_id":           "Social Security Number",
+        "investor_telephone_id": "Telephone Number",
+        "investor_email_id": "Email Address",
+        "investor_ssn_id": "Social Security Number",
         "investor_date_of_birth_id": "Investor Date Of Birth",
-        "authorized_signatory_id":   "Authorized Signatory",
-        "commitment_amount_id":      "Commitment Amount",
-        "investor_ein_tax_id":       "Employer Identification Number Or Tax Identification Number",
-        "pep_check":                 "Is the investor a Politically Exposed Person?",
+        "authorized_signatory_id": "Authorized Signatory",
+        "commitment_amount_id": "Commitment Amount",
+        "investor_ein_tax_id": "Employer Identification Number Or Tax Identification Number",
+        "pep_check": "Is the investor a Politically Exposed Person?",
     }
 
     def _get_grouped_missing_labels(self, missing_keys: list) -> list:
@@ -156,9 +181,15 @@ class MissingFieldsHandler(BaseHandler):
                 if section in seen_sections:
                     continue
                 seen_sections.add(section)
-                labels.append(self.SECTION_LABELS.get(section) or format_field_name(section))
+                labels.append(
+                    self.SECTION_LABELS.get(section) or format_field_name(section)
+                )
             else:
-                label = self.FIELD_LABELS.get(key) or self.form_config.get_label(key) or format_field_name(key)
+                label = (
+                    self.FIELD_LABELS.get(key)
+                    or self.form_config.get_label(key)
+                    or format_field_name(key)
+                )
                 labels.append(label)
         return labels
 

@@ -6,12 +6,13 @@ Ports Lambda logger_utils.py into a standalone class that works in any
 deployment (local, AWS Lambda, GCP, Azure) without boto3 dependency at
 the class level — S3 persistence is called explicitly only when needed.
 """
+
 from __future__ import annotations
 
 import json
 import traceback
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any
 
 
 class ExecutionLogger:
@@ -29,7 +30,7 @@ class ExecutionLogger:
         summary = logger.get_summary()
     """
 
-    def __init__(self, job_id: Optional[str] = None):
+    def __init__(self, job_id: str | None = None):
         self.job_id = job_id or "unknown"
         self._data: dict = {
             "job_id": self.job_id,
@@ -60,14 +61,16 @@ class ExecutionLogger:
         print(f"\n{'-'*60}\n📤 API REQUEST: {operation}\n{'-'*60}")
         print(f"URL: {url}")
         print(f"Payload: {json.dumps(payload, indent=2)}")
-        self._data["api_calls"].append({
-            "type": "request",
-            "timestamp": ts,
-            "operation": operation,
-            "url": url,
-            "headers": headers,
-            "payload": payload,
-        })
+        self._data["api_calls"].append(
+            {
+                "type": "request",
+                "timestamp": ts,
+                "operation": operation,
+                "url": url,
+                "headers": headers,
+                "payload": payload,
+            }
+        )
 
     def log_api_response(
         self,
@@ -78,22 +81,24 @@ class ExecutionLogger:
     ) -> None:
         ts = datetime.now(timezone.utc).isoformat() + "Z"
         print(f"📥 API RESPONSE: {operation}  [{status_code}]  {duration_seconds}s")
-        self._data["api_calls"].append({
-            "type": "response",
-            "timestamp": ts,
-            "operation": operation,
-            "status_code": status_code,
-            "response_data": response_data,
-            "duration_seconds": duration_seconds,
-        })
+        self._data["api_calls"].append(
+            {
+                "type": "response",
+                "timestamp": ts,
+                "operation": operation,
+                "status_code": status_code,
+                "response_data": response_data,
+                "duration_seconds": duration_seconds,
+            }
+        )
 
     # ── Errors ─────────────────────────────────────────────────────────
 
     def log_error(
         self,
         message: str,
-        details: Optional[dict] = None,
-        exception: Optional[Exception] = None,
+        details: dict | None = None,
+        exception: Exception | None = None,
     ) -> None:
         ts = datetime.now(timezone.utc).isoformat() + "Z"
         entry: dict = {"timestamp": ts, "message": message}
@@ -132,7 +137,9 @@ class ExecutionLogger:
     def get_summary(self) -> dict:
         data = dict(self._data)
         data["summary"] = {
-            "total_api_calls": len([c for c in self._data["api_calls"] if c["type"] == "request"]),
+            "total_api_calls": len(
+                [c for c in self._data["api_calls"] if c["type"] == "request"]
+            ),
             "total_process_logs": len(self._data["process_logs"]),
             "total_errors": len(self._data["errors"]),
             "success": len(self._data["errors"]) == 0,
@@ -157,5 +164,5 @@ class ExecutionLogger:
             end = datetime.fromisoformat(summary["ended_at"].replace("Z", ""))
             summary["total_duration_seconds"] = round((end - start).total_seconds(), 3)
         except Exception:
-            pass
+            pass  # intentional
         return summary

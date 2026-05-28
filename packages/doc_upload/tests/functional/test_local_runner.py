@@ -1,456 +1,1 @@
-# tests/functional/test_local_runner.py
-"""
-Functional tests — run the full extraction pipeline with real data/input files.
-
-These tests call the real DocumentReader + mocked LLM (no API key needed).
-They verify the entire pipeline end-to-end: read -> extract -> schema enforce -> save.
-
-How to run:
-    cd doc_upload
-    python -m pytest tests/functional/ -v
-
-Requirements:
-    - pip install pytest python-docx python-pptx openpyxl PyMuPDF
-    - No API key needed (LLM is mocked in all tests)
-    - Sample files must exist under data/input/  (they are bundled with the repo)
-
-To run against a REAL LLM (needs API key):
-    DOC_UPLOAD_LLM_MODEL=openai/gpt-4.1-mini \\
-    DOC_UPLOAD_LLM_API_KEY=sk-... \\
-    python -m pytest tests/functional/ -v -k "real"
-"""
-from __future__ import annotations
-
-import json
-import os
-import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock
-
-import pytest
-
-# ── Paths ─────────────────────────────────────────────────────────────────────
-REPO_ROOT   = Path(__file__).parent.parent.parent   # doc_upload/
-DATA_INPUT  = REPO_ROOT / "data" / "input"
-CONFIG_DIR  = REPO_ROOT / "configs"
-SCHEMA_FILE = CONFIG_DIR / "form_keys.json"
-
-# ── Skip markers ──────────────────────────────────────────────────────────────
-needs_schema  = pytest.mark.skipif(not SCHEMA_FILE.exists(),  reason="configs/form_keys.json not found — run copy_sample_configs first")
-needs_pymupdf = pytest.mark.skipif(True, reason="PyMuPDF skip in CI — install separately")  # flip to False locally
-
-
-# ── Mock LLM output ───────────────────────────────────────────────────────────
-
-def _make_mock_llm(schema: dict):
-    """
-    Return a MagicMock LLMClient whose .complete() returns a valid JSON
-    extraction matching the schema structure but with dummy values.
-    """
-    def _fill(s):
-        if isinstance(s, dict):
-            return {k: _fill(v) for k, v in s.items()}
-        if isinstance(s, bool):
-            return False
-        return "mock_value"
-
-    filled = {"filled_form_keys": _fill(schema)}
-    mock = MagicMock()
-    mock.complete.return_value = json.dumps(filled)
-    return mock
-
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-def _load_schema():
-    with open(SCHEMA_FILE) as f:
-        return json.load(f)
-
-
-def _run_extraction(document_path: str, tmp_path: Path):
-    """
-    Run extraction with a mocked LLM.
-    Returns the (result_dict, output_flat_path) tuple.
-    """
-    from pdf_autofillr_doc_upload import DocUploadClient
-    from pdf_autofillr_doc_upload.storage.local_storage import LocalStorage
-    from pdf_autofillr_doc_upload.extraction.extractor import Extractor
-
-    schema = _load_schema()
-    mock_llm = _make_mock_llm(schema)
-
-    storage = LocalStorage(
-        data_path=str(tmp_path / "data"),
-        config_path=str(CONFIG_DIR),
-    )
-
-    extractor = Extractor(llm_client=mock_llm)
-    # Explicitly pass pdf_filler=None so DOC_UPLOAD_PDF_FILLER from .env
-    # never triggers the in-process mapper during mocked tests
-    client = DocUploadClient(storage=storage, extractor=extractor, pdf_filler=None)
-
-    result = client.run(
-        document_path=str(document_path),
-        schema_path=str(SCHEMA_FILE),
-        job_id="test_job",
-    )
-    return result
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# TXT
-# ══════════════════════════════════════════════════════════════════════════════
-
-@needs_schema
-class TestTxtExtraction:
-    """Run full pipeline on data/input/sample_investor.txt"""
-
-    def test_txt_file_exists(self):
-        assert (DATA_INPUT / "sample_investor.txt").exists(), (
-            "data/input/sample_investor.txt not found — it should be bundled with the repo"
-        )
-
-    def test_txt_extraction_runs(self, tmp_path):
-        result = _run_extraction(DATA_INPUT / "sample_investor.txt", tmp_path)
-        assert result["success"] is True
-        assert isinstance(result["output_nested"], dict)
-        assert isinstance(result["output_flat"], dict)
-
-    def test_txt_output_has_schema_keys(self, tmp_path):
-        result = _run_extraction(DATA_INPUT / "sample_investor.txt", tmp_path)
-        flat = result["output_flat"]
-        # Every key must be a string; every value must be str or bool
-        for k, v in flat.items():
-            assert isinstance(k, str), f"Key {k!r} is not a string"
-            assert isinstance(v, (str, bool, type(None))), f"Value for {k!r} is {type(v)}"
-
-    def test_txt_output_saved_to_storage(self, tmp_path):
-        _run_extraction(DATA_INPUT / "sample_investor.txt", tmp_path)
-        output_file = tmp_path / "data" / "jobs" / "test_job" / "output.json"
-        assert output_file.exists(), "output.json not written to storage"
-        flat_file   = tmp_path / "data" / "jobs" / "test_job" / "output_flat.json"
-        assert flat_file.exists(), "output_flat.json not written to storage"
-
-    def test_txt_execution_log_saved(self, tmp_path):
-        _run_extraction(DATA_INPUT / "sample_investor.txt", tmp_path)
-        log_file = tmp_path / "data" / "jobs" / "test_job" / "execution_log.json"
-        assert log_file.exists(), "execution_log.json not written"
-        log = json.loads(log_file.read_text())
-        assert log["summary"]["success"] is True
-        assert log["summary"]["total_errors"] == 0
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# JSON
-# ══════════════════════════════════════════════════════════════════════════════
-
-@needs_schema
-class TestJsonExtraction:
-    """Run full pipeline on data/input/sample_investor.json"""
-
-    def test_json_file_exists(self):
-        assert (DATA_INPUT / "sample_investor.json").exists()
-
-    def test_json_extraction_runs(self, tmp_path):
-        result = _run_extraction(DATA_INPUT / "sample_investor.json", tmp_path)
-        assert result["success"] is True
-
-    def test_json_output_non_empty(self, tmp_path):
-        result = _run_extraction(DATA_INPUT / "sample_investor.json", tmp_path)
-        assert len(result["output_flat"]) > 0
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# CSV
-# ══════════════════════════════════════════════════════════════════════════════
-
-@needs_schema
-class TestCsvExtraction:
-    """Run full pipeline on data/input/sample_investor.csv"""
-
-    def test_csv_file_exists(self):
-        assert (DATA_INPUT / "sample_investor.csv").exists()
-
-    def test_csv_extraction_runs(self, tmp_path):
-        result = _run_extraction(DATA_INPUT / "sample_investor.csv", tmp_path)
-        assert result["success"] is True
-
-    def test_csv_output_non_empty(self, tmp_path):
-        result = _run_extraction(DATA_INPUT / "sample_investor.csv", tmp_path)
-        assert len(result["output_flat"]) > 0
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# MARKDOWN
-# ══════════════════════════════════════════════════════════════════════════════
-
-@needs_schema
-class TestMarkdownExtraction:
-    """Run full pipeline on data/input/sample_investor.md"""
-
-    def test_md_file_exists(self):
-        assert (DATA_INPUT / "sample_investor.md").exists()
-
-    def test_md_extraction_runs(self, tmp_path):
-        result = _run_extraction(DATA_INPUT / "sample_investor.md", tmp_path)
-        assert result["success"] is True
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# SAMPLE_INVESTOR.PDF  (investor data as PDF — NOT blank_form.pdf)
-# ══════════════════════════════════════════════════════════════════════════════
-
-class TestSamplePdfExtraction:
-    """
-    Run pipeline on data/input/sample_investor.pdf — a PDF containing investor data.
-
-    This is different from blank_form.pdf (the blank template used for filling).
-    If you have a PDF with investor text, place it here as sample_investor.pdf.
-    """
-    PDF_FILE = DATA_INPUT / "sample_investor.pdf"
-
-    @pytest.mark.skipif(
-        not (DATA_INPUT / "sample_investor.pdf").exists(),
-        reason="data/input/sample_investor.pdf not found — place any investor PDF there to enable"
-    )
-    def test_sample_pdf_extraction_runs(self, tmp_path):
-        pytest.importorskip("fitz", reason="PyMuPDF not installed")
-        result = _run_extraction(self.PDF_FILE, tmp_path)
-        assert result["success"] is True
-        assert len(result["output_flat"]) > 0
-
-    def test_pdf_reader_imported(self):
-        from pdf_autofillr_doc_upload.extraction.document_reader import DocumentReader
-        assert ".pdf" in DocumentReader.supported_extensions()
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# PDF  (skipped if PyMuPDF not installed or file not present)
-# ══════════════════════════════════════════════════════════════════════════════
-
-class TestPdfExtraction:
-    """
-    Run pipeline on data/input/blank_form.pdf or any .pdf placed there.
-
-    Place your own PDF in data/input/ and update the filename below, or copy the
-    chatbot-final blank form:
-        cp ../chatbot-final/data/input/blank_form.pdf data/input/
-    """
-    PDF_FILE = DATA_INPUT / "blank_form.pdf"
-
-    @pytest.mark.skipif(
-        not (DATA_INPUT / "blank_form.pdf").exists(),
-        reason="data/input/blank_form.pdf not found — copy any PDF there to enable"
-    )
-    def test_pdf_extraction_runs(self, tmp_path):
-        pytest.importorskip("fitz", reason="PyMuPDF not installed")
-        result = _run_extraction(self.PDF_FILE, tmp_path)
-        assert result["success"] is True
-
-    def test_pdf_reader_imported(self):
-        """Confirm DocumentReader class loads even if fitz is absent."""
-        from pdf_autofillr_doc_upload.extraction.document_reader import DocumentReader
-        assert ".pdf" in DocumentReader.supported_extensions()
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# DOCX  (skipped if python-docx not installed or file not present)
-# ══════════════════════════════════════════════════════════════════════════════
-
-class TestDocxExtraction:
-    """
-    Run pipeline on data/input/sample_investor.docx if present.
-
-    Create a sample docx:
-        python -c "
-        from docx import Document
-        doc = Document()
-        doc.add_paragraph('Investor Full Legal Name: Test Investor')
-        doc.add_paragraph('Email: test@example.com')
-        doc.save('data/input/sample_investor.docx')
-        "
-    """
-    DOCX_FILE = DATA_INPUT / "sample_investor.docx"
-
-    @pytest.mark.skipif(
-        not (DATA_INPUT / "sample_investor.docx").exists(),
-        reason="data/input/sample_investor.docx not found — create it to enable"
-    )
-    def test_docx_extraction_runs(self, tmp_path):
-        pytest.importorskip("docx", reason="python-docx not installed")
-        result = _run_extraction(self.DOCX_FILE, tmp_path)
-        assert result["success"] is True
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# XLSX  (skipped if file not present)
-# ══════════════════════════════════════════════════════════════════════════════
-
-class TestXlsxExtraction:
-    """
-    Run pipeline on data/input/sample_investor.xlsx if present.
-
-    Create a sample xlsx:
-        python -c "
-        import openpyxl
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.append(['Field', 'Value'])
-        ws.append(['Investor Full Legal Name', 'XLSX Investor'])
-        ws.append(['Email', 'xlsx@example.com'])
-        wb.save('data/input/sample_investor.xlsx')
-        "
-    """
-    XLSX_FILE = DATA_INPUT / "sample_investor.xlsx"
-
-    @pytest.mark.skipif(
-        not (DATA_INPUT / "sample_investor.xlsx").exists(),
-        reason="data/input/sample_investor.xlsx not found — create it to enable"
-    )
-    def test_xlsx_extraction_runs(self, tmp_path):
-        pytest.importorskip("openpyxl", reason="openpyxl not installed")
-        result = _run_extraction(self.XLSX_FILE, tmp_path)
-        assert result["success"] is True
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# REAL LLM tests — only run when API key is set
-# ══════════════════════════════════════════════════════════════════════════════
-
-# ══════════════════════════════════════════════════════════════════════════════
-# END-TO-END WITH MAPPER  (real LLM + real PDF fill via in-process mapper)
-# ══════════════════════════════════════════════════════════════════════════════
-
-@pytest.mark.skipif(
-    not os.getenv("DOC_UPLOAD_LLM_API_KEY") and not os.getenv("OPENAI_API_KEY"),
-    reason="No API key — skipping mapper e2e (set DOC_UPLOAD_LLM_API_KEY to enable)"
-)
-@pytest.mark.skipif(
-    not (DATA_INPUT / "blank_form.pdf").exists(),
-    reason="data/input/blank_form.pdf not found — copy blank form to enable mapper e2e test"
-)
-@needs_schema
-class TestMapperEndToEnd:
-    """
-    Full end-to-end test: extract from TXT -> fill blank_form.pdf via in-process mapper.
-
-    Requires:
-        - DOC_UPLOAD_LLM_API_KEY  (real LLM call)
-        - data/input/blank_form.pdf  (blank PDF template)
-        - Java on PATH  (mapper Java filler)
-        - C:/Temp exists on Windows  (mapper temp dir)
-
-    Run with:
-        DOC_UPLOAD_LLM_API_KEY=sk-... \
-        DOC_UPLOAD_PDF_PATH=data/input/blank_form.pdf \
-        python -m pytest tests/functional/ -v -k "mapper_e2e"
-    """
-
-    def test_mapper_e2e_txt(self, tmp_path):
-        """Extract from sample_investor.txt and fill blank_form.pdf."""
-        from pdf_autofillr_doc_upload import DocUploadClient
-        from pdf_autofillr_doc_upload.storage.local_storage import LocalStorage
-        from pdf_autofillr_doc_upload.extraction.extractor import Extractor
-        from pdf_autofillr_doc_upload.extraction.llm_client import LLMClient
-        from pdf_autofillr_doc_upload.pdf.inprocess_filler import InProcessMapperFiller
-
-        storage = LocalStorage(
-            data_path=str(tmp_path / "data"),
-            config_path=str(CONFIG_DIR),
-        )
-        filler = InProcessMapperFiller(
-            pdf_path=str(DATA_INPUT / "blank_form.pdf"),
-            config_dir=str(CONFIG_DIR),
-            data_path=str(tmp_path / "data"),
-        )
-        client = DocUploadClient(
-            storage=storage,
-            extractor=Extractor(llm_client=LLMClient()),
-            pdf_filler=filler,
-        )
-
-        result = client.run(
-            document_path=str(DATA_INPUT / "sample_investor.txt"),
-            schema_path=str(SCHEMA_FILE),
-            job_id="e2e_mapper_test",
-            investor_type="Individual",
-        )
-
-        assert result["success"] is True, f"Pipeline failed: {result.get('errors')}"
-        assert result["filled_pdf_path"] is not None, "filled_pdf_path is None"
-        from pathlib import Path
-        assert Path(result["filled_pdf_path"]).exists(), (
-            f"Filled PDF not found at: {result['filled_pdf_path']}"
-        )
-
-    def test_mapper_e2e_json(self, tmp_path):
-        """Extract from sample_investor.json and fill blank_form.pdf."""
-        from pdf_autofillr_doc_upload import DocUploadClient
-        from pdf_autofillr_doc_upload.storage.local_storage import LocalStorage
-        from pdf_autofillr_doc_upload.extraction.extractor import Extractor
-        from pdf_autofillr_doc_upload.extraction.llm_client import LLMClient
-        from pdf_autofillr_doc_upload.pdf.inprocess_filler import InProcessMapperFiller
-
-        storage = LocalStorage(
-            data_path=str(tmp_path / "data"),
-            config_path=str(CONFIG_DIR),
-        )
-        filler = InProcessMapperFiller(
-            pdf_path=str(DATA_INPUT / "blank_form.pdf"),
-            config_dir=str(CONFIG_DIR),
-            data_path=str(tmp_path / "data"),
-        )
-        client = DocUploadClient(
-            storage=storage,
-            extractor=Extractor(llm_client=LLMClient()),
-            pdf_filler=filler,
-        )
-
-        result = client.run(
-            document_path=str(DATA_INPUT / "sample_investor.json"),
-            schema_path=str(SCHEMA_FILE),
-            job_id="e2e_mapper_json_test",
-            investor_type="Individual",
-        )
-
-        assert result["success"] is True
-        assert result["filled_pdf_path"] is not None
-
-
-@pytest.mark.skipif(
-    not os.getenv("DOC_UPLOAD_LLM_API_KEY") and not os.getenv("OPENAI_API_KEY"),
-    reason="No API key set — skipping real LLM tests (set DOC_UPLOAD_LLM_API_KEY to enable)"
-)
-@needs_schema
-class TestRealLlmExtraction:
-    """
-    End-to-end tests using a real LLM API call.
-
-    Run with:
-        DOC_UPLOAD_LLM_API_KEY=sk-... python -m pytest tests/functional/ -v -k "real"
-    """
-
-    def test_real_txt_extraction(self, tmp_path):
-        """Extract from TXT using real LLM — verify name and email are picked up."""
-        from pdf_autofillr_doc_upload import DocUploadClient
-        from pdf_autofillr_doc_upload.storage.local_storage import LocalStorage
-        from pdf_autofillr_doc_upload.extraction.extractor import Extractor
-        from pdf_autofillr_doc_upload.extraction.llm_client import LLMClient
-
-        storage  = LocalStorage(data_path=str(tmp_path / "data"), config_path=str(CONFIG_DIR))
-        client   = DocUploadClient(
-            storage=storage,
-            extractor=Extractor(llm_client=LLMClient()),
-        )
-        result = client.run(
-            document_path=str(DATA_INPUT / "sample_investor.txt"),
-            schema_path=str(SCHEMA_FILE),
-            job_id="real_llm_test",
-        )
-        assert result["success"] is True
-        flat = result["output_flat"]
-        # The real LLM should extract John A. Doe from the sample file
-        name = flat.get("investor_full_legal_name_id", "")
-        assert "doe" in name.lower() or "john" in name.lower(), (
-            f"Expected name to contain 'Doe' or 'John', got: {name!r}"
-        )
+# tests/functional/test_local_runner.py"""Functional tests — run the full extraction pipeline with real data/input files.These tests call the real DocumentReader + mocked LLM (no API key needed).They verify the entire pipeline end-to-end: read -> extract -> schema enforce -> save.How to run:    cd doc_upload    python -m pytest tests/functional/ -vRequirements:    - pip install pytest python-docx python-pptx openpyxl PyMuPDF    - No API key needed (LLM is mocked in all tests)    - Sample files must exist under data/input/  (they are bundled with the repo)To run against a REAL LLM (needs API key):    DOC_UPLOAD_LLM_MODEL=openai/gpt-4.1-mini \\    DOC_UPLOAD_LLM_API_KEY=sk-... \\    python -m pytest tests/functional/ -v -k "real""""from __future__ import annotationsimport jsonimport osfrom pathlib import Pathfrom unittest.mock import MagicMockimport pytest# ── Paths ─────────────────────────────────────────────────────────────────────REPO_ROOT = Path(__file__).parent.parent.parent  # doc_upload/DATA_INPUT = REPO_ROOT / "data" / "input"CONFIG_DIR = REPO_ROOT / "configs"SCHEMA_FILE = CONFIG_DIR / "form_keys.json"# ── Skip markers ──────────────────────────────────────────────────────────────needs_schema = pytest.mark.skipif(    not SCHEMA_FILE.exists(),    reason="configs/form_keys.json not found — run copy_sample_configs first",)needs_pymupdf = pytest.mark.skipif(    True, reason="PyMuPDF skip in CI — install separately")  # flip to False locally# ── Mock LLM output ───────────────────────────────────────────────────────────def _make_mock_llm(schema: dict):    """    Return a MagicMock LLMClient whose .complete() returns a valid JSON    extraction matching the schema structure but with dummy values.    """    def _fill(s):        if isinstance(s, dict):            return {k: _fill(v) for k, v in s.items()}        if isinstance(s, bool):            return False        return "mock_value"    filled = {"filled_form_keys": _fill(schema)}    mock = MagicMock()    mock.complete.return_value = json.dumps(filled)    return mock# ── Helpers ───────────────────────────────────────────────────────────────────def _load_schema():    with open(SCHEMA_FILE) as f:        return json.load(f)def _run_extraction(document_path: str, tmp_path: Path):    """    Run extraction with a mocked LLM.    Returns the (result_dict, output_flat_path) tuple.    """    from pdf_autofillr_doc_upload import DocUploadClient    from pdf_autofillr_doc_upload.extraction.extractor import Extractor    from pdf_autofillr_doc_upload.storage.local_storage import LocalStorage    schema = _load_schema()    mock_llm = _make_mock_llm(schema)    storage = LocalStorage(        data_path=str(tmp_path / "data"),        config_path=str(CONFIG_DIR),    )    extractor = Extractor(llm_client=mock_llm)    # Explicitly pass pdf_filler=None so DOC_UPLOAD_PDF_FILLER from .env    # never triggers the in-process mapper during mocked tests    client = DocUploadClient(storage=storage, extractor=extractor, pdf_filler=None)    result = client.run(        document_path=str(document_path),        schema_path=str(SCHEMA_FILE),        job_id="test_job",    )    return result# ══════════════════════════════════════════════════════════════════════════════# TXT# ══════════════════════════════════════════════════════════════════════════════@needs_schemaclass TestTxtExtraction:    """Run full pipeline on data/input/sample_investor.txt"""    def test_txt_file_exists(self):        assert (            DATA_INPUT / "sample_investor.txt"        ).exists(), "data/input/sample_investor.txt not found — it should be bundled with the repo"    def test_txt_extraction_runs(self, tmp_path):        result = _run_extraction(DATA_INPUT / "sample_investor.txt", tmp_path)        assert result["success"] is True        assert isinstance(result["output_nested"], dict)        assert isinstance(result["output_flat"], dict)    def test_txt_output_has_schema_keys(self, tmp_path):        result = _run_extraction(DATA_INPUT / "sample_investor.txt", tmp_path)        flat = result["output_flat"]        # Every key must be a string; every value must be str or bool        for k, v in flat.items():            assert isinstance(k, str), f"Key {k!r} is not a string"            assert isinstance(                v, (str, bool, type(None))            ), f"Value for {k!r} is {type(v)}"    def test_txt_output_saved_to_storage(self, tmp_path):        _run_extraction(DATA_INPUT / "sample_investor.txt", tmp_path)        output_file = tmp_path / "data" / "jobs" / "test_job" / "output.json"        assert output_file.exists(), "output.json not written to storage"        flat_file = tmp_path / "data" / "jobs" / "test_job" / "output_flat.json"        assert flat_file.exists(), "output_flat.json not written to storage"    def test_txt_execution_log_saved(self, tmp_path):        _run_extraction(DATA_INPUT / "sample_investor.txt", tmp_path)        log_file = tmp_path / "data" / "jobs" / "test_job" / "execution_log.json"        assert log_file.exists(), "execution_log.json not written"        log = json.loads(log_file.read_text())        assert log["summary"]["success"] is True        assert log["summary"]["total_errors"] == 0# ══════════════════════════════════════════════════════════════════════════════# JSON# ══════════════════════════════════════════════════════════════════════════════@needs_schemaclass TestJsonExtraction:    """Run full pipeline on data/input/sample_investor.json"""    def test_json_file_exists(self):        assert (DATA_INPUT / "sample_investor.json").exists()    def test_json_extraction_runs(self, tmp_path):        result = _run_extraction(DATA_INPUT / "sample_investor.json", tmp_path)        assert result["success"] is True    def test_json_output_non_empty(self, tmp_path):        result = _run_extraction(DATA_INPUT / "sample_investor.json", tmp_path)        assert len(result["output_flat"]) > 0# ══════════════════════════════════════════════════════════════════════════════# CSV# ══════════════════════════════════════════════════════════════════════════════@needs_schemaclass TestCsvExtraction:    """Run full pipeline on data/input/sample_investor.csv"""    def test_csv_file_exists(self):        assert (DATA_INPUT / "sample_investor.csv").exists()    def test_csv_extraction_runs(self, tmp_path):        result = _run_extraction(DATA_INPUT / "sample_investor.csv", tmp_path)        assert result["success"] is True    def test_csv_output_non_empty(self, tmp_path):        result = _run_extraction(DATA_INPUT / "sample_investor.csv", tmp_path)        assert len(result["output_flat"]) > 0# ══════════════════════════════════════════════════════════════════════════════# MARKDOWN# ══════════════════════════════════════════════════════════════════════════════@needs_schemaclass TestMarkdownExtraction:    """Run full pipeline on data/input/sample_investor.md"""    def test_md_file_exists(self):        assert (DATA_INPUT / "sample_investor.md").exists()    def test_md_extraction_runs(self, tmp_path):        result = _run_extraction(DATA_INPUT / "sample_investor.md", tmp_path)        assert result["success"] is True# ══════════════════════════════════════════════════════════════════════════════# SAMPLE_INVESTOR.PDF  (investor data as PDF — NOT blank_form.pdf)# ══════════════════════════════════════════════════════════════════════════════class TestSamplePdfExtraction:    """    Run pipeline on data/input/sample_investor.pdf — a PDF containing investor data.    This is different from blank_form.pdf (the blank template used for filling).    If you have a PDF with investor text, place it here as sample_investor.pdf.    """    PDF_FILE = DATA_INPUT / "sample_investor.pdf"    @pytest.mark.skipif(        not (DATA_INPUT / "sample_investor.pdf").exists(),        reason="data/input/sample_investor.pdf not found — place any investor PDF there to enable",    )    def test_sample_pdf_extraction_runs(self, tmp_path):        pytest.importorskip("fitz", reason="PyMuPDF not installed")        result = _run_extraction(self.PDF_FILE, tmp_path)        assert result["success"] is True        assert len(result["output_flat"]) > 0    def test_pdf_reader_imported(self):        from pdf_autofillr_doc_upload.extraction.document_reader import DocumentReader        assert ".pdf" in DocumentReader.supported_extensions()# ══════════════════════════════════════════════════════════════════════════════# PDF  (skipped if PyMuPDF not installed or file not present)# ══════════════════════════════════════════════════════════════════════════════class TestPdfExtraction:    """    Run pipeline on data/input/blank_form.pdf or any .pdf placed there.    Place your own PDF in data/input/ and update the filename below, or copy the    chatbot-final blank form:        cp ../chatbot-final/data/input/blank_form.pdf data/input/    """    PDF_FILE = DATA_INPUT / "blank_form.pdf"    @pytest.mark.skipif(        not (DATA_INPUT / "blank_form.pdf").exists(),        reason="data/input/blank_form.pdf not found — copy any PDF there to enable",    )    def test_pdf_extraction_runs(self, tmp_path):        pytest.importorskip("fitz", reason="PyMuPDF not installed")        result = _run_extraction(self.PDF_FILE, tmp_path)        assert result["success"] is True    def test_pdf_reader_imported(self):        """Confirm DocumentReader class loads even if fitz is absent."""        from pdf_autofillr_doc_upload.extraction.document_reader import DocumentReader        assert ".pdf" in DocumentReader.supported_extensions()# ══════════════════════════════════════════════════════════════════════════════# DOCX  (skipped if python-docx not installed or file not present)# ══════════════════════════════════════════════════════════════════════════════class TestDocxExtraction:    """    Run pipeline on data/input/sample_investor.docx if present.    Create a sample docx:        python -c "        from docx import Document        doc = Document()        doc.add_paragraph('Investor Full Legal Name: Test Investor')        doc.add_paragraph('Email: test@example.com')        doc.save('data/input/sample_investor.docx')        "    """    DOCX_FILE = DATA_INPUT / "sample_investor.docx"    @pytest.mark.skipif(        not (DATA_INPUT / "sample_investor.docx").exists(),        reason="data/input/sample_investor.docx not found — create it to enable",    )    def test_docx_extraction_runs(self, tmp_path):        pytest.importorskip("docx", reason="python-docx not installed")        result = _run_extraction(self.DOCX_FILE, tmp_path)        assert result["success"] is True# ══════════════════════════════════════════════════════════════════════════════# XLSX  (skipped if file not present)# ══════════════════════════════════════════════════════════════════════════════class TestXlsxExtraction:    """    Run pipeline on data/input/sample_investor.xlsx if present.    Create a sample xlsx:        python -c "        import openpyxl        wb = openpyxl.Workbook()        ws = wb.active        ws.append(['Field', 'Value'])        ws.append(['Investor Full Legal Name', 'XLSX Investor'])        ws.append(['Email', 'xlsx@example.com'])        wb.save('data/input/sample_investor.xlsx')        "    """    XLSX_FILE = DATA_INPUT / "sample_investor.xlsx"    @pytest.mark.skipif(        not (DATA_INPUT / "sample_investor.xlsx").exists(),        reason="data/input/sample_investor.xlsx not found — create it to enable",    )    def test_xlsx_extraction_runs(self, tmp_path):        pytest.importorskip("openpyxl", reason="openpyxl not installed")        result = _run_extraction(self.XLSX_FILE, tmp_path)        assert result["success"] is True# ══════════════════════════════════════════════════════════════════════════════# REAL LLM tests — only run when API key is set# ══════════════════════════════════════════════════════════════════════════════# ══════════════════════════════════════════════════════════════════════════════# END-TO-END WITH MAPPER  (real LLM + real PDF fill via in-process mapper)# ══════════════════════════════════════════════════════════════════════════════@pytest.mark.skipif(    not os.getenv("DOC_UPLOAD_LLM_API_KEY") and not os.getenv("OPENAI_API_KEY"),    reason="No API key — skipping mapper e2e (set DOC_UPLOAD_LLM_API_KEY to enable)",)@pytest.mark.skipif(    not (DATA_INPUT / "blank_form.pdf").exists(),    reason="data/input/blank_form.pdf not found — copy blank form to enable mapper e2e test",)@needs_schemaclass TestMapperEndToEnd:    """    Full end-to-end test: extract from TXT -> fill blank_form.pdf via in-process mapper.    Requires:        - DOC_UPLOAD_LLM_API_KEY  (real LLM call)        - data/input/blank_form.pdf  (blank PDF template)        - Java on PATH  (mapper Java filler)        - C:/Temp exists on Windows  (mapper temp dir)    Run with:        DOC_UPLOAD_LLM_API_KEY=sk-... \        DOC_UPLOAD_PDF_PATH=data/input/blank_form.pdf \        python -m pytest tests/functional/ -v -k "mapper_e2e"    """    def test_mapper_e2e_txt(self, tmp_path):        """Extract from sample_investor.txt and fill blank_form.pdf."""        from pdf_autofillr_doc_upload import DocUploadClient        from pdf_autofillr_doc_upload.extraction.extractor import Extractor        from pdf_autofillr_doc_upload.extraction.llm_client import LLMClient        from pdf_autofillr_doc_upload.pdf.inprocess_filler import InProcessMapperFiller        from pdf_autofillr_doc_upload.storage.local_storage import LocalStorage        storage = LocalStorage(            data_path=str(tmp_path / "data"),            config_path=str(CONFIG_DIR),        )        filler = InProcessMapperFiller(            pdf_path=str(DATA_INPUT / "blank_form.pdf"),            config_dir=str(CONFIG_DIR),            data_path=str(tmp_path / "data"),        )        client = DocUploadClient(            storage=storage,            extractor=Extractor(llm_client=LLMClient()),            pdf_filler=filler,        )        result = client.run(            document_path=str(DATA_INPUT / "sample_investor.txt"),            schema_path=str(SCHEMA_FILE),            job_id="e2e_mapper_test",            investor_type="Individual",        )        assert result["success"] is True, f"Pipeline failed: {result.get('errors')}"        assert result["filled_pdf_path"] is not None, "filled_pdf_path is None"        from pathlib import Path        assert Path(            result["filled_pdf_path"]        ).exists(), f"Filled PDF not found at: {result['filled_pdf_path']}"    def test_mapper_e2e_json(self, tmp_path):        """Extract from sample_investor.json and fill blank_form.pdf."""        from pdf_autofillr_doc_upload import DocUploadClient        from pdf_autofillr_doc_upload.extraction.extractor import Extractor        from pdf_autofillr_doc_upload.extraction.llm_client import LLMClient        from pdf_autofillr_doc_upload.pdf.inprocess_filler import InProcessMapperFiller        from pdf_autofillr_doc_upload.storage.local_storage import LocalStorage        storage = LocalStorage(            data_path=str(tmp_path / "data"),            config_path=str(CONFIG_DIR),        )        filler = InProcessMapperFiller(            pdf_path=str(DATA_INPUT / "blank_form.pdf"),            config_dir=str(CONFIG_DIR),            data_path=str(tmp_path / "data"),        )        client = DocUploadClient(            storage=storage,            extractor=Extractor(llm_client=LLMClient()),            pdf_filler=filler,        )        result = client.run(            document_path=str(DATA_INPUT / "sample_investor.json"),            schema_path=str(SCHEMA_FILE),            job_id="e2e_mapper_json_test",            investor_type="Individual",        )        assert result["success"] is True        assert result["filled_pdf_path"] is not None@pytest.mark.skipif(    not os.getenv("DOC_UPLOAD_LLM_API_KEY") and not os.getenv("OPENAI_API_KEY"),    reason="No API key set — skipping real LLM tests (set DOC_UPLOAD_LLM_API_KEY to enable)",)@needs_schemaclass TestRealLlmExtraction:    """    End-to-end tests using a real LLM API call.    Run with:        DOC_UPLOAD_LLM_API_KEY=sk-... python -m pytest tests/functional/ -v -k "real"    """    def test_real_txt_extraction(self, tmp_path):        """Extract from TXT using real LLM — verify name and email are picked up."""        from pdf_autofillr_doc_upload import DocUploadClient        from pdf_autofillr_doc_upload.extraction.extractor import Extractor        from pdf_autofillr_doc_upload.extraction.llm_client import LLMClient        from pdf_autofillr_doc_upload.storage.local_storage import LocalStorage        storage = LocalStorage(            data_path=str(tmp_path / "data"), config_path=str(CONFIG_DIR)        )        client = DocUploadClient(            storage=storage,            extractor=Extractor(llm_client=LLMClient()),        )        result = client.run(            document_path=str(DATA_INPUT / "sample_investor.txt"),            schema_path=str(SCHEMA_FILE),            job_id="real_llm_test",        )        assert result["success"] is True        flat = result["output_flat"]        # The real LLM should extract John A. Doe from the sample file        name = flat.get("investor_full_legal_name_id", "")        assert (            "doe" in name.lower() or "john" in name.lower()        ), f"Expected name to contain 'Doe' or 'John', got: {name!r}"

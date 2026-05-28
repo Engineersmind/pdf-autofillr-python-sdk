@@ -8,19 +8,21 @@ Covers:
   - In-process mode: delegates to InProcessMapperFiller
   - ImportError when mapper package missing
 """
-import os
-import pytest
+
 from unittest.mock import MagicMock, patch
 
+import pytest
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Fixtures
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 @pytest.fixture
 def http_filler(tmp_path):
     """MapperPDFFiller in HTTP mode with a mocked _HttpMapperFiller impl."""
     from chatbot.pdf.mapper_filler import MapperPDFFiller
+
     f = MapperPDFFiller(
         mapper_api_url="http://localhost:8000",
         mapper_api_key="test-key",
@@ -36,6 +38,7 @@ def http_filler(tmp_path):
 def inprocess_filler(tmp_path):
     """MapperPDFFiller in in-process mode with a mocked InProcessMapperFiller."""
     from chatbot.pdf.mapper_filler import MapperPDFFiller
+
     # No MAPPER_API_URL -> in-process mode
     f = MapperPDFFiller(mapper_api_url="", config_dir=str(tmp_path))
     mock_impl = MagicMock()
@@ -47,21 +50,29 @@ def inprocess_filler(tmp_path):
 # Mode detection
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestModeDetection:
     def test_http_mode_when_url_set(self, tmp_path):
         from chatbot.pdf.mapper_filler import MapperPDFFiller, _HttpMapperFiller
-        f = MapperPDFFiller(mapper_api_url="http://myserver:9000", config_dir=str(tmp_path))
+
+        f = MapperPDFFiller(
+            mapper_api_url="http://myserver:9000", config_dir=str(tmp_path)
+        )
         impl = f._get_impl()
         assert isinstance(impl, _HttpMapperFiller)
 
     def test_http_mode_url_has_prefix(self, tmp_path):
-        from chatbot.pdf.mapper_filler import MapperPDFFiller, _HttpMapperFiller
-        f = MapperPDFFiller(mapper_api_url="http://myserver:9000", config_dir=str(tmp_path))
+        from chatbot.pdf.mapper_filler import MapperPDFFiller
+
+        f = MapperPDFFiller(
+            mapper_api_url="http://myserver:9000", config_dir=str(tmp_path)
+        )
         impl = f._get_impl()
         assert impl._api_url == "http://myserver:9000/mapper"
 
     def test_http_mode_custom_prefix_empty(self, tmp_path):
-        from chatbot.pdf.mapper_filler import MapperPDFFiller, _HttpMapperFiller
+        from chatbot.pdf.mapper_filler import MapperPDFFiller
+
         f = MapperPDFFiller(
             mapper_api_url="http://myserver:9000",
             url_prefix="",
@@ -72,6 +83,7 @@ class TestModeDetection:
 
     def test_http_mode_custom_prefix(self, tmp_path):
         from chatbot.pdf.mapper_filler import MapperPDFFiller
+
         f = MapperPDFFiller(
             mapper_api_url="http://myserver:9000",
             url_prefix="/api/v1",
@@ -82,15 +94,17 @@ class TestModeDetection:
 
     def test_inprocess_mode_when_no_url(self, tmp_path):
         from chatbot.pdf.mapper_filler import MapperPDFFiller
+
         # Patch InProcessMapperFiller so we don't need actual mapper installed
         with patch("chatbot.pdf.mapper_filler.InProcessMapperFiller") as MockIP:
             MockIP.return_value = MagicMock()
             f = MapperPDFFiller(mapper_api_url="", config_dir=str(tmp_path))
-            impl = f._get_impl()
+            f._get_impl()
         MockIP.assert_called_once_with(config_dir=str(tmp_path))
 
     def test_inprocess_mode_uses_config_dir(self, tmp_path, monkeypatch):
         from chatbot.pdf.mapper_filler import MapperPDFFiller
+
         monkeypatch.setenv("chatbot_CONFIG_PATH", str(tmp_path))
         with patch("chatbot.pdf.mapper_filler.InProcessMapperFiller") as MockIP:
             MockIP.return_value = MagicMock()
@@ -100,15 +114,22 @@ class TestModeDetection:
 
     def test_inprocess_raises_import_error_when_mapper_missing(self, tmp_path):
         from chatbot.pdf.mapper_filler import MapperPDFFiller
+
         f = MapperPDFFiller(mapper_api_url="", config_dir=str(tmp_path))
-        with patch.dict("sys.modules", {"pdf_autofillr_mapper": None,
-                                         "pdf_autofillr_mapper.inprocess_filler": None}):
+        with patch.dict(
+            "sys.modules",
+            {
+                "pdf_autofillr_mapper": None,
+                "pdf_autofillr_mapper.inprocess_filler": None,
+            },
+        ):
             with pytest.raises(ImportError, match="pdf-autofillr-mapper"):
                 f._get_impl()
 
     def test_url_prefix_from_env(self, tmp_path, monkeypatch):
         monkeypatch.setenv("MAPPER_URL_PREFIX", "/custom")
         from chatbot.pdf.mapper_filler import MapperPDFFiller
+
         f = MapperPDFFiller(mapper_api_url="http://host:8000", config_dir=str(tmp_path))
         impl = f._get_impl()
         assert impl._api_url == "http://host:8000/custom"
@@ -117,6 +138,7 @@ class TestModeDetection:
 # ─────────────────────────────────────────────────────────────────────────────
 # Interface delegation
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class TestInterfaceDelegation:
     def test_prepare_document_delegates(self, http_filler):
@@ -156,11 +178,13 @@ class TestInterfaceDelegation:
 # HTTP implementation (_HttpMapperFiller)
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TestHttpMapperFiller:
 
     @pytest.fixture
     def http_impl(self):
         from chatbot.pdf.mapper_filler import _HttpMapperFiller
+
         return _HttpMapperFiller(
             api_url="http://localhost:8000/mapper",
             api_key="test-key",
@@ -169,7 +193,9 @@ class TestHttpMapperFiller:
 
     def test_prepare_extracts_outputs_embedded_pdf(self, http_impl):
         with patch("chatbot.pdf.mapper_filler._HttpMapperFiller._post") as mock_post:
-            mock_post.return_value = {"data": {"outputs": {"embedded_pdf": "/out/emb.pdf"}}}
+            mock_post.return_value = {
+                "data": {"outputs": {"embedded_pdf": "/out/emb.pdf"}}
+            }
             result = http_impl.prepare_document("/in/form.pdf", "Individual")
         assert result == "/out/emb.pdf"
 
@@ -226,7 +252,10 @@ class TestHttpMapperFiller:
     def test_fill_document_posts_to_fill(self, http_impl):
         data = {"investor_full_name_id": "John Doe"}
         with patch("chatbot.pdf.mapper_filler._HttpMapperFiller._post") as mock_post:
-            mock_post.return_value = {"status": "success", "filled_pdf": "/out/filled.pdf"}
+            mock_post.return_value = {
+                "status": "success",
+                "filled_pdf": "/out/filled.pdf",
+            }
             result = http_impl.fill_document("/out/embedded.pdf", data)
         call_args = mock_post.call_args
         assert call_args[0][0] == "fill"
@@ -235,7 +264,7 @@ class TestHttpMapperFiller:
         assert result["status"] == "success"
 
     def test_post_attaches_api_key_header(self, http_impl):
-        import httpx
+
         with patch("httpx.post") as mock_post:
             mock_response = MagicMock()
             mock_response.json.return_value = {}

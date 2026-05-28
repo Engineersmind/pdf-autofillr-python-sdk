@@ -4,9 +4,10 @@ Integration tests for the local entrypoint.
 Tests the run_session() function end-to-end using temp storage
 and a mocked LLM extractor.
 """
-import os
-import pytest
+
 from unittest.mock import patch
+
+import pytest
 
 pytestmark = pytest.mark.integration
 
@@ -14,7 +15,7 @@ pytestmark = pytest.mark.integration
 @pytest.fixture
 def local_client(config_path, temp_dir):
     """chatbotClient wired for local entrypoint tests."""
-    from chatbot import chatbotClient, LocalStorage, FormConfig
+    from chatbot import FormConfig, LocalStorage, chatbotClient
 
     storage = LocalStorage(
         data_path=str(temp_dir / "entrypoint_data"),
@@ -37,6 +38,7 @@ def local_client(config_path, temp_dir):
 
 def test_run_session_returns_response(local_client):
     from entrypoints.local import run_session
+
     response, complete, data = run_session(
         user_id="u1",
         session_id="s1",
@@ -54,6 +56,7 @@ def test_run_session_persists_state(local_client, temp_dir):
     run_session(user_id="u1", session_id="s2", message="", client=local_client)
 
     from pathlib import Path
+
     session_dir = Path(temp_dir) / "entrypoint_data" / "u1" / "sessions" / "s2"
     assert (session_dir / "session_state.json").exists()
 

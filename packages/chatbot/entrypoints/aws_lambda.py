@@ -31,6 +31,7 @@ Recommended env vars for Lambda:
     chatbot_PDF_FILLER=mapper  (optional)
     MAPPER_API_URL=...         (optional — for HTTP mapper mode)
 """
+
 from __future__ import annotations
 
 import json
@@ -38,17 +39,17 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from chatbot import chatbotClient, FormConfig
+from chatbot import FormConfig, chatbotClient
 from chatbot.storage.factory import StorageFactory
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=os.getenv("chatbot_LOG_LEVEL", "INFO"))
 
-_client: Optional[chatbotClient] = None
+_client: chatbotClient | None = None
 
 
 def _build_client() -> chatbotClient:
@@ -59,6 +60,7 @@ def _build_client() -> chatbotClient:
     pdf_filler = None
     if os.getenv("chatbot_PDF_FILLER", "none").lower() in ("mapper", "managed"):
         from chatbot.pdf.mapper_filler import MapperPDFFiller
+
         pdf_filler = MapperPDFFiller(
             mapper_api_url=os.getenv("MAPPER_API_URL", ""),
             mapper_api_key=os.getenv("MAPPER_API_KEY", ""),
@@ -94,7 +96,7 @@ def _parse_event(event: dict) -> dict:
     return event
 
 
-def handler(event: Dict[str, Any], context: Any) -> dict:
+def handler(event: dict[str, Any], context: Any) -> dict:
     try:
         payload = _parse_event(event)
         user_id = payload.get("user_id")
@@ -115,13 +117,16 @@ def handler(event: Dict[str, Any], context: Any) -> dict:
             message=message,
         )
 
-        return _response(200, {
-            "user_id": user_id,
-            "session_id": session_id,
-            "response": response,
-            "session_complete": complete,
-            "filled_data": data if complete else None,
-        })
+        return _response(
+            200,
+            {
+                "user_id": user_id,
+                "session_id": session_id,
+                "response": response,
+                "session_complete": complete,
+                "filled_data": data if complete else None,
+            },
+        )
 
     except (KeyError, ValueError) as e:
         return _response(400, {"error": str(e)})

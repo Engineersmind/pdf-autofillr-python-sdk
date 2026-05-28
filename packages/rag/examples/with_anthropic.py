@@ -4,8 +4,16 @@ Example 7 — Anthropic Claude corrector backend.
 Install:
     pip install ragpdf-sdk[transformers,anthropic]
 """
+
 import os
-from ragpdf import RAGPDFClient, LocalStorage, LocalVectorStore, SentenceTransformerBackend, AnthropicCorrectorBackend
+
+from ragpdf import (
+    AnthropicCorrectorBackend,
+    LocalStorage,
+    LocalVectorStore,
+    RAGPDFClient,
+    SentenceTransformerBackend,
+)
 
 client = RAGPDFClient(
     storage=LocalStorage("./data/rag"),

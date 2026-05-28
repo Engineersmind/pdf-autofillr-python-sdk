@@ -7,22 +7,23 @@ Standalone via chatbot-server command, or mount in your own app::
     from chatbot.entrypoints.fastapi_app import app as chatbot_app
     main_app.mount("/onboarding", chatbot_app)
 """
+
 from __future__ import annotations
 
-import os
 import logging
-from typing import Optional
+import os
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from fastapi.responses import JSONResponse  # noqa: E402
+from pydantic import BaseModel  # noqa: E402
 
-from chatbot import chatbotClient, FormConfig
-from chatbot.storage.factory import StorageFactory
+from chatbot import FormConfig, chatbotClient  # noqa: E402
+from chatbot.storage.factory import StorageFactory  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +32,11 @@ app = FastAPI(
     description="Conversational investor onboarding — collects data and fills PDF forms.",
     version="0.3.0",
 )
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
+)
 
-_client: Optional[chatbotClient] = None
+_client: chatbotClient | None = None
 
 
 def _build_pdf_filler():
@@ -42,12 +45,15 @@ def _build_pdf_filler():
         return None
     if mode in ("mapper", "managed"):
         from chatbot.pdf.mapper_filler import MapperPDFFiller
+
         return MapperPDFFiller(
             mapper_api_url=os.getenv("MAPPER_API_URL", ""),
             mapper_api_key=os.getenv("MAPPER_API_KEY", ""),
             config_dir=os.getenv("chatbot_CONFIG_PATH", "./configs"),
         )
-    raise ValueError(f"Unknown chatbot_PDF_FILLER: {mode!r}. Use: none | mapper | custom")
+    raise ValueError(
+        f"Unknown chatbot_PDF_FILLER: {mode!r}. Use: none | mapper | custom"
+    )
 
 
 def get_client() -> chatbotClient:
@@ -57,7 +63,9 @@ def get_client() -> chatbotClient:
         _client = chatbotClient(
             # api_key read from CHATBOT_LLM_API_KEY env var automatically
             storage=storage,
-            form_config=FormConfig.from_directory(os.getenv("chatbot_CONFIG_PATH", "./configs")),
+            form_config=FormConfig.from_directory(
+                os.getenv("chatbot_CONFIG_PATH", "./configs")
+            ),
             pdf_filler=_build_pdf_filler(),
         )
     return _client
@@ -67,7 +75,7 @@ class ChatRequest(BaseModel):
     user_id: str
     session_id: str
     message: str = ""
-    pdf_path: Optional[str] = None
+    pdf_path: str | None = None
 
 
 class ChatResponse(BaseModel):
@@ -75,13 +83,13 @@ class ChatResponse(BaseModel):
     session_id: str
     response: str
     session_complete: bool
-    filled_data: Optional[dict] = None
+    filled_data: dict | None = None
 
 
 class SessionDataResponse(BaseModel):
     user_id: str
     session_id: str
-    data: Optional[dict]
+    data: dict | None
 
 
 @app.get("/")
@@ -96,7 +104,9 @@ def chat(req: ChatRequest):
         pdf_path = req.pdf_path or os.getenv("chatbot_PDF_PATH", "")
         if pdf_path:
             client.create_session(req.user_id, req.session_id, pdf_path=pdf_path)
-        response, complete, data = client.send_message(req.user_id, req.session_id, req.message)
+        response, complete, data = client.send_message(
+            req.user_id, req.session_id, req.message
+        )
         return ChatResponse(
             user_id=req.user_id,
             session_id=req.session_id,
@@ -105,17 +115,19 @@ def chat(req: ChatRequest):
             filled_data=data if complete else None,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.exception("Error in /chatbot/chat")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/chatbot/session/{user_id}/{session_id}", response_model=SessionDataResponse)
 def get_session(user_id: str, session_id: str):
     data = get_client().get_session_data(user_id, session_id)
     if data is None:
-        raise HTTPException(status_code=404, detail="Session not found or not complete.")
+        raise HTTPException(
+            status_code=404, detail="Session not found or not complete."
+        )
     return SessionDataResponse(user_id=user_id, session_id=session_id, data=data)
 
 

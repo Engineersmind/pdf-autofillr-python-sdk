@@ -11,6 +11,7 @@ Provides:
     - mock_openai       — patches LLMExtractor so no real API calls happen
     - fastapi_client    — TestClient for the FastAPI api_server app
 """
+
 from __future__ import annotations
 
 import json
@@ -19,8 +20,8 @@ import sys
 import tempfile
 import uuid
 from pathlib import Path
-from typing import Any, Dict
-from unittest.mock import MagicMock, patch
+from typing import Any
+from unittest.mock import patch
 
 import pytest
 
@@ -83,6 +84,7 @@ MINIMAL_INDIVIDUAL_KEYS = {
 # Fixtures
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 @pytest.fixture
 def temp_dir():
     """Isolated temporary directory, cleaned up after each test."""
@@ -114,6 +116,7 @@ def config_path(temp_dir):
 def local_storage(temp_dir):
     """LocalStorage backed by temp_dir."""
     from chatbot.storage.local_storage import LocalStorage
+
     return LocalStorage(
         data_path=str(temp_dir / "data"),
         config_path=str(temp_dir / "configs"),
@@ -124,6 +127,7 @@ def local_storage(temp_dir):
 def form_config(config_path):
     """FormConfig loaded from minimal config fixtures."""
     from chatbot.config.form_config import FormConfig
+
     return FormConfig.from_directory(config_path)
 
 
@@ -149,6 +153,7 @@ def minimal_client(local_storage, form_config, mock_openai):
     outside temp_dir.
     """
     from chatbot import chatbotClient
+
     return chatbotClient(
         openai_api_key="sk-test-key",
         storage=local_storage,
@@ -171,6 +176,7 @@ def session_id():
 def sample_session(user_id, session_id):
     """A minimal session dict at INIT state."""
     from chatbot.core.states import State
+
     return {
         "user_id": user_id,
         "session_id": session_id,
@@ -193,6 +199,7 @@ def sample_session(user_id, session_id):
 def investor_types():
     """All 10 investor type strings from states.py."""
     from chatbot.core.states import INVESTOR_TYPES
+
     return list(INVESTOR_TYPES)
 
 
@@ -202,8 +209,8 @@ def fastapi_client(config_path, temp_dir):
     httpx TestClient for the FastAPI api_server app.
     Uses temp_dir for storage.
     """
+
     from fastapi.testclient import TestClient
-    import importlib
 
     os.environ["chatbot_CONFIG_PATH"] = config_path
     os.environ["chatbot_DATA_PATH"] = str(temp_dir / "api_data")
@@ -211,6 +218,7 @@ def fastapi_client(config_path, temp_dir):
 
     # Re-import api_server fresh with patched env
     import api_server
+
     # Reset the singleton so it picks up new config_path
     api_server._client = None
 
@@ -226,9 +234,12 @@ def fastapi_client(config_path, temp_dir):
 # Helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
-def make_session(user_id: str, session_id: str, state: str = "INIT", **kwargs) -> Dict[str, Any]:
+
+def make_session(
+    user_id: str, session_id: str, state: str = "INIT", **kwargs
+) -> dict[str, Any]:
     """Convenience factory for building test session dicts."""
-    base = {
+    base: dict[str, Any] = {
         "user_id": user_id,
         "session_id": session_id,
         "state": state,

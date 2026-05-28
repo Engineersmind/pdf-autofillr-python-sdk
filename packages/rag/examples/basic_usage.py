@@ -5,7 +5,13 @@ Local storage, sentence-transformers embeddings, no cloud dependencies.
 Install:
     pip install ragpdf-sdk[transformers]
 """
-from ragpdf import RAGPDFClient, LocalStorage, LocalVectorStore, SentenceTransformerBackend
+
+from ragpdf import (
+    LocalStorage,
+    LocalVectorStore,
+    RAGPDFClient,
+    SentenceTransformerBackend,
+)
 
 client = RAGPDFClient(
     storage=LocalStorage("./data/rag"),

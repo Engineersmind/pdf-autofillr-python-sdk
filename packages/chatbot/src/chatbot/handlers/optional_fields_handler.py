@@ -1,6 +1,5 @@
 # chatbot/handlers/optional_fields_handler.py
 from __future__ import annotations
-from typing import List
 
 from chatbot.core.states import State
 from chatbot.handlers.base_handler import BaseHandler
@@ -16,15 +15,15 @@ NEVER_OPTIONAL_KEYS = {
     "managing_director_ids",
     "trustees_ids",
     "beneficial_owners_ids",
-    "domicile_or_country_of_incorporation_id",   # not in Lambda optional list
+    "domicile_or_country_of_incorporation_id",  # not in Lambda optional list
 }
 NEVER_OPTIONAL_PREFIXES = (
     "investor_type.",
     "telephone_part_",
     "fax_part_",
-    "address_jurisdiction.",   # jurisdiction auto-copied from registered
+    "address_jurisdiction.",  # jurisdiction auto-copied from registered
     "entity_representative.",
-    "form_pf.",                # excluded for Individual (non-US)
+    "form_pf.",  # excluded for Individual (non-US)
 )
 NEVER_OPTIONAL_SUFFIXES = ("_part_1_id", "_part_2_id", "_part_3_id", "_country_code_id")
 
@@ -38,18 +37,18 @@ OPTIONAL_GROUP_LABELS = {
 
 # Top-level field labels matching original Lambda output
 OPTIONAL_FIELD_LABELS = {
-    "investor_ein_tax_id":               "Employer Identification Number Or Tax Identification Number",
-    "investor_fax_id":                    "Fax Number",
-    "investor_occupation_id":             "Investor Occupation",
-    "nature_of_business_id":              "Nature Of Business",
-    "principal_place_of_business_id":     "Principal Place Of Business",
-    "point_of_contact_information_id":    "Point Of Contact Information",
-    "currency_id":                        "Currency",
-    "minimum_investment_amount_id":       "Minimum Investment Amount",
-    "joint_owner_ids":                    "Joint Owners",
-    "restricted_domicile_check":          "Is the investor's domicile in a restricted jurisdiction?",
-    "aml_kyc_clearance_check":            "Anti-Money Laundering / Know Your Customer Clearance",
-    "self_certification_check":           "Self Certification",
+    "investor_ein_tax_id": "Employer Identification Number Or Tax Identification Number",
+    "investor_fax_id": "Fax Number",
+    "investor_occupation_id": "Investor Occupation",
+    "nature_of_business_id": "Nature Of Business",
+    "principal_place_of_business_id": "Principal Place Of Business",
+    "point_of_contact_information_id": "Point Of Contact Information",
+    "currency_id": "Currency",
+    "minimum_investment_amount_id": "Minimum Investment Amount",
+    "joint_owner_ids": "Joint Owners",
+    "restricted_domicile_check": "Is the investor's domicile in a restricted jurisdiction?",
+    "aml_kyc_clearance_check": "Anti-Money Laundering / Know Your Customer Clearance",
+    "self_certification_check": "Self Certification",
 }
 
 
@@ -83,7 +82,10 @@ class OptionalFieldsHandler(BaseHandler):
             session["_in_sequential"] = True
             session["_in_optional"] = True
             if all_fields:
-                from chatbot.handlers.sequential_fill_handler import SequentialFillHandler
+                from chatbot.handlers.sequential_fill_handler import (
+                    SequentialFillHandler,
+                )
+
                 handler = SequentialFillHandler(self.engine)
                 first = all_fields[0]
                 msg = handler._ask_question(first, in_optional=True)
@@ -144,7 +146,11 @@ class OptionalFieldsHandler(BaseHandler):
                 label = OPTIONAL_GROUP_LABELS.get(section) or format_field_name(section)
                 display_items.append(label)
             else:
-                label = OPTIONAL_FIELD_LABELS.get(key) or self.form_config.get_label(key) or format_field_name(key)
+                label = (
+                    OPTIONAL_FIELD_LABELS.get(key)
+                    or self.form_config.get_label(key)
+                    or format_field_name(key)
+                )
                 display_items.append(label)
 
         lines = ["Here are some optional fields you can fill:\n"]

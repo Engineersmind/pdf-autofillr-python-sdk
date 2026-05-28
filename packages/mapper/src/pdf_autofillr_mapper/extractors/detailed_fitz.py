@@ -1,17 +1,21 @@
-import sys as _sys, io as _io
+import io as _io
+import sys as _sys
+
 _old_stdout, _old_stderr = _sys.stdout, _sys.stderr
 _sys.stdout = _sys.stderr = _io.StringIO()
-import fitz
+import fitz  # noqa: E402
+
 _sys.stdout, _sys.stderr = _old_stdout, _old_stderr
 
-import re
-import logging
-import json
-from collections import defaultdict, Counter
-from pdf_autofillr_mapper.models.bounding_box import BoundingBox
-from pdf_autofillr_mapper.utils.storage import save_json
+import logging  # noqa: E402
+import os  # noqa: E402
+import re  # noqa: E402
+from collections import defaultdict  # noqa: E402
+from typing import Any  # noqa: E402
 
-import os
+from pdf_autofillr_mapper.models.bounding_box import BoundingBox  # noqa: E402
+from pdf_autofillr_mapper.utils.storage import save_json  # noqa: E402
+
 os.environ.setdefault("PYMUPDF_SUGGEST_LAYOUT_ANALYZER", "0")
 
 logger = logging.getLogger(__name__)
@@ -25,7 +29,9 @@ class DocumentAnalyzer:
 
     def __init__(self):
         # Font pattern learning: track which fonts/sizes map to which heading levels
-        self.font_patterns = defaultdict(lambda: defaultdict(int))  # {(font_name, size): {h1: count, h2: count}}
+        self.font_patterns = defaultdict(
+            lambda: defaultdict(int)
+        )  # {(font_name, size): {h1: count, h2: count}}
 
         # Cross-page consistency tracking
         self.heading_sequences = []  # [(page_num, heading_type, text, font_size), ...]
@@ -58,13 +64,13 @@ class DocumentAnalyzer:
             page_stats: Font statistics for this page
         """
         for element in text_elements:
-            heading_type = element.get('heading_type', 'normal')
-            text = element.get('text', '').strip()
-            font_name = element.get('font_name', 'unknown')
-            font_size = element.get('font_size', 12)
-            is_bold = element.get('is_bold', False)
-            is_header = element.get('is_header', False)
-            is_footer = element.get('is_footer', False)
+            heading_type = element.get("heading_type", "normal")
+            text = element.get("text", "").strip()
+            font_name = element.get("font_name", "unknown")
+            font_size = element.get("font_size", 12)
+            is_bold = element.get("is_bold", False)
+            is_header = element.get("is_header", False)
+            is_footer = element.get("is_footer", False)
 
             # Track all font sizes
             self.all_font_sizes.append(font_size)
@@ -74,51 +80,57 @@ class DocumentAnalyzer:
                 continue
 
             # Learn font patterns for headings
-            if heading_type in ['h1', 'h2', 'h3']:
+            if heading_type in ["h1", "h2", "h3"]:
                 font_key = (font_name, round(font_size, 1))
                 self.font_patterns[font_key][heading_type] += 1
                 self.heading_font_sizes.append(font_size)
 
                 # Track heading sequences
-                self.heading_sequences.append({
-                    'page': page_num,
-                    'type': heading_type,
-                    'text': text,
-                    'font_size': font_size,
-                    'is_bold': is_bold
-                })
+                self.heading_sequences.append(
+                    {
+                        "page": page_num,
+                        "type": heading_type,
+                        "text": text,
+                        "font_size": font_size,
+                        "is_bold": is_bold,
+                    }
+                )
 
             # Track repeated text (for better header/footer detection)
             text_normalized = text.lower().strip()
             if len(text_normalized) > 5:  # Ignore very short text
-                self.text_occurrences[text_normalized].append({
-                    'page': page_num,
-                    'position': element.get('bbox', {}).get('top', 0),
-                    'heading_type': heading_type
-                })
+                self.text_occurrences[text_normalized].append(
+                    {
+                        "page": page_num,
+                        "position": element.get("bbox", {}).get("top", 0),
+                        "heading_type": heading_type,
+                    }
+                )
 
             # Track style signatures
             style_key = (font_name, round(font_size, 1), is_bold)
             self.style_signatures[style_key] += 1
 
             # Track numbering patterns in headings
-            if heading_type in ['h1', 'h2', 'h3']:
+            if heading_type in ["h1", "h2", "h3"]:
                 has_pattern, level, pattern_type = self._detect_numbering_pattern(text)
                 if has_pattern:
-                    self.numbering_patterns.append({
-                        'page': page_num,
-                        'text': text,
-                        'pattern_type': pattern_type,
-                        'suggested_level': level,
-                        'current_type': heading_type
-                    })
+                    self.numbering_patterns.append(
+                        {
+                            "page": page_num,
+                            "text": text,
+                            "pattern_type": pattern_type,
+                            "suggested_level": level,
+                            "current_type": heading_type,
+                        }
+                    )
 
             # Track which pages have which heading levels
-            if heading_type == 'h1':
+            if heading_type == "h1":
                 self.pages_with_h1.add(page_num)
-            elif heading_type == 'h2':
+            elif heading_type == "h2":
                 self.pages_with_h2.add(page_num)
-            elif heading_type == 'h3':
+            elif heading_type == "h3":
                 self.pages_with_h3.add(page_num)
 
     def _detect_numbering_pattern(self, text):
@@ -126,23 +138,25 @@ class DocumentAnalyzer:
         text = text.strip()
 
         # Level 1 patterns: "1.", "1 ", "Chapter 1", "Section 1", "Part I"
-        if re.match(r'^\d+\.?\s+[A-Z]', text) or re.match(r'^(Chapter|Section|Part|Article)\s+[IVX\d]+', text, re.IGNORECASE):
+        if re.match(r"^\d+\.?\s+[A-Z]", text) or re.match(
+            r"^(Chapter|Section|Part|Article)\s+[IVX\d]+", text, re.IGNORECASE
+        ):
             return (True, 1, "decimal_1")
 
         # Level 2 patterns: "1.1", "1.2", "A.", "I."
-        if re.match(r'^\d+\.\d+\.?\s+[A-Z]', text):
+        if re.match(r"^\d+\.\d+\.?\s+[A-Z]", text):
             return (True, 2, "decimal_2")
-        if re.match(r'^[A-Z]\.?\s+[A-Z]', text):
+        if re.match(r"^[A-Z]\.?\s+[A-Z]", text):
             return (True, 2, "alpha")
-        if re.match(r'^[IVX]+\.?\s+[A-Z]', text):
+        if re.match(r"^[IVX]+\.?\s+[A-Z]", text):
             return (True, 2, "roman")
 
         # Level 3 patterns: "1.1.1", "a)", "(i)"
-        if re.match(r'^\d+\.\d+\.\d+\.?\s+', text):
+        if re.match(r"^\d+\.\d+\.\d+\.?\s+", text):
             return (True, 3, "decimal_3")
-        if re.match(r'^[a-z]\)?\s+[A-Z]', text):
+        if re.match(r"^[a-z]\)?\s+[A-Z]", text):
             return (True, 3, "lower_alpha")
-        if re.match(r'^\([ivx]+\)\s+', text):
+        if re.match(r"^\([ivx]+\)\s+", text):
             return (True, 3, "lower_roman")
 
         return (False, None, None)
@@ -161,18 +175,18 @@ class DocumentAnalyzer:
 
         for text, occurrences in self.text_occurrences.items():
             if len(occurrences) >= min_occurrences:
-                pages = [occ['page'] for occ in occurrences]
-                positions = [occ['position'] for occ in occurrences]
+                pages = [occ["page"] for occ in occurrences]
+                positions = [occ["position"] for occ in occurrences]
 
                 # Determine if header or footer based on position consistency
                 avg_position = sum(positions) / len(positions)
-                likely_type = 'header' if avg_position < 100 else 'footer'
+                likely_type = "header" if avg_position < 100 else "footer"
 
                 repeated[text] = {
-                    'pages': pages,
-                    'occurrences': len(occurrences),
-                    'likely_type': likely_type,
-                    'avg_position': avg_position
+                    "pages": pages,
+                    "occurrences": len(occurrences),
+                    "likely_type": likely_type,
+                    "avg_position": avg_position,
                 }
 
         return repeated
@@ -184,13 +198,13 @@ class DocumentAnalyzer:
         Returns:
             dict: {heading_type: [(font_name, size, confidence), ...]}
         """
-        patterns = {'h1': [], 'h2': [], 'h3': []}
+        patterns = {"h1": [], "h2": [], "h3": []}
 
         for font_key, heading_counts in self.font_patterns.items():
             font_name, size = font_key
             total = sum(heading_counts.values())
 
-            for heading_type in ['h1', 'h2', 'h3']:
+            for heading_type in ["h1", "h2", "h3"]:
                 count = heading_counts[heading_type]
                 if count > 0:
                     confidence = count / total if total > 0 else 0
@@ -215,32 +229,38 @@ class DocumentAnalyzer:
         # Check for H3 on pages without H2
         for page in self.pages_with_h3:
             if page not in self.pages_with_h2 and page not in self.pages_with_h1:
-                issues.append({
-                    'page': page,
-                    'issue': 'h3_without_parent',
-                    'description': 'H3 found without H1 or H2 on this page'
-                })
+                issues.append(
+                    {
+                        "page": page,
+                        "issue": "h3_without_parent",
+                        "description": "H3 found without H1 or H2 on this page",
+                    }
+                )
 
         # Check numbering pattern consistency
-        decimal_sequences = [p for p in self.numbering_patterns if 'decimal' in p['pattern_type']]
+        decimal_sequences = [
+            p for p in self.numbering_patterns if "decimal" in p["pattern_type"]
+        ]
         if decimal_sequences:
             # Check if numbering levels match heading levels
             mismatches = []
             for pattern in decimal_sequences:
-                expected_level = pattern['suggested_level']
-                actual_type = pattern['current_type']
-                expected_type = f'h{expected_level}'
+                expected_level = pattern["suggested_level"]
+                actual_type = pattern["current_type"]
+                expected_type = f"h{expected_level}"
 
                 if expected_type != actual_type:
                     mismatches.append(pattern)
 
             if mismatches:
-                issues.append({
-                    'issue': 'numbering_level_mismatch',
-                    'count': len(mismatches),
-                    'description': f'{len(mismatches)} headings have numbering that suggests different level',
-                    'examples': mismatches[:3]
-                })
+                issues.append(
+                    {
+                        "issue": "numbering_level_mismatch",
+                        "count": len(mismatches),
+                        "description": f"{len(mismatches)} headings have numbering that suggests different level",
+                        "examples": mismatches[:3],
+                    }
+                )
 
         return issues
 
@@ -256,26 +276,38 @@ class DocumentAnalyzer:
         issues = self.validate_heading_sequences()
 
         return {
-            'total_pages_analyzed': len(set(seq['page'] for seq in self.heading_sequences)) if self.heading_sequences else 0,
-            'pages_with_h1': len(self.pages_with_h1),
-            'pages_with_h2': len(self.pages_with_h2),
-            'pages_with_h3': len(self.pages_with_h3),
-            'total_headings': len(self.heading_sequences),
-            'repeated_elements': len(repeated),
-            'likely_headers_footers': {text: info for text, info in repeated.items() if info['occurrences'] >= 3},
-            'font_patterns': {
-                'h1': font_patterns['h1'][:3] if font_patterns['h1'] else [],
-                'h2': font_patterns['h2'][:3] if font_patterns['h2'] else [],
-                'h3': font_patterns['h3'][:3] if font_patterns['h3'] else []
+            "total_pages_analyzed": (
+                len(set(seq["page"] for seq in self.heading_sequences))
+                if self.heading_sequences
+                else 0
+            ),
+            "pages_with_h1": len(self.pages_with_h1),
+            "pages_with_h2": len(self.pages_with_h2),
+            "pages_with_h3": len(self.pages_with_h3),
+            "total_headings": len(self.heading_sequences),
+            "repeated_elements": len(repeated),
+            "likely_headers_footers": {
+                text: info
+                for text, info in repeated.items()
+                if info["occurrences"] >= 3
             },
-            'numbering_patterns': len(self.numbering_patterns),
-            'validation_issues': issues,
-            'font_size_range': {
-                'min': min(self.all_font_sizes) if self.all_font_sizes else 0,
-                'max': max(self.all_font_sizes) if self.all_font_sizes else 0,
-                'heading_min': min(self.heading_font_sizes) if self.heading_font_sizes else 0,
-                'heading_max': max(self.heading_font_sizes) if self.heading_font_sizes else 0
-            }
+            "font_patterns": {
+                "h1": font_patterns["h1"][:3] if font_patterns["h1"] else [],
+                "h2": font_patterns["h2"][:3] if font_patterns["h2"] else [],
+                "h3": font_patterns["h3"][:3] if font_patterns["h3"] else [],
+            },
+            "numbering_patterns": len(self.numbering_patterns),
+            "validation_issues": issues,
+            "font_size_range": {
+                "min": min(self.all_font_sizes) if self.all_font_sizes else 0,
+                "max": max(self.all_font_sizes) if self.all_font_sizes else 0,
+                "heading_min": (
+                    min(self.heading_font_sizes) if self.heading_font_sizes else 0
+                ),
+                "heading_max": (
+                    max(self.heading_font_sizes) if self.heading_font_sizes else 0
+                ),
+            },
         }
 
     def refine_classifications(self, all_pages_elements):
@@ -289,7 +321,7 @@ class DocumentAnalyzer:
             list: Refined text elements with Phase 4 corrections
         """
         refined = []
-        font_patterns = self.get_dominant_font_patterns()
+        self.get_dominant_font_patterns()
         repeated = self.detect_repeated_elements()
 
         # Create lookup for repeated text (likely headers/footers)
@@ -297,34 +329,44 @@ class DocumentAnalyzer:
 
         for element in all_pages_elements:
             refined_element = element.copy()
-            text = element.get('text', '').strip()
+            text = element.get("text", "").strip()
             text_lower = text.lower().strip()
-            font_name = element.get('font_name', 'unknown')
-            font_size = element.get('font_size', 12)
-            heading_type = element.get('heading_type', 'normal')
-            page_num = element.get('page', 0)
+            font_name = element.get("font_name", "unknown")
+            font_size = element.get("font_size", 12)
+            heading_type = element.get("heading_type", "normal")
+            element.get("page", 0)
 
             phase4_corrections = []
 
             # Correction 1: Mark repeated text as header/footer if not already marked
-            if text_lower in repeated_text and not element.get('is_header') and not element.get('is_footer'):
+            if (
+                text_lower in repeated_text
+                and not element.get("is_header")
+                and not element.get("is_footer")
+            ):
                 repeated_info = repeated.get(text_lower, {})
-                if repeated_info.get('occurrences', 0) >= 3:
-                    likely_type = repeated_info.get('likely_type', 'header')
-                    if likely_type == 'header':
-                        refined_element['is_header'] = True
-                        phase4_corrections.append('repeated_header_detected')
+                if repeated_info.get("occurrences", 0) >= 3:
+                    likely_type = repeated_info.get("likely_type", "header")
+                    if likely_type == "header":
+                        refined_element["is_header"] = True
+                        phase4_corrections.append("repeated_header_detected")
                     else:
-                        refined_element['is_footer'] = True
-                        phase4_corrections.append('repeated_footer_detected')
+                        refined_element["is_footer"] = True
+                        phase4_corrections.append("repeated_footer_detected")
 
                     # Downgrade heading if it's a repeated element
-                    if heading_type in ['h1', 'h2', 'h3']:
-                        refined_element['heading_type'] = 'normal'
-                        phase4_corrections.append(f'downgraded_{heading_type}_to_normal')
+                    if heading_type in ["h1", "h2", "h3"]:
+                        refined_element["heading_type"] = "normal"
+                        phase4_corrections.append(
+                            f"downgraded_{heading_type}_to_normal"
+                        )
 
             # Correction 2: Apply dominant font patterns
-            if heading_type in ['h1', 'h2', 'h3'] and not refined_element.get('is_header') and not refined_element.get('is_footer'):
+            if (
+                heading_type in ["h1", "h2", "h3"]
+                and not refined_element.get("is_header")
+                and not refined_element.get("is_footer")
+            ):
                 font_key = (font_name, round(font_size, 1))
 
                 # Check if this font pattern is strongly associated with a different level
@@ -332,36 +374,52 @@ class DocumentAnalyzer:
                     pattern_votes = self.font_patterns[font_key]
                     if pattern_votes:
                         # Get the most common heading level for this font
-                        most_common_level = max(pattern_votes.items(), key=lambda x: x[1])
+                        most_common_level = max(
+                            pattern_votes.items(), key=lambda x: x[1]
+                        )
                         most_common_type = most_common_level[0]
                         most_common_count = most_common_level[1]
                         total_count = sum(pattern_votes.values())
 
                         # If >70% of uses are for a different level, suggest correction
-                        if most_common_count / total_count > 0.7 and most_common_type != heading_type:
-                            phase4_corrections.append(f'font_pattern_suggests_{most_common_type}')
+                        if (
+                            most_common_count / total_count > 0.7
+                            and most_common_type != heading_type
+                        ):
+                            phase4_corrections.append(
+                                f"font_pattern_suggests_{most_common_type}"
+                            )
                             # Store suggestion but don't auto-correct (conservative approach)
-                            refined_element['phase4_suggestion'] = most_common_type
+                            refined_element["phase4_suggestion"] = most_common_type
 
             # Correction 3: Validate numbering patterns against heading level
-            has_pattern, suggested_level, pattern_type = self._detect_numbering_pattern(text)
-            if has_pattern and heading_type in ['h1', 'h2', 'h3']:
-                expected_type = f'h{suggested_level}'
+            has_pattern, suggested_level, pattern_type = self._detect_numbering_pattern(
+                text
+            )
+            if has_pattern and heading_type in ["h1", "h2", "h3"]:
+                expected_type = f"h{suggested_level}"
                 if expected_type != heading_type:
-                    phase4_corrections.append(f'numbering_suggests_{expected_type}')
+                    phase4_corrections.append(f"numbering_suggests_{expected_type}")
                     # For strong numbering patterns, we can be more confident
-                    if pattern_type in ['decimal_1', 'decimal_2', 'decimal_3']:
-                        refined_element['phase4_suggestion'] = expected_type
+                    if pattern_type in ["decimal_1", "decimal_2", "decimal_3"]:
+                        refined_element["phase4_suggestion"] = expected_type
 
             # Add Phase 4 metadata
             if phase4_corrections:
-                refined_element['phase4_corrections'] = phase4_corrections
-                confidence = refined_element.get('confidence', 1.0)
+                refined_element["phase4_corrections"] = phase4_corrections
+                confidence = refined_element.get("confidence", 1.0)
                 # Adjust confidence based on corrections
-                if 'repeated_header_detected' in phase4_corrections or 'repeated_footer_detected' in phase4_corrections:
-                    refined_element['confidence'] = 1.0  # High confidence for repeated elements
-                elif refined_element.get('phase4_suggestion'):
-                    refined_element['confidence'] = max(0.6, confidence * 0.8)  # Lower confidence if suggested change
+                if (
+                    "repeated_header_detected" in phase4_corrections
+                    or "repeated_footer_detected" in phase4_corrections
+                ):
+                    refined_element["confidence"] = (
+                        1.0  # High confidence for repeated elements
+                    )
+                elif refined_element.get("phase4_suggestion"):
+                    refined_element["confidence"] = max(
+                        0.6, confidence * 0.8
+                    )  # Lower confidence if suggested change
 
             refined.append(refined_element)
 
@@ -405,18 +463,22 @@ def debug_font_flags(pdf_path, max_samples=50):
                             if text and sample_count < max_samples:
                                 font_name = span.get("font", "unknown")
                                 flags = span.get("flags", 0)
-                                size = span.get("size", 12)
+                                span.get("size", 12)
 
                                 key = (font_name, flags)
                                 if key not in seen_combinations:
                                     seen_combinations[key] = []
                                     sample_count += 1
 
-                                if len(seen_combinations[key]) < 3:  # Store up to 3 samples per combo
+                                if (
+                                    len(seen_combinations[key]) < 3
+                                ):  # Store up to 3 samples per combo
                                     seen_combinations[key].append(text[:40])
 
         # Print results
-        logger.info(f"\nFound {len(seen_combinations)} unique font+flag combinations:\n")
+        logger.info(
+            f"\nFound {len(seen_combinations)} unique font+flag combinations:\n"
+        )
 
         for (font_name, flags), samples in sorted(seen_combinations.items()):
             is_bold = bool(flags & (1 << 4))
@@ -427,8 +489,10 @@ def debug_font_flags(pdf_path, max_samples=50):
 
             # Check if font name contains bold/semibold indicators
             font_name_lower = font_name.lower()
-            has_bold_in_name = any(indicator in font_name_lower
-                                   for indicator in ['bold', 'semibold', 'demi', 'heavy', 'black'])
+            has_bold_in_name = any(
+                indicator in font_name_lower
+                for indicator in ["bold", "semibold", "demi", "heavy", "black"]
+            )
 
             style_tags = []
             if is_bold or has_bold_in_name:
@@ -447,9 +511,11 @@ def debug_font_flags(pdf_path, max_samples=50):
 
             style_str = "+".join(style_tags) if style_tags else "NORMAL"
 
-            logger.info(f"Font: {font_name:30} | Flags: {flags:3} (binary: {bin(flags):10}) | {style_str}")
+            logger.info(
+                f"Font: {font_name:30} | Flags: {flags:3} (binary: {bin(flags):10}) | {style_str}"
+            )
             for sample in samples[:2]:
-                logger.info(f"      Sample: \"{sample}\"")
+                logger.info(f'      Sample: "{sample}"')
             logger.info("")
 
         doc.close()
@@ -459,15 +525,17 @@ def debug_font_flags(pdf_path, max_samples=50):
         logger.error(f"Error in debug_font_flags: {e}", exc_info=True)
 
 
-class DetailedFitzExtractor():
+class DetailedFitzExtractor:
     def __init__(self, config: dict):
-        self.WIDGET_LINE_DISTANCE_THRESHOLD = config.get("WIDGET_LINE_DISTANCE_THRESHOLD", 10)
+        self.WIDGET_LINE_DISTANCE_THRESHOLD = config.get(
+            "WIDGET_LINE_DISTANCE_THRESHOLD", 10
+        )
         self.rounding = config.get("rounding", 1)
         self.global_id = 1
         self.global_fid = 1
         self.AVG_CHAR_WIDTH = 7
         self.LEFT_MARGIN = 70
-        self.fid_to_gid_map = {}
+        self.fid_to_gid_map: dict[Any, Any] = {}
 
     def _get_field_type_new(self, widget):
         base = widget.field_type_string.upper()
@@ -506,13 +574,17 @@ class DetailedFitzExtractor():
                     if page_num not in outline_by_page:
                         outline_by_page[page_num] = []
 
-                    outline_by_page[page_num].append({
-                        "level": level,
-                        "title": title.strip(),
-                        "heading_type": f"h{min(level, 3)}"  # Cap at h3
-                    })
+                    outline_by_page[page_num].append(
+                        {
+                            "level": level,
+                            "title": title.strip(),
+                            "heading_type": f"h{min(level, 3)}",  # Cap at h3
+                        }
+                    )
             else:
-                logger.info("PDF has no outline/bookmarks - will use font-based detection")
+                logger.info(
+                    "PDF has no outline/bookmarks - will use font-based detection"
+                )
 
         except Exception as e:
             logger.warning(f"Error extracting PDF outline: {e}")
@@ -537,25 +609,29 @@ class DetailedFitzExtractor():
 
         # Try exact match first
         for entry in outline_entries:
-            outline_title = entry['title'].lower()
+            outline_title = entry["title"].lower()
             if text == outline_title:
                 logger.debug(f"Exact match: '{text[:50]}' -> {entry['heading_type']}")
-                return entry['heading_type']
+                return entry["heading_type"]
 
         # Try partial match (outline title contained in text or vice versa)
         for entry in outline_entries:
-            outline_title = entry['title'].lower()
+            outline_title = entry["title"].lower()
             # Remove common prefixes/suffixes for better matching
-            cleaned_text = text.strip('.:;-– ')
-            cleaned_title = outline_title.strip('.:;-– ')
+            cleaned_text = text.strip(".:;-– ")
+            cleaned_title = outline_title.strip(".:;-– ")
 
             if len(cleaned_title) > 10:  # Only match longer titles
-                if (cleaned_title in cleaned_text or
-                    cleaned_text in cleaned_title or
-                    cleaned_text.startswith(cleaned_title) or
-                    cleaned_title.startswith(cleaned_text)):
-                    logger.debug(f"Partial match: '{text[:50]}' -> {entry['heading_type']}")
-                    return entry['heading_type']
+                if (
+                    cleaned_title in cleaned_text
+                    or cleaned_text in cleaned_title
+                    or cleaned_text.startswith(cleaned_title)
+                    or cleaned_title.startswith(cleaned_text)
+                ):
+                    logger.debug(
+                        f"Partial match: '{text[:50]}' -> {entry['heading_type']}"
+                    )
+                    return entry["heading_type"]
 
         return None
 
@@ -590,8 +666,12 @@ class DetailedFitzExtractor():
                                 x2, y2 = end
 
                                 # Check if line is mostly horizontal (underline)
-                                if abs(y2 - y1) < 2 and abs(x2 - x1) > 20:  # Horizontal line
-                                    underlined_regions.append((min(y1, y2) - 5, max(y1, y2) + 5))
+                                if (
+                                    abs(y2 - y1) < 2 and abs(x2 - x1) > 20
+                                ):  # Horizontal line
+                                    underlined_regions.append(
+                                        (min(y1, y2) - 5, max(y1, y2) + 5)
+                                    )
         except Exception as e:
             logger.debug(f"Could not detect underlines: {e}")
 
@@ -647,29 +727,43 @@ class DetailedFitzExtractor():
                 if block.get("type") == 0:  # Text block
                     for line in block.get("lines", []):
                         for span in line.get("spans", []):
-                            if span.get("text", "").strip():  # Only process non-empty text
+                            if span.get(
+                                "text", ""
+                            ).strip():  # Only process non-empty text
                                 flags = span.get("flags", 0)
                                 font_name = span.get("font", "unknown")
 
                                 # Check both flag and font name for bold/semibold
                                 flag_bold = bool(flags & (1 << 4))
                                 font_name_lower = font_name.lower()
-                                name_bold = any(indicator in font_name_lower
-                                              for indicator in ['bold', 'semibold', 'demi', 'heavy', 'black'])
+                                name_bold = any(
+                                    indicator in font_name_lower
+                                    for indicator in [
+                                        "bold",
+                                        "semibold",
+                                        "demi",
+                                        "heavy",
+                                        "black",
+                                    ]
+                                )
                                 is_bold = flag_bold or name_bold
 
-                                text_data.append({
-                                    "text": span["text"],
-                                    "font_size": span.get("size", 12),
-                                    "font_name": font_name,
-                                    "flags": flags,
-                                    "is_bold": is_bold,  # Combined check
-                                    "is_italic": bool(flags & (1 << 1)),  # bit 1
-                                    "is_superscript": bool(flags & (1 << 0)),  # bit 0
-                                    "bbox": span.get("bbox", (0, 0, 0, 0)),
-                                    "color": span.get("color", 0),
-                                    "origin": span.get("origin", (0, 0))
-                                })
+                                text_data.append(
+                                    {
+                                        "text": span["text"],
+                                        "font_size": span.get("size", 12),
+                                        "font_name": font_name,
+                                        "flags": flags,
+                                        "is_bold": is_bold,  # Combined check
+                                        "is_italic": bool(flags & (1 << 1)),  # bit 1
+                                        "is_superscript": bool(
+                                            flags & (1 << 0)
+                                        ),  # bit 0
+                                        "bbox": span.get("bbox", (0, 0, 0, 0)),
+                                        "color": span.get("color", 0),
+                                        "origin": span.get("origin", (0, 0)),
+                                    }
+                                )
         except Exception as e:
             logger.warning(f"Error extracting text with fonts: {e}")
 
@@ -686,24 +780,16 @@ class DetailedFitzExtractor():
             dict: Statistics including average, median, max, min font sizes
         """
         if not text_data:
-            return {
-                "average": 12,
-                "median": 12,
-                "max": 12,
-                "min": 12
-            }
+            return {"average": 12, "median": 12, "max": 12, "min": 12}
 
         # Filter out very small or very large outliers that might skew statistics
         font_sizes = [item["font_size"] for item in text_data if item["text"].strip()]
-        font_sizes = [size for size in font_sizes if 6 <= size <= 72]  # Reasonable range
+        font_sizes = [
+            size for size in font_sizes if 6 <= size <= 72
+        ]  # Reasonable range
 
         if not font_sizes:
-            return {
-                "average": 12,
-                "median": 12,
-                "max": 12,
-                "min": 12
-            }
+            return {"average": 12, "median": 12, "max": 12, "min": 12}
 
         sorted_sizes = sorted(font_sizes)
 
@@ -711,7 +797,7 @@ class DetailedFitzExtractor():
             "average": sum(font_sizes) / len(font_sizes),
             "median": sorted_sizes[len(sorted_sizes) // 2],
             "max": max(font_sizes),
-            "min": min(font_sizes)
+            "min": min(font_sizes),
         }
 
     def _detect_numbering_pattern(self, text):
@@ -724,7 +810,7 @@ class DetailedFitzExtractor():
         text_stripped = text.strip()
 
         # Pattern 1: "1. ", "2.3 ", "1.1.1 " style numbering
-        match = re.match(r'^(\d+)\.(\d+)?\.?(\d+)?\s+', text_stripped)
+        match = re.match(r"^(\d+)\.(\d+)?\.?(\d+)?\s+", text_stripped)
         if match:
             if match.group(3):  # 1.1.1
                 return (True, 3, "decimal_3")
@@ -734,19 +820,21 @@ class DetailedFitzExtractor():
                 return (True, 1, "decimal_1")
 
         # Pattern 2: "A. ", "B. " style (uppercase letters)
-        if re.match(r'^[A-Z]\.\s+', text_stripped):
+        if re.match(r"^[A-Z]\.\s+", text_stripped):
             return (True, 2, "letter_upper")
 
         # Pattern 3: "a) ", "b) " style (lowercase letters with parenthesis)
-        if re.match(r'^[a-z]\)\s+', text_stripped):
+        if re.match(r"^[a-z]\)\s+", text_stripped):
             return (True, 3, "letter_lower_paren")
 
         # Pattern 4: Roman numerals "I. ", "II. ", "III. "
-        if re.match(r'^[IVX]+\.\s+', text_stripped):
+        if re.match(r"^[IVX]+\.\s+", text_stripped):
             return (True, 2, "roman")
 
         # Pattern 5: Chapter/Section keywords
-        if re.match(r'^(Chapter|Section|Part|Appendix)\s+\d+', text_stripped, re.IGNORECASE):
+        if re.match(
+            r"^(Chapter|Section|Part|Appendix)\s+\d+", text_stripped, re.IGNORECASE
+        ):
             return (True, 1, "chapter")
 
         # Not a numbered heading
@@ -783,7 +871,9 @@ class DetailedFitzExtractor():
         # Centered if:
         # 1. Left and right margins are roughly equal
         # 2. Line is not too wide (< 80% of page width)
-        is_centered = (margin_difference < margin_threshold) and (line_width / page_width < 0.8)
+        is_centered = (margin_difference < margin_threshold) and (
+            line_width / page_width < 0.8
+        )
 
         # Also ensure there IS some margin (not edge-to-edge)
         min_margin = page_width * 0.05  # At least 5% margin on each side
@@ -808,7 +898,7 @@ class DetailedFitzExtractor():
             "text_width_ratio": line_width / page_width if page_width > 0 else 0,
             "left_margin": left_margin,
             "right_margin": right_margin,
-            "margin_difference": margin_difference
+            "margin_difference": margin_difference,
         }
 
     def _analyze_text_capitalization(self, text):
@@ -821,7 +911,7 @@ class DetailedFitzExtractor():
         text_stripped = text.strip()
 
         # Remove leading numbers/bullets for analysis
-        text_for_analysis = re.sub(r'^[\d\.\)\]\-\•\◦\▪\->]+\s*', '', text_stripped)
+        text_for_analysis = re.sub(r"^[\d\.\)\]\•\◦\▪\->-]+\s*", "", text_stripped)
 
         if not text_for_analysis:
             return {"is_all_caps": False, "is_title_case": False, "caps_ratio": 0}
@@ -848,7 +938,7 @@ class DetailedFitzExtractor():
         return {
             "is_all_caps": is_all_caps,
             "is_title_case": is_title_case,
-            "caps_ratio": caps_ratio
+            "caps_ratio": caps_ratio,
         }
 
     def _calculate_whitespace_context(self, line_key, all_line_keys):
@@ -884,13 +974,15 @@ class DetailedFitzExtractor():
         line_height = line_key[1] - line_key[0]
 
         # Isolated if significant whitespace on both sides (>50% of line height)
-        is_isolated = (space_above > line_height * 0.5 and space_below > line_height * 0.5)
+        is_isolated = (
+            space_above > line_height * 0.5 and space_below > line_height * 0.5
+        )
 
         return {
             "space_above": space_above,
             "space_below": space_below,
             "is_isolated": is_isolated,
-            "line_height": line_height
+            "line_height": line_height,
         }
 
     def _classify_text_type(self, font_size, flags, text_length, font_stats):
@@ -913,10 +1005,8 @@ class DetailedFitzExtractor():
         """
         # Extract bold and italic flags using bit shift operations
         is_bold = bool(flags & (1 << 4))  # bit 4 = bold (value 16)
-        is_italic = bool(flags & (1 << 1))  # bit 1 = italic (value 2)
 
         avg_size = font_stats["average"]
-        median_size = font_stats["median"]
         max_size = font_stats["max"]
         min_size = font_stats["min"]
 
@@ -937,18 +1027,22 @@ class DetailedFitzExtractor():
         # - Font size is max OR
         # - Font size >= 90% of max OR
         # - Font size >= 80% of max AND bold
-        if (font_size >= max_size or
-            normalized_position >= 0.9 or
-            (normalized_position >= 0.8 and is_bold)):
+        if (
+            font_size >= max_size
+            or normalized_position >= 0.9
+            or (normalized_position >= 0.8 and is_bold)
+        ):
             return "h1"
 
         # H2: Very large text with bold, or significantly larger
         # - Font size >= 70% of max AND bold OR
         # - Size ratio >= 1.5 (significantly larger without bold) OR
         # - Size ratio >= 1.25 AND bold
-        elif ((normalized_position >= 0.7 and is_bold) or
-              size_ratio >= 1.5 or
-              (size_ratio >= 1.25 and is_bold)):
+        elif (
+            (normalized_position >= 0.7 and is_bold)
+            or size_ratio >= 1.5
+            or (size_ratio >= 1.25 and is_bold)
+        ):
             return "h2"
 
         # H3: MUST be bold (stricter rule)
@@ -966,8 +1060,20 @@ class DetailedFitzExtractor():
         else:
             return "normal"
 
-    def _classify_with_phase3_context(self, base_classification, text, bbox, page_width, page_height,
-                                       font_size, is_bold, font_stats, line_key, all_line_keys, is_underlined=False):
+    def _classify_with_phase3_context(
+        self,
+        base_classification,
+        text,
+        bbox,
+        page_width,
+        page_height,
+        font_size,
+        is_bold,
+        font_stats,
+        line_key,
+        all_line_keys,
+        is_underlined=False,
+    ):
         """
         Phase 3: Enhanced classification using position, patterns, and context.
         Refines the base font-based classification with contextual clues.
@@ -1001,7 +1107,9 @@ class DetailedFitzExtractor():
             return ("normal", 0.9, ["too_short"])
 
         # Analyze numbering patterns
-        has_numbering, suggested_level, pattern_type = self._detect_numbering_pattern(text_stripped)
+        has_numbering, suggested_level, pattern_type = self._detect_numbering_pattern(
+            text_stripped
+        )
         if has_numbering:
             hints.append(f"numbered_{pattern_type}")
             confidence += 0.2
@@ -1117,7 +1225,9 @@ class DetailedFitzExtractor():
                 hints.append("promoted_underlined_centered")
 
         # Font size boost
-        size_ratio = font_size / font_stats["average"] if font_stats["average"] > 0 else 1
+        size_ratio = (
+            font_size / font_stats["average"] if font_stats["average"] > 0 else 1
+        )
         if size_ratio >= 1.3:
             hints.append("large_font")
             confidence += 0.1
@@ -1160,7 +1270,7 @@ class DetailedFitzExtractor():
                     "font_sizes": [],
                     "flags": [],
                     "text_lengths": [],
-                    "matched_count": 0
+                    "matched_count": 0,
                 }
 
             # Handle underscores/dots (field placeholders)
@@ -1180,8 +1290,13 @@ class DetailedFitzExtractor():
 
                 if x_overlap > 0 and y_overlap > 0:
                     # Check if the text matches (case-insensitive partial match)
-                    if text.lower() in font_data["text"].lower() or font_data["text"].lower() in text.lower():
-                        line_font_info[line_key]["font_sizes"].append(font_data["font_size"])
+                    if (
+                        text.lower() in font_data["text"].lower()
+                        or font_data["text"].lower() in text.lower()
+                    ):
+                        line_font_info[line_key]["font_sizes"].append(
+                            font_data["font_size"]
+                        )
                         line_font_info[line_key]["flags"].append(font_data["flags"])
                         line_font_info[line_key]["text_lengths"].append(len(text))
                         line_font_info[line_key]["matched_count"] += 1
@@ -1190,7 +1305,9 @@ class DetailedFitzExtractor():
 
             # If no match found, use default values but log it
             if not matched and text.strip():
-                logger.debug(f"No font match found for word: '{text}' at ({x0:.1f}, {y0:.1f})")
+                logger.debug(
+                    f"No font match found for word: '{text}' at ({x0:.1f}, {y0:.1f})"
+                )
 
         return lines, line_font_info, font_stats
 
@@ -1207,13 +1324,15 @@ class DetailedFitzExtractor():
         table_objects = []
 
         for table in page.find_tables():
-            tables.append({
-                "tid": global_tid,
-                "bbox": list(table.bbox),
-                "row_count": table.row_count,
-                "col_count": table.col_count,
-                "table_obj": table
-            })
+            tables.append(
+                {
+                    "tid": global_tid,
+                    "bbox": list(table.bbox),
+                    "row_count": table.row_count,
+                    "col_count": table.col_count,
+                    "table_obj": table,
+                }
+            )
             table_objects.append(table)
             global_tid += 1
         return tables, global_tid
@@ -1232,8 +1351,12 @@ class DetailedFitzExtractor():
         for table_info in table_data:
             table_bbox = table_info["bbox"]
 
-            if (bbox.l >= table_bbox[0] and bbox.r <= table_bbox[2] and
-                bbox.t >= table_bbox[1] and bbox.b <= table_bbox[3]):
+            if (
+                bbox.l >= table_bbox[0]
+                and bbox.r <= table_bbox[2]
+                and bbox.t >= table_bbox[1]
+                and bbox.b <= table_bbox[3]
+            ):
 
                 table_obj = table_info.get("table_obj")
                 if not table_obj:
@@ -1251,15 +1374,21 @@ class DetailedFitzExtractor():
                                 cell = table_obj.cell(row_idx, col_idx)
                                 if cell:
                                     cell_bbox = cell.bbox
-                                    if (cell_bbox[0] <= cell_center_x <= cell_bbox[2] and
-                                        cell_bbox[1] <= cell_center_y <= cell_bbox[3]):
+                                    if (
+                                        cell_bbox[0] <= cell_center_x <= cell_bbox[2]
+                                        and cell_bbox[1]
+                                        <= cell_center_y
+                                        <= cell_bbox[3]
+                                    ):
                                         return table_info["tid"], row_idx, col_idx
-                            except:
+                            except Exception:
                                 continue
 
                     # Method 2: If exact match fails, find closest cell
-                    logger.info(f"Exact cell position not found for field in table {table_info['tid']}, using closest match")
-                    min_distance = float('inf')
+                    logger.info(
+                        f"Exact cell position not found for field in table {table_info['tid']}, using closest match"
+                    )
+                    min_distance = float("inf")
                     best_row, best_col = None, None
 
                     for row_idx in range(table_info["row_count"]):
@@ -1270,27 +1399,38 @@ class DetailedFitzExtractor():
                                     cell_bbox = cell.bbox
                                     cell_cx = (cell_bbox[0] + cell_bbox[2]) / 2
                                     cell_cy = (cell_bbox[1] + cell_bbox[3]) / 2
-                                    distance = ((cell_cx - cell_center_x) ** 2 + (cell_cy - cell_center_y) ** 2) ** 0.5
+                                    distance = (
+                                        (cell_cx - cell_center_x) ** 2
+                                        + (cell_cy - cell_center_y) ** 2
+                                    ) ** 0.5
                                     if distance < min_distance:
                                         min_distance = distance
                                         best_row, best_col = row_idx, col_idx
-                            except:
+                            except Exception:
                                 continue
 
                     if best_row is not None and best_col is not None:
-                        logger.info(f"Found closest cell: row={best_row}, col={best_col} (distance={min_distance:.2f})")
+                        logger.info(
+                            f"Found closest cell: row={best_row}, col={best_col} (distance={min_distance:.2f})"
+                        )
                         return table_info["tid"], best_row, best_col
 
                 except Exception as e:
-                    logger.warning(f"Error determining cell position in table {table_info['tid']}: {e}")
+                    logger.warning(
+                        f"Error determining cell position in table {table_info['tid']}: {e}"
+                    )
 
                 # Method 3: Fallback - estimate based on bbox position
                 row_idx, col_idx = self._estimate_cell_position(bbox, table_info)
                 if row_idx is not None and col_idx is not None:
-                    logger.info(f"Using estimated position: row={row_idx}, col={col_idx}")
+                    logger.info(
+                        f"Using estimated position: row={row_idx}, col={col_idx}"
+                    )
                     return table_info["tid"], row_idx, col_idx
 
-                logger.warning(f"Could not determine row/col for field in table {table_info['tid']}")
+                logger.warning(
+                    f"Could not determine row/col for field in table {table_info['tid']}"
+                )
                 return table_info["tid"], None, None
 
         return None, None, None
@@ -1327,14 +1467,20 @@ class DetailedFitzExtractor():
             logger.warning(f"Could not estimate cell position: {e}")
             return None, None
 
-    def _assign_fid_and_gid_to_field(self, rect, widget, lines, line_map, table_data, page_num):
+    def _assign_fid_and_gid_to_field(
+        self, rect, widget, lines, line_map, table_data, page_num
+    ):
         fid = self.global_fid
-        bbox = BoundingBox(l=rect.x0, t=rect.y0, r=rect.x1, b=rect.y1, rounding=self.rounding)
+        bbox = BoundingBox(
+            l=rect.x0, t=rect.y0, r=rect.x1, b=rect.y1, rounding=self.rounding
+        )
 
         field_type_str = self._get_field_type_new(widget)
 
         # Find table assignment with row and column information
-        assigned_table_tid, row_idx, col_idx = self._find_cell_position_in_table(bbox, table_data)
+        assigned_table_tid, row_idx, col_idx = self._find_cell_position_in_table(
+            bbox, table_data
+        )
 
         min_distance = float("inf")
         closest_line = None
@@ -1379,7 +1525,7 @@ class DetailedFitzExtractor():
             "page": page_num,
             "field_name": widget.field_name or None,
             "field_value": widget.field_value,
-            "gid": gid
+            "gid": gid,
         }
 
         if assigned_table_tid is not None:
@@ -1404,7 +1550,6 @@ class DetailedFitzExtractor():
             tuple: (header_threshold, footer_threshold) - Y coordinates defining header/footer regions
         """
         page_height = page.rect.height
-        page_width = page.rect.width
 
         # Typical header/footer margins (adjustable)
         HEADER_MARGIN_RATIO = 0.08  # Top 8% of page
@@ -1433,7 +1578,17 @@ class DetailedFitzExtractor():
 
         return header_threshold, footer_threshold
 
-    def _process_lines_with_headings(self, lines, line_map, line_font_info, font_stats, page_num, global_tid, page_outline=None, page=None):
+    def _process_lines_with_headings(
+        self,
+        lines,
+        line_map,
+        line_font_info,
+        font_stats,
+        page_num,
+        global_tid,
+        page_outline=None,
+        page=None,
+    ):
         """
         Process lines with heading detection based on font information.
 
@@ -1455,10 +1610,12 @@ class DetailedFitzExtractor():
 
         # Detect header and footer regions
         header_threshold = 0
-        footer_threshold = float('inf')
+        footer_threshold = float("inf")
         underlined_regions = []
         if page:
-            header_threshold, footer_threshold = self._detect_header_footer_regions(page, lines)
+            header_threshold, footer_threshold = self._detect_header_footer_regions(
+                page, lines
+            )
             underlined_regions = self._detect_underlines(page)
 
         for page_pid, line_key in enumerate(sorted(lines.keys()), start=1):
@@ -1469,7 +1626,7 @@ class DetailedFitzExtractor():
             full_text = ""
             previous_x1 = None
 
-            for i, (word, (x0, y0, x1, y1), _) in enumerate(words):
+            for i, (word, (x0, _y0, x1, _y1), _) in enumerate(words):
                 if i == 0:
                     gap = max(0, x0 - self.LEFT_MARGIN)
                     space_count = int(gap / self.AVG_CHAR_WIDTH)
@@ -1487,7 +1644,7 @@ class DetailedFitzExtractor():
                 t=line_key[0],
                 r=max(w[1][2] for w in words),
                 b=line_key[1],
-                rounding=self.rounding
+                rounding=self.rounding,
             )
 
             # Determine heading type based on font info
@@ -1531,8 +1688,16 @@ class DetailedFitzExtractor():
                         # Use the maximum font size in the line (typically the dominant one)
                         avg_font_size = max(font_info["font_sizes"])
                         # Check if any word in the line is bold or italic
-                        is_bold = any(flags & (1 << 4) for flags in font_info["flags"]) if font_info["flags"] else False
-                        is_italic = any(flags & (1 << 1) for flags in font_info["flags"]) if font_info["flags"] else False
+                        is_bold = (
+                            any(flags & (1 << 4) for flags in font_info["flags"])
+                            if font_info["flags"]
+                            else False
+                        )
+                        is_italic = (
+                            any(flags & (1 << 1) for flags in font_info["flags"])
+                            if font_info["flags"]
+                            else False
+                        )
                         # Get text length
                         text_length = len(full_text.strip())
 
@@ -1540,31 +1705,32 @@ class DetailedFitzExtractor():
                         # Create flags value for classification
                         combined_flags = 0
                         if is_bold:
-                            combined_flags |= (1 << 4)
+                            combined_flags |= 1 << 4
                         if is_italic:
-                            combined_flags |= (1 << 1)
+                            combined_flags |= 1 << 1
 
-                        base_classification = self._classify_text_type(avg_font_size,
-                                                               combined_flags,
-                                                               text_length,
-                                                               font_stats)
+                        base_classification = self._classify_text_type(
+                            avg_font_size, combined_flags, text_length, font_stats
+                        )
 
                         # Phase 3: Apply contextual refinement
                         if page:
                             page_width = page.rect.width
                             page_height = page.rect.height
-                            heading_type, confidence, phase3_hints = self._classify_with_phase3_context(
-                                base_classification,
-                                full_text,
-                                bbox,  # Pass BoundingBox object directly
-                                page_width,
-                                page_height,
-                                avg_font_size,
-                                is_bold,
-                                font_stats,
-                                line_key,
-                                lines.keys(),
-                                is_underlined  # Pass underline detection
+                            heading_type, confidence, phase3_hints = (
+                                self._classify_with_phase3_context(
+                                    base_classification,
+                                    full_text,
+                                    bbox,  # Pass BoundingBox object directly
+                                    page_width,
+                                    page_height,
+                                    avg_font_size,
+                                    is_bold,
+                                    font_stats,
+                                    line_key,
+                                    lines.keys(),
+                                    is_underlined,  # Pass underline detection
+                                )
                             )
                         else:
                             heading_type = base_classification
@@ -1575,8 +1741,16 @@ class DetailedFitzExtractor():
             # Get font size and style info even for headers/footers
             if line_key in line_font_info and line_font_info[line_key]["font_sizes"]:
                 avg_font_size = max(line_font_info[line_key]["font_sizes"])
-                is_bold = any(flags & (1 << 4) for flags in line_font_info[line_key]["flags"]) if line_font_info[line_key]["flags"] else False
-                is_italic = any(flags & (1 << 1) for flags in line_font_info[line_key]["flags"]) if line_font_info[line_key]["flags"] else False
+                is_bold = (
+                    any(flags & (1 << 4) for flags in line_font_info[line_key]["flags"])
+                    if line_font_info[line_key]["flags"]
+                    else False
+                )
+                is_italic = (
+                    any(flags & (1 << 1) for flags in line_font_info[line_key]["flags"])
+                    if line_font_info[line_key]["flags"]
+                    else False
+                )
 
             element = {
                 "text": full_text,
@@ -1589,7 +1763,7 @@ class DetailedFitzExtractor():
                 "font_size": round(avg_font_size, 1),  # Round to 1 decimal place
                 "is_bold": is_bold,
                 "is_italic": is_italic,
-                "outline_source": outline_source  # Track if heading came from outline
+                "outline_source": outline_source,  # Track if heading came from outline
             }
 
             # Add Phase 3 metadata if available
@@ -1635,16 +1809,16 @@ class DetailedFitzExtractor():
         current_pattern = None
         last_bullet_value = None
 
-        for i, element in enumerate(text_elements):
-            text = element.get('text', '').strip()
+        for _i, element in enumerate(text_elements):
+            text = element.get("text", "").strip()
 
             # Skip headers/footers and headings
-            if element.get('is_header') or element.get('is_footer'):
+            if element.get("is_header") or element.get("is_footer"):
                 in_bullet_group = False
                 current_pattern = None
                 continue
 
-            if element.get('heading_type') in ['h1', 'h2', 'h3']:
+            if element.get("heading_type") in ["h1", "h2", "h3"]:
                 in_bullet_group = False
                 current_pattern = None
                 continue
@@ -1652,33 +1826,33 @@ class DetailedFitzExtractor():
             # Detect bullet pattern
             bullet_info = self._detect_bullet_pattern(text)
 
-            if bullet_info['is_bullet']:
-                pattern = bullet_info['pattern']
-                value = bullet_info['value']
+            if bullet_info["is_bullet"]:
+                pattern = bullet_info["pattern"]
+                value = bullet_info["value"]
 
                 # Check if this continues the current bullet group
                 if in_bullet_group and pattern == current_pattern:
                     # Verify sequence continuity
                     if self._is_next_in_sequence(last_bullet_value, value, pattern):
-                        element['bullet_group_id'] = bullet_group_id
-                        element['bullet_type'] = pattern
-                        element['bullet_index'] = value
+                        element["bullet_group_id"] = bullet_group_id
+                        element["bullet_type"] = pattern
+                        element["bullet_index"] = value
                         last_bullet_value = value
                     else:
                         # Sequence broken, start new group
                         bullet_group_id += 1
-                        element['bullet_group_id'] = bullet_group_id
-                        element['bullet_type'] = pattern
-                        element['bullet_index'] = value
+                        element["bullet_group_id"] = bullet_group_id
+                        element["bullet_type"] = pattern
+                        element["bullet_index"] = value
                         last_bullet_value = value
                 else:
                     # Start new bullet group
                     bullet_group_id += 1
                     in_bullet_group = True
                     current_pattern = pattern
-                    element['bullet_group_id'] = bullet_group_id
-                    element['bullet_type'] = pattern
-                    element['bullet_index'] = value
+                    element["bullet_group_id"] = bullet_group_id
+                    element["bullet_type"] = pattern
+                    element["bullet_index"] = value
                     last_bullet_value = value
             else:
                 # Not a bullet, reset
@@ -1702,65 +1876,71 @@ class DetailedFitzExtractor():
         text = text.strip()
 
         # Pattern 1: Numeric bullets "1. ", "2) ", "1 ", etc.
-        match = re.match(r'^(\d+)[.)]\s+', text)
+        match = re.match(r"^(\d+)[.)]\s+", text)
         if match:
             return {
-                'is_bullet': True,
-                'pattern': 'numeric',
-                'value': int(match.group(1))
+                "is_bullet": True,
+                "pattern": "numeric",
+                "value": int(match.group(1)),
             }
 
         # Pattern 2: Lowercase letter bullets "a. ", "b) ", etc.
-        match = re.match(r'^([a-z])[.)]\s+', text)
+        match = re.match(r"^([a-z])[.)]\s+", text)
         if match:
             return {
-                'is_bullet': True,
-                'pattern': 'lower_alpha',
-                'value': ord(match.group(1)) - ord('a')  # Convert to 0-based index
+                "is_bullet": True,
+                "pattern": "lower_alpha",
+                "value": ord(match.group(1)) - ord("a"),  # Convert to 0-based index
             }
 
         # Pattern 3: Uppercase letter bullets "A. ", "B) ", etc.
-        match = re.match(r'^([A-Z])[.)]\s+', text)
+        match = re.match(r"^([A-Z])[.)]\s+", text)
         if match:
             return {
-                'is_bullet': True,
-                'pattern': 'upper_alpha',
-                'value': ord(match.group(1)) - ord('A')  # Convert to 0-based index
+                "is_bullet": True,
+                "pattern": "upper_alpha",
+                "value": ord(match.group(1)) - ord("A"),  # Convert to 0-based index
             }
 
         # Pattern 4: Roman numerals "i. ", "ii. ", "I. ", "II. "
-        match = re.match(r'^([ivxIVX]+)[.)]\s+', text)
+        match = re.match(r"^([ivxIVX]+)[.)]\s+", text)
         if match:
             roman = match.group(1)
             # Simple roman to int conversion for common cases
             try:
                 roman_value = self._roman_to_int(roman)
-                return {
-                    'is_bullet': True,
-                    'pattern': 'roman',
-                    'value': roman_value
-                }
-            except:
+                return {"is_bullet": True, "pattern": "roman", "value": roman_value}
+            except Exception:
                 pass
 
         # Pattern 5: Symbol bullets "• ", "○ ", "■ ", "- ", "* "
-        if re.match(r'^[•○■▪▫►▸\->⇒✓✔⇨⇒◆◇*\-]\s+', text):
+        if re.match(r"^[•○■▪▫►▸\-⇒✓✔⇨◆◇*]\s+", text):
             return {
-                'is_bullet': True,
-                'pattern': 'symbol',
-                'value': None  # No sequence value for symbols
+                "is_bullet": True,
+                "pattern": "symbol",
+                "value": None,  # No sequence value for symbols
             }
 
-        return {
-            'is_bullet': False,
-            'pattern': None,
-            'value': None
-        }
+        return {"is_bullet": False, "pattern": None, "value": None}
 
     def _roman_to_int(self, s):
         """Convert Roman numeral to integer (basic implementation)."""
-        roman_values = {'I': 1, 'V': 5, 'X': 10, 'L': 50, 'C': 100, 'D': 500, 'M': 1000,
-                       'i': 1, 'v': 5, 'x': 10, 'l': 50, 'c': 100, 'd': 500, 'm': 1000}
+        roman_values = {
+            "I": 1,
+            "V": 5,
+            "X": 10,
+            "L": 50,
+            "C": 100,
+            "D": 500,
+            "M": 1000,
+            "i": 1,
+            "v": 5,
+            "x": 10,
+            "l": 50,
+            "c": 100,
+            "d": 500,
+            "m": 1000,
+        }
         total = 0
         prev_value = 0
 
@@ -1777,9 +1957,9 @@ class DetailedFitzExtractor():
     def _is_next_in_sequence(self, prev_value, curr_value, pattern):
         """Check if curr_value is next in sequence after prev_value."""
         if prev_value is None or curr_value is None:
-            return pattern == 'symbol'  # Symbols always continue if same pattern
+            return pattern == "symbol"  # Symbols always continue if same pattern
 
-        if pattern in ['numeric', 'lower_alpha', 'upper_alpha', 'roman']:
+        if pattern in ["numeric", "lower_alpha", "upper_alpha", "roman"]:
             # Check if current is exactly prev + 1
             return curr_value == prev_value + 1
 
@@ -1809,21 +1989,18 @@ class DetailedFitzExtractor():
         processed = []
         h1_found = False
         h2_found = False
-        h1_element = None  # Track the H1 element
 
         # First pass: identify the true H1 (largest or first significant heading)
-        h1_candidates = [el for el in text_elements if el['heading_type'] in ['h1', 'h2']]
+        [el for el in text_elements if el["heading_type"] in ["h1", "h2"]]
 
         for element in text_elements:
             # Skip header/footer elements - they don't participate in hierarchy
-            if element.get('is_header') or element.get('is_footer'):
+            if element.get("is_header") or element.get("is_footer"):
                 processed.append(element)
                 continue
 
-            original_type = element['heading_type']
-            font_size = element['font_size']
-            is_bold = element['is_bold']
-            text = element['text'].strip()
+            original_type = element["heading_type"]
+            text = element["text"].strip()
             text_length = len(text)
 
             # Skip empty or very short text (likely not a heading)
@@ -1834,52 +2011,49 @@ class DetailedFitzExtractor():
             new_type = original_type
 
             # Rule 1: Only ONE H1 per page
-            if original_type == 'h1':
+            if original_type == "h1":
                 if not h1_found:
                     # This is our H1
-                    new_type = 'h1'
+                    new_type = "h1"
                     h1_found = True
-                    h1_element = element
                     h2_found = False  # Reset H2 tracking after H1
                 else:
                     # Already have H1, demote to H2
-                    new_type = 'h2'
+                    new_type = "h2"
                     h2_found = True
                     logger.debug(f"Demoted H1->H2: '{text[:50]}'")
 
             # Rule 2: H2 requires H1 first
-            elif original_type == 'h2':
+            elif original_type == "h2":
                 if not h1_found:
                     # No H1 yet, promote this to H1
-                    new_type = 'h1'
+                    new_type = "h1"
                     h1_found = True
-                    h1_element = element
                     logger.debug(f"Promoted H2->H1: '{text[:50]}'")
                 else:
                     # Have H1, this is valid H2
-                    new_type = 'h2'
+                    new_type = "h2"
                     h2_found = True
 
             # Rule 3: H3 requires both H1 and H2
-            elif original_type == 'h3':
+            elif original_type == "h3":
                 if not h1_found:
                     # No H1 yet, promote to H1
-                    new_type = 'h1'
+                    new_type = "h1"
                     h1_found = True
-                    h1_element = element
                     logger.debug(f"Promoted H3->H1: '{text[:50]}'")
                 elif not h2_found:
                     # Have H1 but no H2, promote to H2
-                    new_type = 'h2'
+                    new_type = "h2"
                     h2_found = True
                     logger.debug(f"Promoted H3->H2: '{text[:50]}'")
                 else:
                     # Have both H1 and H2, valid H3
-                    new_type = 'h3'
+                    new_type = "h3"
 
             # Update the element
-            element['heading_type'] = new_type
-            element['hierarchy_adjusted'] = (new_type != original_type)
+            element["heading_type"] = new_type
+            element["hierarchy_adjusted"] = new_type != original_type
             processed.append(element)
 
         return processed
@@ -1890,7 +2064,7 @@ class DetailedFitzExtractor():
             "end_fid": max(page_fids) if page_fids else -1,
             "total_fids": len(page_fids),
             "start_gid": min(page_gids) if page_gids else -1,
-            "end_gid": max(page_gids) if page_gids else -1
+            "end_gid": max(page_gids) if page_gids else -1,
         }
 
     def _read_pdf(self, pdf_path: str):
@@ -1910,7 +2084,7 @@ class DetailedFitzExtractor():
         logger.info(f"Reading PDF from local file: {pdf_path}")
 
         try:
-            with open(pdf_path, 'rb') as f:
+            with open(pdf_path, "rb") as f:
                 pdf_bytes = f.read()
         except FileNotFoundError as e:
             logger.error(f"PDF file not found: {pdf_path}")
@@ -1961,7 +2135,9 @@ class DetailedFitzExtractor():
             if doc.page_count == 0:
                 raise ValueError(f"PDF has no pages: {pdf_path}")
 
-            logger.info(f"Starting extraction from PDF: {pdf_path} ({doc.page_count} pages)")
+            logger.info(
+                f"Starting extraction from PDF: {pdf_path} ({doc.page_count} pages)"
+            )
 
             # Phase 1: Try to extract PDF outline/bookmarks first
             pdf_outline = self._extract_pdf_outline(doc)
@@ -1979,7 +2155,7 @@ class DetailedFitzExtractor():
             extracted_data = {
                 "pages": [],
                 "page_width": round(page_width, 2),
-                "page_height": round(page_height, 2)
+                "page_height": round(page_height, 2),
             }
             global_tid = 1
             all_text_elements = []  # Collect all elements for Phase 4 refinement
@@ -1987,7 +2163,9 @@ class DetailedFitzExtractor():
         except (ValueError, FileNotFoundError, RuntimeError):
             raise
         except Exception as e:
-            logger.error(f"Failed to initialize PDF extraction: {str(e)}", exc_info=True)
+            logger.error(
+                f"Failed to initialize PDF extraction: {str(e)}", exc_info=True
+            )
             raise RuntimeError(f"PDF extraction initialization failed: {str(e)}") from e
 
         try:
@@ -1997,7 +2175,9 @@ class DetailedFitzExtractor():
 
                 # Extract words with font information
                 # Using line_tolerance=1 to group slightly offset lines (±1 pixel)
-                lines, line_font_info, font_stats = self._extract_words_by_line_with_fonts(page, line_tolerance=1)
+                lines, line_font_info, font_stats = (
+                    self._extract_words_by_line_with_fonts(page, line_tolerance=1)
+                )
                 line_map = self._assign_gids_to_lines(lines)
 
                 # Extract widgets (form fields)
@@ -2025,23 +2205,34 @@ class DetailedFitzExtractor():
 
                 # Process text elements with heading detection
                 text_elements = self._process_lines_with_headings(
-                    lines, line_map, line_font_info, font_stats, page_num, global_tid, page_outline, page
+                    lines,
+                    line_map,
+                    line_font_info,
+                    font_stats,
+                    page_num,
+                    global_tid,
+                    page_outline,
+                    page,
                 )
 
                 # Phase 2: Enforce heading hierarchy rules (skip header/footer text)
-                text_elements = self._enforce_heading_hierarchy(text_elements, font_stats)
+                text_elements = self._enforce_heading_hierarchy(
+                    text_elements, font_stats
+                )
 
                 # Phase 4: Learn patterns from this page
                 doc_analyzer.learn_from_page(page_num - 1, text_elements, font_stats)
 
                 # Add page number to each element for Phase 4
                 for element in text_elements:
-                    element['page'] = page_num - 1  # 0-based for analyzer
+                    element["page"] = page_num - 1  # 0-based for analyzer
                     all_text_elements.append(element)
 
                 page_metadata = self._compute_page_metadata(page_fids, page_gids)
 
-                form_fields.sort(key=lambda el: (el["bbox"]["bottom"], el["bbox"]["right"]))
+                form_fields.sort(
+                    key=lambda el: (el["bbox"]["bottom"], el["bbox"]["right"])
+                )
 
                 # Clean table_data by removing non-serializable table_obj
                 clean_table_data = [
@@ -2052,14 +2243,16 @@ class DetailedFitzExtractor():
                 # Add font statistics to page metadata
                 page_metadata["font_stats"] = font_stats
 
-                extracted_data["pages"].append({
-                    "page_number": page_num,
-                    "text_elements": text_elements,
-                    "form_fields": form_fields,
-                    "tables": clean_table_data,
-                    "table_cell_info": table_cell_info,
-                    "metadata": page_metadata
-                })
+                extracted_data["pages"].append(
+                    {
+                        "page_number": page_num,
+                        "text_elements": text_elements,
+                        "form_fields": form_fields,
+                        "tables": clean_table_data,
+                        "table_cell_info": table_cell_info,
+                        "metadata": page_metadata,
+                    }
+                )
 
             # Phase 4: Apply document-level refinements
             doc_stats = doc_analyzer.get_document_statistics()
@@ -2067,15 +2260,19 @@ class DetailedFitzExtractor():
 
             # Update pages with refined elements
             element_index = 0
-            for page_data in extracted_data['pages']:
-                page_element_count = len(page_data['text_elements'])
-                page_data['text_elements'] = refined_elements[element_index:element_index + page_element_count]
+            for page_data in extracted_data["pages"]:
+                page_element_count = len(page_data["text_elements"])
+                page_data["text_elements"] = refined_elements[
+                    element_index : element_index + page_element_count
+                ]
                 element_index += page_element_count
 
             # Add Phase 4 statistics to extracted data
-            extracted_data['phase4_statistics'] = doc_stats
+            extracted_data["phase4_statistics"] = doc_stats
 
-            logger.info(f"Extraction completed successfully: {len(extracted_data['pages'])} pages processed")
+            logger.info(
+                f"Extraction completed successfully: {len(extracted_data['pages'])} pages processed"
+            )
 
             # Clean up internal metadata fields before saving
             self._cleanup_output_metadata(extracted_data)
@@ -2083,13 +2280,15 @@ class DetailedFitzExtractor():
             # Save extracted data
             try:
                 save_json(extracted_data, storage_config)
-                local_path = storage_config.get('path')
+                local_path = storage_config.get("path")
                 logger.info(f"Extracted data saved to: {local_path}")
                 # Add local_path to result for operations to reference
-                extracted_data['local_path'] = local_path
+                extracted_data["local_path"] = local_path
             except Exception as e:
                 logger.error(f"Failed to save extracted data: {str(e)}", exc_info=True)
-                raise RuntimeError(f"Failed to save extraction results: {str(e)}") from e
+                raise RuntimeError(
+                    f"Failed to save extraction results: {str(e)}"
+                ) from e
 
             # Generate PDF fingerprint hash from extracted JSON
             pdf_hash = None
@@ -2101,17 +2300,20 @@ class DetailedFitzExtractor():
                 fingerprint, pdf_hash = create_pdf_fingerprint(extracted_data)
 
                 logger.info(f"Generated PDF fingerprint hash: {pdf_hash[:16]}...")
-                extracted_data['pdf_hash'] = pdf_hash
+                extracted_data["pdf_hash"] = pdf_hash
 
             except Exception as hash_error:
                 logger.warning(f"Failed to generate PDF fingerprint hash: {hash_error}")
                 # Don't fail extraction if hash generation fails
-                extracted_data['pdf_hash'] = None
+                extracted_data["pdf_hash"] = None
 
             return extracted_data
 
         except Exception as e:
-            logger.error(f"Extraction failed on page {page_num if 'page_num' in locals() else 'unknown'}: {str(e)}", exc_info=True)
+            logger.error(
+                f"Extraction failed on page {page_num if 'page_num' in locals() else 'unknown'}: {str(e)}",
+                exc_info=True,
+            )
             raise RuntimeError(f"PDF extraction failed: {str(e)}") from e
         finally:
             if doc:
@@ -2138,18 +2340,18 @@ class DetailedFitzExtractor():
             extracted_data: The full extraction data dictionary
         """
         fields_to_remove = [
-            'is_bold',
-            'is_italic',
-            'outline_source',
-            'confidence',
-            'phase3_hints',
-            'hierarchy_adjusted',
-            'phase4_corrections',
-            'phase4_suggestion'
+            "is_bold",
+            "is_italic",
+            "outline_source",
+            "confidence",
+            "phase3_hints",
+            "hierarchy_adjusted",
+            "phase4_corrections",
+            "phase4_suggestion",
         ]
 
-        for page_data in extracted_data.get('pages', []):
-            for element in page_data.get('text_elements', []):
+        for page_data in extracted_data.get("pages", []):
+            for element in page_data.get("text_elements", []):
                 for field in fields_to_remove:
                     element.pop(field, None)
 
@@ -2161,14 +2363,11 @@ def main():
     # Configure logging
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Configuration for the extractor
-    config = {
-        "WIDGET_LINE_DISTANCE_THRESHOLD": 10,
-        "rounding": 1
-    }
+    config = {"WIDGET_LINE_DISTANCE_THRESHOLD": 10, "rounding": 1}
 
     # Path to your test PDF (local file path only)
     pdf_path = "/Users/raghava/Documents/EMC/pdf_autofiller/data/small_4page.pdf"
@@ -2180,7 +2379,7 @@ def main():
     # Storage configuration for local files only
     storage_config = {
         "type": "local",
-        "path": os.path.join(output_dir, "small_4page_extracted_data_detailed.json")
+        "path": os.path.join(output_dir, "small_4page_extracted_data_detailed.json"),
     }
 
     try:
@@ -2196,9 +2395,11 @@ def main():
         extractor = DetailedFitzExtractor(config)
 
         # Extract data from PDF
-        logger.info(f"\nStep 2: Extracting text with heading detection...")
+        logger.info("\nStep 2: Extracting text with heading detection...")
         logger.info(f"Extracting from: {pdf_path}")
-        extracted_data = extractor.extract(pdf_path=pdf_path, storage_config=storage_config)
+        extracted_data = extractor.extract(
+            pdf_path=pdf_path, storage_config=storage_config
+        )
 
         # Print summary statistics
         logger.info("=" * 80)
@@ -2214,13 +2415,19 @@ def main():
         total_fields = 0
         total_tables = 0
 
-        for page in extracted_data['pages']:
-            total_text += len(page['text_elements'])
-            total_h1 += sum(1 for el in page['text_elements'] if el.get('heading_type') == 'h1')
-            total_h2 += sum(1 for el in page['text_elements'] if el.get('heading_type') == 'h2')
-            total_h3 += sum(1 for el in page['text_elements'] if el.get('heading_type') == 'h3')
-            total_fields += len(page['form_fields'])
-            total_tables += len(page['tables'])
+        for page in extracted_data["pages"]:
+            total_text += len(page["text_elements"])
+            total_h1 += sum(
+                1 for el in page["text_elements"] if el.get("heading_type") == "h1"
+            )
+            total_h2 += sum(
+                1 for el in page["text_elements"] if el.get("heading_type") == "h2"
+            )
+            total_h3 += sum(
+                1 for el in page["text_elements"] if el.get("heading_type") == "h3"
+            )
+            total_fields += len(page["form_fields"])
+            total_tables += len(page["tables"])
 
         logger.info(f"Text elements: {total_text}")
         logger.info(f"  - H1: {total_h1}, H2: {total_h2}, H3: {total_h3}")

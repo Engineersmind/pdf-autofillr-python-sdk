@@ -6,8 +6,18 @@ Tasks:
   end_to_end_fill     — extract + fill the PDF, score final output
 """
 
-
-SUPPORTED_FORMATS = ["pdf", "docx", "pptx", "xlsx", "csv", "json", "txt", "md", "html", "xml"]
+SUPPORTED_FORMATS = [
+    "pdf",
+    "docx",
+    "pptx",
+    "xlsx",
+    "csv",
+    "json",
+    "txt",
+    "md",
+    "html",
+    "xml",
+]
 
 
 def document_extraction(

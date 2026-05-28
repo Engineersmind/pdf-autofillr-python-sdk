@@ -35,14 +35,14 @@ Keys are resolved in this order for each phase:
 
 Both phases can use the same model or completely different providers.
 """
+
 from __future__ import annotations
 
 import configparser
 import os
 import warnings
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 
 def _has_key_for_model(model: str, api_key: str) -> bool:
@@ -50,23 +50,27 @@ def _has_key_for_model(model: str, api_key: str) -> bool:
     if api_key:
         return True
     m = model.lower()
-    return any([
-        os.getenv("OPENAI_API_KEY")     and any(t in m for t in ("openai/", "gpt-", "o1", "o3")),
-        os.getenv("ANTHROPIC_API_KEY")  and any(t in m for t in ("anthropic/", "claude-")),
-        os.getenv("GROQ_API_KEY")       and "groq/" in m,
-        os.getenv("GEMINI_API_KEY")     and "gemini/" in m,
-        os.getenv("AZURE_API_KEY")      and "azure/" in m,
-        os.getenv("GOOGLE_APPLICATION_CREDENTIALS") and "vertex_ai/" in m,
-        os.getenv("AWS_ACCESS_KEY_ID")  and "bedrock/" in m,
-        "ollama/" in m,
-    ])
+    return any(
+        [
+            os.getenv("OPENAI_API_KEY")
+            and any(t in m for t in ("openai/", "gpt-", "o1", "o3")),
+            os.getenv("ANTHROPIC_API_KEY")
+            and any(t in m for t in ("anthropic/", "claude-")),
+            os.getenv("GROQ_API_KEY") and "groq/" in m,
+            os.getenv("GEMINI_API_KEY") and "gemini/" in m,
+            os.getenv("AZURE_API_KEY") and "azure/" in m,
+            os.getenv("GOOGLE_APPLICATION_CREDENTIALS") and "vertex_ai/" in m,
+            os.getenv("AWS_ACCESS_KEY_ID") and "bedrock/" in m,
+            "ollama/" in m,
+        ]
+    )
 
 
 @dataclass
 class MapperConfig:
     # ── Mapping LLM (Phase 1) ────────────────────────────────────────────────
     llm_model: str = "gpt-4o"
-    llm_api_key: str = ""        # set MAPPER_LLM_API_KEY or a provider-specific key
+    llm_api_key: str = ""  # set MAPPER_LLM_API_KEY or a provider-specific key
     llm_temperature: float = 0.0
     llm_max_tokens: int = 4096
     llm_timeout: int = 120
@@ -124,7 +128,7 @@ class MapperConfig:
     headers_max_workers: int = 3
 
     # JAR override (None = use bundled JARs)
-    java_jar_dir: Optional[str] = None
+    java_jar_dir: str | None = None
 
     def __post_init__(self):
         if self.use_second_mapper and not self.rag_enabled:
@@ -137,6 +141,7 @@ class MapperConfig:
 
     def validate(self) -> None:
         """Warn at startup if no credential is found for either LLM phase."""
+
         def _warn(phase: str, model: str, key: str, env_var: str) -> None:
             if not _has_key_for_model(model, key):
                 warnings.warn(
@@ -149,10 +154,15 @@ class MapperConfig:
                 )
 
         _warn("mapping", self.llm_model, self.llm_api_key, "MAPPER_LLM_API_KEY")
-        _warn("headers", self.headers_llm_model, self.headers_llm_api_key, "MAPPER_HEADERS_LLM_API_KEY")
+        _warn(
+            "headers",
+            self.headers_llm_model,
+            self.headers_llm_api_key,
+            "MAPPER_HEADERS_LLM_API_KEY",
+        )
 
     @classmethod
-    def from_directory(cls, config_dir: str) -> "MapperConfig":
+    def from_directory(cls, config_dir: str) -> MapperConfig:
         """
         Load from a config directory containing mapper_config.ini.
 
@@ -194,11 +204,11 @@ class MapperConfig:
         source_type = _s("general", "source_type", "local")
 
         # rag_enabled: check new [rag] section first, then legacy use_second_mapper
-        rag_enabled_new    = _b("rag", "enabled", False)
-        use_second_mapper  = _b("mapping", "use_second_mapper", False)
-        rag_enabled        = rag_enabled_new or use_second_mapper
+        rag_enabled_new = _b("rag", "enabled", False)
+        use_second_mapper = _b("mapping", "use_second_mapper", False)
+        rag_enabled = rag_enabled_new or use_second_mapper
 
-        rag_mode    = _s("rag", "mode",    "inprocess")
+        rag_mode = _s("rag", "mode", "inprocess")
         rag_api_url = _s("rag", "api_url", "") or _s("general", "rag_api_url", "")
         rag_api_key = _s("rag", "api_key", "")
 
@@ -221,11 +231,15 @@ class MapperConfig:
             rag_api_url=rag_api_url,
             rag_api_key=rag_api_key,
             source_type=source_type,
-            output_base_path=_s(source_type, "output_base_path", "./data/mapper/output"),
+            output_base_path=_s(
+                source_type, "output_base_path", "./data/mapper/output"
+            ),
             temp_local_dir=_s(source_type, "temp_local_dir", "/tmp"),
             cache_registry_path=_s(source_type, "cache_registry_path", ""),
             pdf_cache_enabled=_b("general", "pdf_cache_enabled", True),
-            notifications_enabled=_b("notifications", "teams_notifications_enabled", False),
+            notifications_enabled=_b(
+                "notifications", "teams_notifications_enabled", False
+            ),
             teams_webhook_url=_s("notifications", "teams_webhook_url", ""),
             headers_llm_model=_s("headers", "headers_llm_model", "gpt-4o"),
             headers_llm_api_key=os.getenv("MAPPER_HEADERS_LLM_API_KEY", ""),
@@ -236,14 +250,16 @@ class MapperConfig:
         )
 
     @classmethod
-    def from_env(cls) -> "MapperConfig":
+    def from_env(cls) -> MapperConfig:
         """Load entirely from environment variables — no config file needed."""
         source_type = os.getenv("MAPPER_SOURCE_TYPE", "local")
 
         # RAG: check new vars first, fall back to legacy MAPPER_USE_SECOND_MAPPER
-        rag_enabled_env   = os.getenv("RAG_ENABLED", "").lower()
-        use_second_mapper = os.getenv("MAPPER_USE_SECOND_MAPPER", "false").lower() == "true"
-        rag_enabled       = (rag_enabled_env == "true") or use_second_mapper
+        rag_enabled_env = os.getenv("RAG_ENABLED", "").lower()
+        use_second_mapper = (
+            os.getenv("MAPPER_USE_SECOND_MAPPER", "false").lower() == "true"
+        )
+        rag_enabled = (rag_enabled_env == "true") or use_second_mapper
 
         return cls(
             llm_model=os.getenv("MAPPER_LLM_MODEL", "gpt-4o"),
@@ -257,7 +273,8 @@ class MapperConfig:
             source_type=source_type,
             output_base_path=os.getenv("MAPPER_OUTPUT_PATH", "./data/mapper/output"),
             temp_local_dir=os.getenv("MAPPER_TEMP_DIR", "/tmp"),
-            pdf_cache_enabled=os.getenv("MAPPER_CACHE_ENABLED", "true").lower() == "true",
+            pdf_cache_enabled=os.getenv("MAPPER_CACHE_ENABLED", "true").lower()
+            == "true",
             use_second_mapper=use_second_mapper,
             rag_enabled=rag_enabled,
             rag_mode=os.getenv("RAG_MODE", "inprocess"),

@@ -3,9 +3,17 @@ Example 6 — Custom LLM corrector using any provider (Llama, Mistral, etc.)
 
 Shows how to implement FieldCorrectorBackend with a local Ollama model.
 """
+
 import json
+
 import requests
-from ragpdf import RAGPDFClient, LocalStorage, LocalVectorStore, SentenceTransformerBackend
+
+from ragpdf import (
+    LocalStorage,
+    LocalVectorStore,
+    RAGPDFClient,
+    SentenceTransformerBackend,
+)
 from ragpdf.correctors.base import FieldCorrectorBackend
 
 
@@ -21,13 +29,22 @@ class OllamaCorrectorBackend(FieldCorrectorBackend):
 Respond with JSON only: {{"corrected_field_name": "name", "confidence": 0.9, "reasoning": "explanation"}}"""
 
         try:
-            resp = requests.post(f"{self.host}/api/generate",
-                json={"model": self.model, "prompt": prompt, "stream": False}, timeout=30)
+            resp = requests.post(
+                f"{self.host}/api/generate",
+                json={"model": self.model, "prompt": prompt, "stream": False},
+                timeout=30,
+            )
             content = resp.json()["response"].strip()
             return json.loads(content)
         except Exception as e:
-            name = error_data.get("field_name", "unknown_field").lower().replace(" ", "_")
-            return {"corrected_field_name": name, "confidence": 0.5, "reasoning": str(e)}
+            name = (
+                error_data.get("field_name", "unknown_field").lower().replace(" ", "_")
+            )
+            return {
+                "corrected_field_name": name,
+                "confidence": 0.5,
+                "reasoning": str(e),
+            }
 
 
 client = RAGPDFClient(

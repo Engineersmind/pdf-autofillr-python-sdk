@@ -34,38 +34,37 @@ Adding a new pipeline file = add one method here, nowhere else.
 
 import os
 
-
 # ── Filename constants ────────────────────────────────────────────────────────
 # All mapper output files are prefixed with {pid}_ per the prod spec.
 # Changing a name? Update it here — one place, all paths follow.
 
 # Input files
-_INPUT_PDF           = "{pid}_input.pdf"     # mapper/{pid}/{pid}_input.pdf  (fetched via API, stored in mapper folder)
-_GLOBAL_JSON         = "form_keys_flat.json" # config/form_keys_flat.json
-_INPUT_JSON          = "final_output_flat.json"  # session root handoff file
+_INPUT_PDF = "{pid}_input.pdf"  # mapper/{pid}/{pid}_input.pdf  (fetched via API, stored in mapper folder)
+_GLOBAL_JSON = "form_keys_flat.json"  # config/form_keys_flat.json
+_INPUT_JSON = "final_output_flat.json"  # session root handoff file
 
 # Mapper output files — all prefixed with {pid}_
-_EXTRACTED_JSON      = "{pid}_extracted.json"
-_MAPPED_JSON         = "{pid}_mapping.json"
-_RADIO_JSON          = "{pid}_radio_groups.json"
-_HEADERS_FIELDS      = "{pid}_headers_with_fields.json"
-_FINAL_FIELDS        = "{pid}_final_form_fields.json"
-_JAVA_MAPPING        = "{pid}_final_mapping_json_combined.json"
-_EMBEDDED_PDF        = "{pid}_embedded.pdf"
-_FILLED_PDF          = "{pid}_filled.pdf"
+_EXTRACTED_JSON = "{pid}_extracted.json"
+_MAPPED_JSON = "{pid}_mapping.json"
+_RADIO_JSON = "{pid}_radio_groups.json"
+_HEADERS_FIELDS = "{pid}_headers_with_fields.json"
+_FINAL_FIELDS = "{pid}_final_form_fields.json"
+_JAVA_MAPPING = "{pid}_final_mapping_json_combined.json"
+_EMBEDDED_PDF = "{pid}_embedded.pdf"
+_FILLED_PDF = "{pid}_filled.pdf"
 
 # RAG input files (written by mapper into rag/{pid}/input/)
-_HEADER_FILE         = "header_file.json"
-_SECTION_FILE        = "section_file.json"
+_HEADER_FILE = "header_file.json"
+_SECTION_FILE = "section_file.json"
 
 # RAG prediction files (rag/{pid}/predictions/)
-_RAG_PRED            = "rag_predictions.json"
-_LLM_PRED            = "llm_predictions.json"
-_FINAL_PRED          = "final_predictions.json"
+_RAG_PRED = "rag_predictions.json"
+_LLM_PRED = "llm_predictions.json"
+_FINAL_PRED = "final_predictions.json"
 
 # Shared global files
-_CACHE_REGISTRY      = "hash_registry.json"
-_UNPREDICTED_FIELDS  = "unpredicted_fields.json"
+_CACHE_REGISTRY = "hash_registry.json"
+_UNPREDICTED_FIELDS = "unpredicted_fields.json"
 
 
 def _f(template: str, pid) -> str:
@@ -98,6 +97,7 @@ class PathResolver:
         """Global input schema — s3://pdf-fillr-production/config/form_keys_flat.json.
         Overridable via GLOBAL_INPUT_JSON_S3_URI env var."""
         import os
+
         override = os.environ.get("GLOBAL_INPUT_JSON_S3_URI", "")
         if override:
             return override
@@ -174,26 +174,29 @@ class PathResolver:
 
     def local_paths(self, uid, sid, pid, processing_dir: str) -> dict:
         """Return all local /tmp processing paths for a job."""
-        p = lambda f: os.path.join(processing_dir, f)
+
+        def p(f):
+            return os.path.join(processing_dir, f)
+
         return {
             # inputs
-            "processing_input_pdf":    p(_f(_INPUT_PDF, pid)),
-            "processing_global_json":  p(_GLOBAL_JSON),
-            "processing_input_json":   p(_INPUT_JSON),
+            "processing_input_pdf": p(_f(_INPUT_PDF, pid)),
+            "processing_global_json": p(_GLOBAL_JSON),
+            "processing_input_json": p(_INPUT_JSON),
             # mapper outputs
-            "extracted_json":          p(_f(_EXTRACTED_JSON, pid)),
-            "mapped_json":             p(_f(_MAPPED_JSON, pid)),
-            "radio_groups_json":       p(_f(_RADIO_JSON, pid)),
-            "headers_with_fields":     p(_f(_HEADERS_FIELDS, pid)),
-            "final_form_fields":       p(_f(_FINAL_FIELDS, pid)),
-            "java_mapping":            p(_f(_JAVA_MAPPING, pid)),
-            "embedded_pdf":            p(_f(_EMBEDDED_PDF, pid)),
-            "filled_pdf":              p(_f(_FILLED_PDF, pid)),
+            "extracted_json": p(_f(_EXTRACTED_JSON, pid)),
+            "mapped_json": p(_f(_MAPPED_JSON, pid)),
+            "radio_groups_json": p(_f(_RADIO_JSON, pid)),
+            "headers_with_fields": p(_f(_HEADERS_FIELDS, pid)),
+            "final_form_fields": p(_f(_FINAL_FIELDS, pid)),
+            "java_mapping": p(_f(_JAVA_MAPPING, pid)),
+            "embedded_pdf": p(_f(_EMBEDDED_PDF, pid)),
+            "filled_pdf": p(_f(_FILLED_PDF, pid)),
             # RAG inputs
-            "header_file":             p(_HEADER_FILE),
-            "section_file":            p(_SECTION_FILE),
+            "header_file": p(_HEADER_FILE),
+            "section_file": p(_SECTION_FILE),
             # RAG predictions
-            "rag_predictions":         p(_RAG_PRED),
-            "llm_predictions":         p(_LLM_PRED),
-            "final_predictions":       p(_FINAL_PRED),
+            "rag_predictions": p(_RAG_PRED),
+            "llm_predictions": p(_LLM_PRED),
+            "final_predictions": p(_FINAL_PRED),
         }

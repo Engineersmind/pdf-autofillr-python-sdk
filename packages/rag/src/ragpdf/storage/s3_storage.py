@@ -1,7 +1,6 @@
 # src/ragpdf/storage/s3_storage.py
 import json
 import logging
-from typing import Optional
 
 from ragpdf.storage.base import StorageBackend
 
@@ -24,11 +23,12 @@ class S3Storage(StorageBackend):
         try:
             import boto3
             from botocore.exceptions import ClientError
+
             self._ClientError = ClientError
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "S3Storage requires boto3. Install with: pip install ragpdf-sdk[s3]"
-            )
+            ) from e
         self.bucket = bucket
         self.prefix = prefix.rstrip("/") + "/" if prefix else ""
         self._s3 = boto3.client("s3", region_name=region)
@@ -45,7 +45,7 @@ class S3Storage(StorageBackend):
         )
         logger.debug(f"S3 saved: s3://{self.bucket}/{self._key(key)}")
 
-    def load_json(self, key: str) -> Optional[dict]:
+    def load_json(self, key: str) -> dict | None:
         try:
             obj = self._s3.get_object(Bucket=self.bucket, Key=self._key(key))
             return json.loads(obj["Body"].read().decode("utf-8"))
@@ -95,7 +95,7 @@ class S3Storage(StorageBackend):
             logger.error(f"S3 copy failed: {e}")
             return False
 
-    def load_json_from_path(self, full_path: str) -> Optional[dict]:
+    def load_json_from_path(self, full_path: str) -> dict | None:
         """Load from a full s3://bucket/key path."""
         if not full_path.startswith("s3://"):
             raise ValueError(f"Expected s3:// path, got: {full_path}")

@@ -30,7 +30,7 @@ gcp     = ["google-cloud-storage>=2.14.0"]
 azure   = ["azure-storage-blob>=12.19.0", "azure-identity>=1.15.0"]
 dev     = [
     "pytest>=7.0", "pytest-asyncio>=0.21", "pytest-cov>=4.0",
-    "black>=24.0", "ruff>=0.4.0", "mypy>=1.8",
+    "black>=24.0", "flake8>=7.0.0", "ruff>=0.4.0", "mypy>=1.8",
     "httpx>=0.24.0", "fastapi>=0.100.0", "uvicorn[standard]>=0.20.0",
 ]
 full = [
@@ -59,8 +59,14 @@ target-version = ["py310"]
 
 [tool.ruff]
 line-length = 100
-select = ["E", "F", "I", "W"]
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP"]
 ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
 
 [tool.mypy]
 python_version = "3.10"

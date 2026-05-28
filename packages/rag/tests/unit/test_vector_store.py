@@ -1,5 +1,6 @@
 # tests/unit/test_vector_store.py
 import pytest
+
 from ragpdf.vector_stores.local_vector_store import LocalVectorStore
 
 
@@ -25,7 +26,9 @@ def test_add_and_find_vector(store):
     embedding = make_embedding(1.0)
     # FIX: add_vector() does not accept initial_confidence as a kwarg —
     # it always starts at 0.75 (from config). Pass only the documented args.
-    vid = store.add_vector("investor_name", "Name field", "Identity", ["Investor"], embedding)
+    vid = store.add_vector(
+        "investor_name", "Name field", "Identity", ["Investor"], embedding
+    )
     store.save()
 
     match = store.find_similar(make_embedding(1.0), threshold=0.75, top_k=5)
@@ -62,6 +65,7 @@ def test_confidence_decay(store):
 
 def test_confidence_clamped_to_min(store):
     from ragpdf.config.settings import MIN_CONFIDENCE
+
     vid = store.add_vector("investor_name", "", "", [], make_embedding(1.0))
     for _ in range(200):
         new_conf = store.update_confidence(vid, is_positive=False)
@@ -70,6 +74,7 @@ def test_confidence_clamped_to_min(store):
 
 def test_confidence_clamped_to_max(store):
     from ragpdf.config.settings import MAX_CONFIDENCE
+
     vid = store.add_vector("investor_name", "", "", [], make_embedding(1.0))
     for _ in range(200):
         new_conf = store.update_confidence(vid, is_positive=True)
@@ -91,7 +96,9 @@ def test_top_k_results(store):
 
 def test_persist_and_reload(tmp_path):
     store1 = LocalVectorStore(path=str(tmp_path))
-    store1.add_vector("investor_name", "context", "section", ["h1"], make_embedding(1.0))
+    store1.add_vector(
+        "investor_name", "context", "section", ["h1"], make_embedding(1.0)
+    )
     store1.save()
 
     store2 = LocalVectorStore(path=str(tmp_path))

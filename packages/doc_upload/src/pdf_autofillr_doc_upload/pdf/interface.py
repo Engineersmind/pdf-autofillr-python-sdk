@@ -1,8 +1,9 @@
 # pdf_autofillr_doc_upload/pdf/interface.py
 """PDFFillerInterface — abstract base for all PDF filling backends."""
+
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Optional
 
 
 class PDFFillerInterface(ABC):
@@ -29,7 +30,7 @@ class PDFFillerInterface(ABC):
 
         Returns True if successful, False otherwise.
         """
-        ...
+        pass
 
     @abstractmethod
     def check_embed_file(
@@ -45,7 +46,7 @@ class PDFFillerInterface(ABC):
 
         Returns (ready: bool, embed_path: str | None).
         """
-        ...
+        pass
 
     @abstractmethod
     def fill_pdf(
@@ -60,4 +61,4 @@ class PDFFillerInterface(ABC):
 
         Returns True if successful, False otherwise.
         """
-        ...
+        pass

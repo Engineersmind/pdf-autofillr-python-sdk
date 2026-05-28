@@ -1,8 +1,10 @@
-from .page_chunker import PageBasedChunker
-from .window_chunker import WindowBasedChunker
 import logging
 
+from .page_chunker import PageBasedChunker
+from .window_chunker import WindowBasedChunker
+
 logger = logging.getLogger(__name__)
+
 
 def get_chunker(strategy_name, tokenizer, **kwargs):
 
@@ -24,7 +26,6 @@ def get_chunker(strategy_name, tokenizer, **kwargs):
         )
     else:
         raise ValueError(f"Unknown chunking strategy: {strategy_name}")
-
 
 
 def get_chunkers_from_config(strategy_list, tokenizer):

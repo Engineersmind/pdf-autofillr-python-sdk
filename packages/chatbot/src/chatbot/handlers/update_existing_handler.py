@@ -5,11 +5,11 @@ Handles UPDATE_EXISTING_PROMPT state.
 Asked when the user has data from a previous session.
 "Would you like to use it to pre-fill this form? (yes / no)"
 """
+
 from __future__ import annotations
-from typing import Optional, Tuple
-from chatbot.core.states import State, INVESTOR_TYPES
+
+from chatbot.core.states import INVESTOR_TYPES, State
 from chatbot.handlers.base_handler import BaseHandler
-from chatbot.logging.debug_logger import DebugLogger
 from chatbot.utils.intent_detection import is_affirmative, is_negative
 
 

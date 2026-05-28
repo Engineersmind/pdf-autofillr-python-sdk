@@ -6,7 +6,7 @@ import logging
 import os
 import tempfile
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 """
@@ -43,7 +43,7 @@ Output layout:
 
 class InProcessMapperFiller:
 
-    def __init__(self, mapper_config=None, config_dir: Optional[str] = None):
+    def __init__(self, mapper_config=None, config_dir: str | None = None):
         from pdf_autofillr_mapper.config.mapper_config import MapperConfig
         from pdf_autofillr_mapper.orchestrator import PDFPipeline
 
@@ -54,29 +54,33 @@ class InProcessMapperFiller:
         )
 
         if mapper_config is None:
+            assert self._config_dir is not None
             ini_path = Path(self._config_dir) / "mapper_config.ini"
             if ini_path.exists():
                 mapper_config = MapperConfig.from_directory(self._config_dir)
                 logger.info("InProcessMapperFiller: loaded config from %s", ini_path)
             else:
                 mapper_config = MapperConfig.from_env()
-                logger.info("InProcessMapperFiller: no mapper_config.ini, using env vars")
+                logger.info(
+                    "InProcessMapperFiller: no mapper_config.ini, using env vars"
+                )
 
         self._mapper_config = mapper_config
         self._pipeline = PDFPipeline(mapper_config=mapper_config)
 
         # Expose the last session_dir used so workflow.py can locate prediction files
-        self._last_session_dir: Optional[str] = None
-        self._last_user_id: Optional[str] = None
-        self._last_session_id: Optional[str] = None
-        self._last_pdf_id: Optional[str] = None
+        self._last_session_dir: str | None = None
+        self._last_user_id: str | None = None
+        self._last_session_id: str | None = None
+        self._last_pdf_id: str | None = None
 
     # ------------------------------------------------------------------
     # Public interface
     # ------------------------------------------------------------------
 
-    def prepare_document(self, pdf_path: str, investor_type: str,
-                         session_dir: Optional[str] = None) -> str:
+    def prepare_document(
+        self, pdf_path: str, investor_type: str, session_dir: str | None = None
+    ) -> str:
         """
         Run Extract + Map + Embed (+ RAG headers pipeline if enabled) on the blank PDF.
 
@@ -93,7 +97,9 @@ class InProcessMapperFiller:
         """
         logger.info(
             "InProcessMapperFiller.prepare_document: pdf=%s type=%s session_dir=%s rag_enabled=%s",
-            pdf_path, investor_type, session_dir or "(next to pdf)",
+            pdf_path,
+            investor_type,
+            session_dir or "(next to pdf)",
             self._mapper_config.rag_enabled,
         )
 
@@ -113,8 +119,9 @@ class InProcessMapperFiller:
     def check_document_ready(self, doc_id: str) -> bool:
         return Path(doc_id).exists()
 
-    def fill_document(self, doc_id: str, data_flat: dict,
-                      output_path: Optional[str] = None) -> Any:
+    def fill_document(
+        self, doc_id: str, data_flat: dict, output_path: str | None = None
+    ) -> Any:
         """
         Fill the embedded PDF with collected investor data.
 
@@ -130,7 +137,9 @@ class InProcessMapperFiller:
 
         logger.info(
             "InProcessMapperFiller.fill_document: doc_id=%s fields=%d output=%s",
-            doc_id, len(data_flat), output_path or "(next to embedded pdf)",
+            doc_id,
+            len(data_flat),
+            output_path or "(next to embedded pdf)",
         )
 
         with tempfile.NamedTemporaryFile(
@@ -148,7 +157,8 @@ class InProcessMapperFiller:
                 )
             )
             logger.info(
-                "InProcessMapperFiller.fill_document: done -> %s", result.get("output_file")
+                "InProcessMapperFiller.fill_document: done -> %s",
+                result.get("output_file"),
             )
             return result
         finally:
@@ -212,8 +222,9 @@ class InProcessMapperFiller:
     # Private: lightweight path (no RAG)
     # ------------------------------------------------------------------
 
-    def _prepare_orchestrator(self, pdf_path: str, investor_type: str,
-                               out_dir: Path) -> str:
+    def _prepare_orchestrator(
+        self, pdf_path: str, investor_type: str, out_dir: Path
+    ) -> str:
         """Extract + Map + Embed using the pure orchestrator (no RAG)."""
         import asyncio
 
@@ -251,8 +262,9 @@ class InProcessMapperFiller:
     # Private: full path with RAG (Extract + Map + Embed + Headers + RAG)
     # ------------------------------------------------------------------
 
-    def _prepare_with_rag(self, pdf_path: str, investor_type: str,
-                           out_dir: Path) -> str:
+    def _prepare_with_rag(
+        self, pdf_path: str, investor_type: str, out_dir: Path
+    ) -> str:
         """
         Run the full handle_make_embed_file_operation pipeline which includes
         the headers stage and RAG inprocess call.
@@ -262,11 +274,9 @@ class InProcessMapperFiller:
         Returns the path to the embedded PDF (doc_id).
         """
         import asyncio
-        import uuid
 
-        from pdf_autofillr_mapper.handlers import operations
         from pdf_autofillr_mapper.configs.local import LocalStorageConfig
-        from pdf_autofillr_mapper.config.mapper_config import MapperConfig
+        from pdf_autofillr_mapper.handlers import operations
 
         pdf_stem = Path(pdf_path).stem
         schema_path = self._get_form_keys_path()
@@ -290,40 +300,59 @@ class InProcessMapperFiller:
         config.local_input_json = schema_path
 
         # Processing / output paths — all inside out_dir
-        config.local_extracted_json      = str(out_dir / f"{pdf_stem}_extracted.json")
-        config.local_mapped_json         = str(out_dir / f"{pdf_stem}_mapped.json")
-        config.local_radio_json          = str(out_dir / f"{pdf_stem}_radio.json")
-        config.local_embedded_pdf        = str(out_dir / f"{pdf_stem}_embedded.pdf")
-        config.local_filled_pdf          = str(out_dir / f"{pdf_stem}_filled.pdf")
-        config.local_headers_with_fields = str(out_dir / f"{pdf_stem}_headers_with_fields.json")
-        config.local_final_form_fields   = str(out_dir / f"{pdf_stem}_final_form_fields.json")
-        config.local_header_file         = str(out_dir / f"{pdf_stem}_header_file.json")
-        config.local_section_file        = str(out_dir / f"{pdf_stem}_section_file.json")
-        config.local_llm_predictions     = str(out_dir / f"{pdf_stem}_llm_predictions.json")
-        config.local_rag_predictions     = str(out_dir / f"{pdf_stem}_rag_predictions.json")
-        config.local_final_predictions   = str(out_dir / f"{pdf_stem}_final_predictions.json")
-        config.local_java_mapping        = str(out_dir / f"{pdf_stem}_java_mapping.json")
+        config.local_extracted_json = str(out_dir / f"{pdf_stem}_extracted.json")
+        config.local_mapped_json = str(out_dir / f"{pdf_stem}_mapped.json")
+        config.local_radio_json = str(out_dir / f"{pdf_stem}_radio.json")
+        config.local_embedded_pdf = str(out_dir / f"{pdf_stem}_embedded.pdf")
+        config.local_filled_pdf = str(out_dir / f"{pdf_stem}_filled.pdf")
+        config.local_headers_with_fields = str(
+            out_dir / f"{pdf_stem}_headers_with_fields.json"
+        )
+        config.local_final_form_fields = str(
+            out_dir / f"{pdf_stem}_final_form_fields.json"
+        )
+        config.local_header_file = str(out_dir / f"{pdf_stem}_header_file.json")
+        config.local_section_file = str(out_dir / f"{pdf_stem}_section_file.json")
+        config.local_llm_predictions = str(out_dir / f"{pdf_stem}_llm_predictions.json")
+        config.local_rag_predictions = str(out_dir / f"{pdf_stem}_rag_predictions.json")
+        config.local_final_predictions = str(
+            out_dir / f"{pdf_stem}_final_predictions.json"
+        )
+        config.local_java_mapping = str(out_dir / f"{pdf_stem}_java_mapping.json")
+
+        config.cached_mapping_json = None
+        config.cached_radio_groups = None
+        config.cached_headers_with_fields = None
+        config.cached_final_form_fields = None
+        config.cached_extraction = None
 
         # Destination paths (for OutputFileHandler) — same dir for local mode
-        config.dest_extracted_json            = config.local_extracted_json
-        config.dest_mapped_json               = config.local_mapped_json
-        config.dest_radio_json                = config.local_radio_json
-        config.dest_embedded_pdf              = config.local_embedded_pdf
-        config.dest_filled_pdf                = config.local_filled_pdf
-        config.dest_headers_with_fields_json  = config.local_headers_with_fields
-        config.dest_final_form_fields_json    = config.local_final_form_fields
-        config.dest_header_file_json          = config.local_header_file
-        config.dest_section_file_json         = config.local_section_file
-        config.dest_llm_predictions_json      = config.local_llm_predictions
-        config.dest_rag_predictions_json      = config.local_rag_predictions
-        config.dest_final_predictions_json    = config.local_final_predictions
-        config.dest_java_mapping_json         = config.local_java_mapping
-        config.dest_semantic_mapping_json     = str(out_dir / f"{pdf_stem}_semantic_mapping.json")
-        config.dest_cache_registry            = None  # not needed for chatbot flow
-        config.output_base_path               = None  # disable cloud-style path generation
+        config.dest_extracted_json = config.local_extracted_json
+        config.dest_mapped_json = config.local_mapped_json
+        config.dest_radio_json = config.local_radio_json
+        config.dest_embedded_pdf = config.local_embedded_pdf
+        config.dest_filled_pdf = config.local_filled_pdf
+        config.dest_headers_with_fields_json = config.local_headers_with_fields
+        config.dest_final_form_fields_json = config.local_final_form_fields
+        config.dest_header_file_json = config.local_header_file
+        config.dest_section_file_json = config.local_section_file
+        config.dest_llm_predictions_json = config.local_llm_predictions
+        config.dest_rag_predictions_json = config.local_rag_predictions
+        config.dest_final_predictions_json = config.local_final_predictions
+        config.dest_java_mapping_json = config.local_java_mapping
+        config.dest_semantic_mapping_json = str(
+            out_dir / f"{pdf_stem}_semantic_mapping.json"
+        )
+        config.dest_cache_registry = None  # not needed for chatbot flow
+        config.output_base_path = None  # disable cloud-style path generation
 
         # Cache registry — point to mapper's own cache dir so it benefits from hash caching
-        mapper_cache = Path(os.getenv("chatbot_DATA_PATH", "./data/chatbot")) / ".." / "mapper" / "cache"
+        mapper_cache = (
+            Path(os.getenv("chatbot_DATA_PATH", "./data/chatbot"))
+            / ".."
+            / "mapper"
+            / "cache"
+        )
         cache_registry = mapper_cache / "hash_registry.json"
         cache_registry.parent.mkdir(parents=True, exist_ok=True)
         config.cache_registry_path = str(cache_registry)
@@ -331,18 +360,24 @@ class InProcessMapperFiller:
         # Build mapping_config from the loaded MapperConfig (respects mapper_config.ini)
         mc = self._mapper_config
         mapping_config = {
-            "llm_model":            mc.llm_model,
-            "llm_temperature":      mc.llm_temperature,
-            "llm_max_tokens":       mc.llm_max_tokens,
+            "llm_model": mc.llm_model,
+            "llm_temperature": mc.llm_temperature,
+            "llm_max_tokens": mc.llm_max_tokens,
             "confidence_threshold": mc.confidence_threshold,
-            "chunking_strategy":    mc.chunking_strategy,
+            "chunking_strategy": mc.chunking_strategy,
         }
 
         logger.info(
             "InProcessMapperFiller._prepare_with_rag: user=%s session=%s pdf=%s",
-            user_id, session_id, pdf_id,
+            user_id,
+            session_id,
+            pdf_id,
         )
 
+        import sys as _sys
+
+        if _sys.platform == "win32":
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
         result = asyncio.run(
             operations.handle_make_embed_file_operation(
                 config=config,
@@ -351,17 +386,15 @@ class InProcessMapperFiller:
                 session_id=session_id,
                 investor_type=investor_type.lower() if investor_type else "individual",
                 mapping_config=mapping_config,
-                use_second_mapper=True,   # rag_enabled=True means always use second mapper
+                use_second_mapper=True,  # rag_enabled=True means always use second mapper
             )
         )
 
         # The operation returns the embedded PDF path in result["outputs"]["embedded_pdf"]
         # or config.local_embedded_pdf — both point to the same file
         embedded_path = (
-            (result.get("outputs") or result.get("data", {}).get("outputs") or {})
-            .get("embedded_pdf")
-            or config.local_embedded_pdf
-        )
+            result.get("outputs") or result.get("data", {}).get("outputs") or {}
+        ).get("embedded_pdf") or config.local_embedded_pdf
 
         if not Path(embedded_path).exists():
             raise RuntimeError(
@@ -370,7 +403,9 @@ class InProcessMapperFiller:
                 f"Operation result keys: {list(result.keys())}"
             )
 
-        logger.info("InProcessMapperFiller._prepare_with_rag: done -> %s", embedded_path)
+        logger.info(
+            "InProcessMapperFiller._prepare_with_rag: done -> %s", embedded_path
+        )
         return embedded_path
 
     # ------------------------------------------------------------------
@@ -378,6 +413,7 @@ class InProcessMapperFiller:
     # ------------------------------------------------------------------
 
     def _get_form_keys_path(self) -> str:
+        assert self._config_dir is not None
         candidates = [
             Path(self._config_dir) / "form_keys.json",
             Path("configs") / "form_keys.json",

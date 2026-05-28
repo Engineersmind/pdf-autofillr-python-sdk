@@ -29,6 +29,7 @@ Called from:
   - ragpdf init-vectors           (explicit CLI command)
   - LocalVectorStore.__init__()   (auto-bootstrap on first load)
 """
+
 from __future__ import annotations
 
 import json
@@ -38,34 +39,51 @@ import os
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
 
 # ── Colour helpers (terminal only, stripped by logger) ───────────────────────
 
+
 def _c(code: str, text: str) -> str:
     """Wrap text in ANSI colour if stdout is a TTY."""
     import sys
+
     if sys.stdout.isatty():
         return f"\033[{code}m{text}\033[0m"
     return text
 
-def green(s):  return _c("92", s)
-def red(s):    return _c("91", s)
-def cyan(s):   return _c("96", s)
-def yellow(s): return _c("93", s)
-def bold(s):   return _c("1",  s)
+
+def green(s):
+    return _c("92", s)
+
+
+def red(s):
+    return _c("91", s)
+
+
+def cyan(s):
+    return _c("96", s)
+
+
+def yellow(s):
+    return _c("93", s)
+
+
+def bold(s):
+    return _c("1", s)
 
 
 # ── Timestamp ─────────────────────────────────────────────────────────────────
+
 
 def _now() -> str:
     return datetime.utcnow().isoformat() + "Z"
 
 
 # ── Source file helpers ───────────────────────────────────────────────────────
+
 
 def _needs_embedding(v: dict) -> bool:
     """Return True if this vector has no usable embedding."""
@@ -105,7 +123,7 @@ def _load_source(source_path: Path) -> list:
     else:
         raise ValueError(
             f"Unrecognised format in {source_path}. "
-            "Expected a JSON list or {\"vectors\": [...]}."
+            'Expected a JSON list or {"vectors": [...]}.'
         )
 
     required = {"vector_id", "field_name", "context"}
@@ -117,7 +135,9 @@ def _load_source(source_path: Path) -> list:
     return vectors
 
 
-def _merge_source_into_runtime(source_vectors: list, runtime_vectors: list) -> tuple[list, int]:
+def _merge_source_into_runtime(
+    source_vectors: list, runtime_vectors: list
+) -> tuple[list, int]:
     """
     Merge source definitions into the runtime DB.
 
@@ -136,35 +156,37 @@ def _merge_source_into_runtime(source_vectors: list, runtime_vectors: list) -> t
         if vid not in runtime_by_id:
             # New vector — add skeleton, embedding will be generated next
             runtime_by_id[vid] = {
-                "vector_id":          vid,
-                "field_name":         sv["field_name"],
-                "context":            sv.get("context", ""),
-                "section_context":    sv.get("section_context", ""),
-                "headers":            sv.get("headers", []),
-                "embedding":          [],
-                "confidence":         sv.get("confidence", 0.75),
+                "vector_id": vid,
+                "field_name": sv["field_name"],
+                "context": sv.get("context", ""),
+                "section_context": sv.get("section_context", ""),
+                "headers": sv.get("headers", []),
+                "embedding": [],
+                "confidence": sv.get("confidence", 0.75),
                 "confidence_history": [sv.get("confidence", 0.75)],
-                "positive_count":     0,
-                "negative_count":     0,
-                "usage_count":        0,
-                "stability_score":    1.0,
-                "avg_confidence":     sv.get("confidence", 0.75),
-                "error_history":      [],
-                "created_at":         _now(),
-                "last_updated":       _now(),
-                "last_used":          _now(),
+                "positive_count": 0,
+                "negative_count": 0,
+                "usage_count": 0,
+                "stability_score": 1.0,
+                "avg_confidence": sv.get("confidence", 0.75),
+                "error_history": [],
+                "created_at": _now(),
+                "last_updated": _now(),
+                "last_used": _now(),
             }
             added += 1
         else:
             # Already exists — refresh metadata from source, keep all learned data
             rv = runtime_by_id[vid]
-            rv["field_name"]      = sv["field_name"]
-            rv["context"]         = sv.get("context",         rv.get("context", ""))
-            rv["section_context"] = sv.get("section_context", rv.get("section_context", ""))
-            rv["headers"]         = sv.get("headers",         rv.get("headers", []))
+            rv["field_name"] = sv["field_name"]
+            rv["context"] = sv.get("context", rv.get("context", ""))
+            rv["section_context"] = sv.get(
+                "section_context", rv.get("section_context", "")
+            )
+            rv["headers"] = sv.get("headers", rv.get("headers", []))
 
     # Preserve source order, append any runtime-only vectors at the end
-    source_ids   = [v["vector_id"] for v in source_vectors]
+    source_ids = [v["vector_id"] for v in source_vectors]
     runtime_only = [v for v in runtime_vectors if v["vector_id"] not in set(source_ids)]
     merged = [runtime_by_id[vid] for vid in source_ids] + runtime_only
 
@@ -183,13 +205,15 @@ def _get_embedder(backend: str, model: str):
     if backend == "openai":
         try:
             from dotenv import load_dotenv
+
             load_dotenv()
         except ImportError:
-            pass
+            pass  # intentional
         from openai import OpenAI
+
         api_key = os.environ.get("OPENAI_API_KEY", "")
         if not api_key:
-            raise EnvironmentError(
+            raise OSError(
                 "OPENAI_API_KEY is not set.\n"
                 "Add it to your .env file or set it as an environment variable."
             )
@@ -202,7 +226,7 @@ def _get_embedder(backend: str, model: str):
             # Normalise
             result = []
             for emb in embs:
-                arr  = np.array(emb, dtype=float)
+                arr = np.array(emb, dtype=float)
                 norm = np.linalg.norm(arr)
                 result.append((arr / norm).tolist() if norm > 1e-9 else emb)
             return result
@@ -212,16 +236,16 @@ def _get_embedder(backend: str, model: str):
     else:  # sentence_transformer
         try:
             from sentence_transformers import SentenceTransformer
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "sentence-transformers is required for this backend.\n"
                 "Install with: pip install 'pdf-autofillr-rag[transformers]'"
-            )
+            ) from e
         used_model = model or "all-MiniLM-L6-v2"
         st = SentenceTransformer(used_model)
 
         def embed_batch(texts: list) -> list:
-            embs  = st.encode(texts, show_progress_bar=False, convert_to_numpy=True)
+            embs = st.encode(texts, show_progress_bar=False, convert_to_numpy=True)
             norms = np.linalg.norm(embs, axis=1, keepdims=True)
             norms = np.where(norms < 1e-9, 1.0, norms)
             return (embs / norms).tolist()
@@ -231,8 +255,8 @@ def _get_embedder(backend: str, model: str):
 
 def _write_runtime(runtime_path: Path, merged: list, existing_db: dict) -> None:
     """Write the final runtime vector_database.json."""
-    existing_db["vectors"]                  = merged
-    existing_db["metadata"]["total_count"]  = len(merged)
+    existing_db["vectors"] = merged
+    existing_db["metadata"]["total_count"] = len(merged)
     existing_db["metadata"]["last_updated"] = _now()
     runtime_path.parent.mkdir(parents=True, exist_ok=True)
     runtime_path.write_text(json.dumps(existing_db, indent=2), encoding="utf-8")
@@ -255,11 +279,11 @@ def _sanity_check(
         import numpy as np
         from sklearn.metrics.pairwise import cosine_similarity as cos_sim
 
-        db       = json.loads(runtime_path.read_text(encoding="utf-8"))
+        db = json.loads(runtime_path.read_text(encoding="utf-8"))
         all_vecs = db["vectors"]
         all_embs = np.array([v["embedding"] for v in all_vecs])
 
-        texts      = [_build_text(v) for v in sample_vectors]
+        texts = [_build_text(v) for v in sample_vectors]
         embeddings = embed_batch_fn(texts)
 
         if verbose:
@@ -272,25 +296,29 @@ def _sanity_check(
             print(f"  {'-'*65}")
 
         all_pass = True
-        for v, emb in zip(sample_vectors, embeddings):
-            q      = np.array(emb) / np.linalg.norm(emb)
-            sims   = cos_sim([q], all_embs)[0]
+        for v, emb in zip(sample_vectors, embeddings, strict=False):
+            q = np.array(emb) / np.linalg.norm(emb)
+            sims = cos_sim([q], all_embs)[0]
             best_i = int(np.argmax(sims))
             best_n = all_vecs[best_i]["field_name"]
             best_c = float(sims[best_i])
-            ok     = best_n == v["field_name"] and best_c >= 0.99
+            ok = best_n == v["field_name"] and best_c >= 0.99
             if not ok:
                 all_pass = False
             if verbose:
                 flag = green("PASS") if ok else red(f"FAIL (got {best_n})")
-                print(f"  {v['vector_id']:<8} {v['field_name']:<38} {best_c:>7.4f}  {flag}")
+                print(
+                    f"  {v['vector_id']:<8} {v['field_name']:<38} {best_c:>7.4f}  {flag}"
+                )
 
         if verbose:
             print()
             if all_pass:
                 print(green("  ✓ Sanity check passed."))
             else:
-                print(red("  ✗ Sanity check failed — check embedding model consistency."))
+                print(
+                    red("  ✗ Sanity check failed — check embedding model consistency.")
+                )
 
         return all_pass
 
@@ -303,9 +331,10 @@ def _sanity_check(
 
 # ── Main public function ──────────────────────────────────────────────────────
 
+
 def run_init_vectors(
     data_path: str = "./data/rag",
-    source_path: Optional[str] = None,
+    source_path: str | None = None,
     backend: str = "openai",
     model: str = "",
     force: bool = False,
@@ -333,11 +362,12 @@ def run_init_vectors(
     """
     import numpy as np
 
-    dp           = Path(data_path)
+    dp = Path(data_path)
     runtime_path = dp / "vectors" / "vector_database.json"
-    source_dir   = dp / "vectors" / "source"
+    source_dir = dp / "vectors" / "source"
 
     # ── Locate source file ────────────────────────────────────────────────────
+    sp: Path | None
     if source_path:
         sp = Path(source_path)
     else:
@@ -385,15 +415,21 @@ def run_init_vectors(
     if runtime_path.exists():
         raw = runtime_path.read_text(encoding="utf-8").strip()
         if raw:
-            runtime_db   = json.loads(raw)
+            runtime_db = json.loads(raw)
             runtime_vecs = runtime_db.get("vectors", [])
             if verbose:
                 print(f"  Existing:   {len(runtime_vecs)} vectors in runtime DB")
         else:
-            runtime_db   = {"metadata": {"total_count": 0, "last_updated": _now()}, "vectors": []}
+            runtime_db = {
+                "metadata": {"total_count": 0, "last_updated": _now()},
+                "vectors": [],
+            }
             runtime_vecs = []
     else:
-        runtime_db   = {"metadata": {"total_count": 0, "last_updated": _now()}, "vectors": []}
+        runtime_db = {
+            "metadata": {"total_count": 0, "last_updated": _now()},
+            "vectors": [],
+        }
         runtime_vecs = []
 
     # ── Merge ─────────────────────────────────────────────────────────────────
@@ -402,7 +438,7 @@ def run_init_vectors(
         print(f"  {green(f'+{added} new vectors added from source')}")
 
     # ── Find what needs embedding ─────────────────────────────────────────────
-    to_embed     = [v for v in merged if force or _needs_embedding(v)]
+    to_embed = [v for v in merged if force or _needs_embedding(v)]
     already_done = len(merged) - len(to_embed)
 
     if verbose:
@@ -421,13 +457,13 @@ def run_init_vectors(
                 embed_fn, _ = _get_embedder(backend, model)
                 _sanity_check(merged[:3], embed_fn, runtime_path, verbose=verbose)
             except Exception:
-                pass
+                pass  # intentional
         return {
-            "vectors_total":    len(merged),
+            "vectors_total": len(merged),
             "vectors_embedded": 0,
-            "vectors_skipped":  already_done,
-            "runtime_path":     str(runtime_path),
-            "model_used":       model or "(unchanged)",
+            "vectors_skipped": already_done,
+            "runtime_path": str(runtime_path),
+            "model_used": model or "(unchanged)",
         }
 
     # ── Load embedder ─────────────────────────────────────────────────────────
@@ -439,11 +475,11 @@ def run_init_vectors(
         print(f"  Model:      {bold(used_model)}")
 
     # ── Embed in batches ──────────────────────────────────────────────────────
-    texts     = [_build_text(v) for v in to_embed]
-    ids       = [v["vector_id"] for v in to_embed]
+    texts = [_build_text(v) for v in to_embed]
+    ids = [v["vector_id"] for v in to_embed]
     n_batches = math.ceil(len(texts) / batch_size)
-    idx_map   = {v["vector_id"]: i for i, v in enumerate(merged)}
-    embedded  = 0
+    idx_map = {v["vector_id"]: i for i, v in enumerate(merged)}
+    embedded = 0
 
     if verbose:
         print()
@@ -451,8 +487,8 @@ def run_init_vectors(
         print()
 
     for b in range(n_batches):
-        batch_texts = texts[b * batch_size: (b + 1) * batch_size]
-        batch_ids   = ids[  b * batch_size: (b + 1) * batch_size]
+        batch_texts = texts[b * batch_size : (b + 1) * batch_size]
+        batch_ids = ids[b * batch_size : (b + 1) * batch_size]
 
         try:
             embeddings = embed_fn(batch_texts)
@@ -464,18 +500,21 @@ def run_init_vectors(
                 f"Progress saved ({embedded} vectors embedded so far)."
             ) from e
 
-        for vid, emb in zip(batch_ids, embeddings):
-            arr  = np.array(emb, dtype=float)
+        for vid, emb in zip(batch_ids, embeddings, strict=False):
+            arr = np.array(emb, dtype=float)
             norm = np.linalg.norm(arr)
             normalised = (arr / norm).tolist() if norm > 1e-9 else emb
-            merged[idx_map[vid]]["embedding"]    = [round(x, 8) for x in normalised]
+            merged[idx_map[vid]]["embedding"] = [round(x, 8) for x in normalised]
             merged[idx_map[vid]]["last_updated"] = _now()
             embedded += 1
 
         if verbose:
             pct = int((b + 1) / n_batches * 40)
             bar = "█" * pct + "░" * (40 - pct)
-            print(f"  [{bar}] {embedded}/{len(to_embed)}  batch {b + 1}/{n_batches}", end="\r")
+            print(
+                f"  [{bar}] {embedded}/{len(to_embed)}  batch {b + 1}/{n_batches}",
+                end="\r",
+            )
 
     if verbose:
         print()
@@ -493,23 +532,27 @@ def run_init_vectors(
         _sanity_check(merged[:3], embed_fn, runtime_path, verbose=verbose)
 
     return {
-        "vectors_total":    len(merged),
+        "vectors_total": len(merged),
         "vectors_embedded": embedded,
-        "vectors_skipped":  already_done,
-        "runtime_path":     str(runtime_path),
-        "model_used":       used_model,
+        "vectors_skipped": already_done,
+        "runtime_path": str(runtime_path),
+        "model_used": used_model,
     }
 
 
-def _find_bundled_source() -> Optional[Path]:
+def _find_bundled_source() -> Path | None:
     """Try to find vector_source.json bundled with the ragpdf package."""
     try:
         import importlib.resources
+
         pkg_files = importlib.resources.files("ragpdf")
         p = pkg_files / "data" / "vector_source.json"
         # importlib.resources gives a non-Path object on older Python — extract to temp
         import tempfile
-        tmp = Path(tempfile.mktemp(suffix=".json"))
+
+        fd, tmp_str = tempfile.mkstemp(suffix=".json")
+        os.close(fd)
+        tmp = Path(tmp_str)
         with p.open("rb") as src, open(tmp, "wb") as dst:
             dst.write(src.read())
         return tmp
@@ -518,11 +561,12 @@ def _find_bundled_source() -> Optional[Path]:
 
     try:
         import ragpdf as pkg_mod
+
         p = Path(os.path.dirname(pkg_mod.__file__)) / "data" / "vector_source.json"
         if p.exists():
             return p
     except Exception:
-        pass
+        pass  # intentional
 
     return None
 
@@ -538,11 +582,11 @@ def auto_bootstrap(data_path: str, verbose: bool = False) -> bool:
     """
     from ragpdf.config.settings import (
         RAGPDF_EMBEDDING_BACKEND,
-        RAGPDF_ST_MODEL,
         RAGPDF_OPENAI_EMBEDDING_MODEL,
+        RAGPDF_ST_MODEL,
     )
 
-    dp           = Path(data_path)
+    dp = Path(data_path)
     runtime_path = dp / "vectors" / "vector_database.json"
 
     # Only bootstrap if runtime DB is missing or empty
@@ -569,30 +613,33 @@ def auto_bootstrap(data_path: str, verbose: bool = False) -> bool:
             source_file = str(bundled)
 
     if source_file is None:
-        logger.debug("auto_bootstrap: no source file found, starting with empty vector DB")
+        logger.debug(
+            "auto_bootstrap: no source file found, starting with empty vector DB"
+        )
         return False
 
     backend = RAGPDF_EMBEDDING_BACKEND
-    model   = (
-        RAGPDF_OPENAI_EMBEDDING_MODEL if backend == "openai"
-        else RAGPDF_ST_MODEL
-    )
+    model = RAGPDF_OPENAI_EMBEDDING_MODEL if backend == "openai" else RAGPDF_ST_MODEL
 
     # Don't auto-bootstrap with noop — that would silently create garbage vectors
     if backend == "noop":
-        logger.debug("auto_bootstrap: RAGPDF_EMBEDDING_BACKEND=noop — skipping bootstrap")
+        logger.debug(
+            "auto_bootstrap: RAGPDF_EMBEDDING_BACKEND=noop — skipping bootstrap"
+        )
         return False
 
     logger.info(
         "auto_bootstrap: vector_database.json missing, bootstrapping from %s using %s/%s",
-        source_file, backend, model,
+        source_file,
+        backend,
+        model,
     )
 
     if verbose:
         print(f"\n  📦 First run — generating vector embeddings from {source_file}")
         print(f"     Backend: {backend}  Model: {model or '(default)'}")
-        print(f"     This takes ~30s for OpenAI or ~60s for sentence_transformer.")
-        print(f"     Run once only — subsequent starts are instant.\n")
+        print("     This takes ~30s for OpenAI or ~60s for sentence_transformer.")
+        print("     Run once only — subsequent starts are instant.\n")
 
     try:
         run_init_vectors(

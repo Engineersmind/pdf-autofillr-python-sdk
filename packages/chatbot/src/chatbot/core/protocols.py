@@ -4,6 +4,7 @@ Structural protocols — break cyclic imports between engine, router, base_handl
 
 Nothing in this file imports from engine, router, or base_handler.
 """
+
 from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
@@ -30,4 +31,5 @@ class HandlerProtocol(Protocol):
         user_id: str,
         session_id: str,
         debug: object = None,
-    ) -> tuple: ...
+    ) -> tuple:
+        pass
