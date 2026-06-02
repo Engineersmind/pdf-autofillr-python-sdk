@@ -2,8 +2,8 @@
 # Install with: pip install pdf-autofillr-chatbot
 # Or directly: pip install -r requirements.txt
 
-langchain-openai>=0.2.0
-langchain-core>=0.3.0
+langchain-openai>=1.2.2
+langchain-core>=1.4.0
 fuzzywuzzy>=0.18.0
 python-levenshtein>=0.12.0
 python-dotenv>=1.0.0
