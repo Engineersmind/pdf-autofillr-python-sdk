@@ -23,21 +23,21 @@ httpx>=0.24.0
 pdf-autofillr-doc-upload>=0.1.0
 PyMuPDF>=1.23.0
 python-docx>=1.1.0
-python-pptx>=0.6.21
+python-pptx>=1.0.2
 openpyxl>=3.1.0
 
 # ── Mapper ────────────────────────────────────────────────────
 pdf-autofillr-mapper>=1.0.0
 tiktoken>=0.5.0
-tenacity>=8.2.0
+tenacity>=9.1.4
 requests>=2.31.0
-numpy>=1.24.0
+numpy>=2.2.6
 tqdm>=4.66.0
 
 # ── RAG ───────────────────────────────────────────────────────
 pdf-autofillr-rag>=0.2.0
 scikit-learn>=1.4.0
-sentence-transformers>=2.3.1
+sentence-transformers>=5.5.1
 torch>=2.0.0
 python-dateutil>=2.8.2
 
