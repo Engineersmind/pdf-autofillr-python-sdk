@@ -18,12 +18,17 @@ class StorageFactory:
         if storage_type == "local":
             from pdf_autofillr_doc_upload.storage.local_storage import LocalStorage
 
+            env_roots = os.getenv("DOC_UPLOAD_ALLOWED_DOCUMENT_ROOTS", "")
             return LocalStorage(
                 data_path=kwargs.get(
                     "data_path", os.getenv("DOC_UPLOAD_DATA_PATH", "./data/doc_upload")
                 ),
                 config_path=kwargs.get(
                     "config_path", os.getenv("DOC_UPLOAD_CONFIG_PATH", "./configs")
+                ),
+                document_roots=kwargs.get(
+                    "document_roots",
+                    [r for r in env_roots.split(",") if r.strip()] or None,
                 ),
             )
 

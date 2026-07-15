@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pdf-autofillr-chatbot"
-version = "0.3.0"
+version = "0.4.0"
 description = "Conversational investor onboarding chatbot — PDF form-filling via LLM extraction"
 readme = "README.md"
 license = { file = "LICENSE" }

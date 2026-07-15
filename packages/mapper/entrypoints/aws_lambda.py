@@ -479,8 +479,8 @@ async def route_operation(event: dict, operation: str, notifier):
                     extractor = DetailedFitzExtractor(
                         config={}
                     )  # Pass empty config for quick extraction
-                    quick_extract = await extractor.extract_to_json(
-                        local_pdf_path, output_file=None
+                    quick_extract = extractor.extract(
+                        local_pdf_path, storage_config={"type": "local", "path": None}
                     )
                     pdf_hash = quick_extract.get("pdf_hash")
 

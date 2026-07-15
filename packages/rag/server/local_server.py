@@ -4,6 +4,7 @@ FastAPI dev server — mirrors all 6 Lambda APIs locally.
 Run with: uvicorn server.local_server:app --reload --port 8000
 """
 
+import hmac
 import os
 from typing import Any
 
@@ -12,9 +13,13 @@ from pydantic import BaseModel
 
 from ragpdf import RAGPDFClient
 
-app = FastAPI(title="ragpdf-sdk dev server", version="0.1.0")
+app = FastAPI(title="ragpdf-sdk dev server", version="0.1.1")
 
-EXPECTED_API_KEY = os.getenv("RAGPDF_API_KEY", "dev-key")
+# No safe default — see packages/rag CHANGELOG for why "dev-key" was removed.
+EXPECTED_API_KEY = os.getenv("RAGPDF_API_KEY")
+_ALLOW_INSECURE_NO_AUTH = (
+    os.getenv("RAGPDF_ALLOW_INSECURE_NO_AUTH", "false").lower() == "true"
+)
 client: RAGPDFClient = None
 
 
@@ -25,7 +30,19 @@ def startup():
 
 
 def _auth(x_api_key: str = Header(None)):
-    if x_api_key != EXPECTED_API_KEY:
+    if not EXPECTED_API_KEY:
+        if _ALLOW_INSECURE_NO_AUTH:
+            return
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "Server misconfigured: RAGPDF_API_KEY is not set. Set "
+                "RAGPDF_API_KEY to a strong secret, or set "
+                "RAGPDF_ALLOW_INSECURE_NO_AUTH=true to explicitly run "
+                "without authentication (not recommended)."
+            ),
+        )
+    if not x_api_key or not hmac.compare_digest(x_api_key, EXPECTED_API_KEY):
         raise HTTPException(status_code=401, detail="Invalid API key")
 
 

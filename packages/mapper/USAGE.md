@@ -240,9 +240,10 @@ cfg.validate()  # prints a warning if no key is found for either phase
 pdf-mapper extract blank_form.pdf
 pdf-mapper extract blank_form.pdf -o fields.json
 
-# Map fields to your target schema via LLM
-pdf-mapper map blank_form.pdf --mapper-type ensemble
-pdf-mapper map blank_form.pdf --mapper-type semantic -o mapped.json
+# Map fields to your target schema via LLM — requires the input JSON data
+# you're mapping fields against
+pdf-mapper map blank_form.pdf --input-json investor_data.json
+pdf-mapper map blank_form.pdf --input-json investor_data.json -o mapped.json
 
 # Create an embedded template (extract + map + embed in one step)
 # Run once per blank PDF template — result is reused for all fills
@@ -254,11 +255,11 @@ pdf-mapper check-embed-file blank_form.pdf
 # Fill with data from a JSON file
 pdf-mapper fill blank_form.pdf -d investor_data.json -o filled_form.pdf
 
-# Full pipeline — extract → map → embed → fill
-pdf-mapper run-all blank_form.pdf -o final_form.pdf
+# Full pipeline — extract → map → embed → fill (also needs --input-json)
+pdf-mapper run-all blank_form.pdf --input-json investor_data.json -o final_form.pdf
 
 # Control log verbosity
-pdf-mapper --log-level DEBUG run-all blank_form.pdf -o final_form.pdf
+pdf-mapper --log-level DEBUG run-all blank_form.pdf --input-json investor_data.json -o final_form.pdf
 
 # View help
 pdf-mapper --help
@@ -270,11 +271,11 @@ pdf-mapper run-all --help
 | Command | Description |
 |---|---|
 | `extract <pdf>` | Extract raw PDF form fields (no LLM) |
-| `map <pdf>` | Map fields to target schema via LLM |
+| `map <pdf> --input-json <data.json>` | Map fields to target schema via LLM |
 | `make-embed-file <pdf> -o <out>` | Extract + Map + Embed in one step |
 | `check-embed-file <pdf>` | Check whether PDF has embedded metadata |
 | `fill <pdf> -d <data.json> -o <out>` | Fill form with data from JSON file |
-| `run-all <pdf> -o <out>` | Full pipeline: extract → map → embed → fill |
+| `run-all <pdf> --input-json <data.json> -o <out>` | Full pipeline: extract → map → embed → fill |
 
 ### Common flags
 
@@ -282,7 +283,8 @@ pdf-mapper run-all --help
 |---|---|
 | `-o / --output` | Output file path |
 | `-d / --data-file` | JSON file with field data (for `fill`) |
-| `--mapper-type` | `semantic`, `headers`, `rag`, `ensemble` (default: `ensemble`) |
+| `--input-json` | Path to input JSON data to map fields against (for `map`, `run-all`) |
+| `--mapper-type` | Accepted for compatibility; not currently wired to a mapping-strategy switch — mapping behavior comes from `mapping.ini`/`mapping_config` |
 | `--session-id` | Session ID for tracking/caching |
 | `--log-level` | `DEBUG`, `INFO`, `WARNING`, `ERROR` |
 

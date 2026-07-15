@@ -11,11 +11,14 @@ The actual business logic is in src/handlers/operations.py
 """
 
 import argparse
+import asyncio
 import json
 import logging
 import sys
 
+from pdf_autofillr_mapper.configs.local import build_operation_config
 from pdf_autofillr_mapper.core.logger import setup_logging
+from pdf_autofillr_mapper.utils.ini_config import get_ini_config
 
 # Import platform-agnostic handlers
 from pdf_autofillr_mapper.handlers.operations import (
@@ -33,16 +36,31 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 
+def _copy_result_output(result: dict, output_path: str | None, logger_) -> None:
+    """Copy whichever output file key is present in `result` to `output_path`."""
+    if not output_path:
+        return
+    import shutil
+
+    for key in ("filled_pdf", "embedded_pdf", "output_file"):
+        src = result.get(key)
+        if src:
+            shutil.copy2(src, output_path)
+            logger_.info(f"Copied {key} -> {output_path}")
+            return
+    logger_.warning(
+        f"No recognized output file key in result to copy to {output_path}"
+    )
+
+
 def extract_command(args):
     """Extract fields from PDF."""
     logger.info(f"Extracting fields from: {args.pdf_path}")
 
-    payload = {
-        "pdf_path": args.pdf_path,
-        "session_id": args.session_id,
-    }
-
-    result = handle_extract_operation(payload)
+    config = build_operation_config(pdf_path=args.pdf_path, session_id=args.session_id)
+    result = asyncio.run(
+        handle_extract_operation(config=config, session_id=args.session_id)
+    )
 
     if args.output:
         with open(args.output, "w") as f:
@@ -58,13 +76,22 @@ def map_command(args):
     """Map PDF fields."""
     logger.info(f"Mapping fields for: {args.pdf_path}")
 
-    payload = {
-        "pdf_path": args.pdf_path,
-        "session_id": args.session_id,
-        "mapper_type": args.mapper_type,
-    }
-
-    result = handle_map_operation(payload)
+    # Note: handle_map_operation has no direct "mapper_type" switch — mapping
+    # strategy comes from mapping_config / investor_type. args.mapper_type is
+    # accepted for CLI compatibility but not currently wired through.
+    config = build_operation_config(
+        pdf_path=args.pdf_path,
+        input_json_path=args.input_json,
+        session_id=args.session_id,
+    )
+    mapping_config = get_ini_config().get_mapping_config()
+    result = asyncio.run(
+        handle_map_operation(
+            config=config,
+            mapping_config=mapping_config,
+            session_id=args.session_id,
+        )
+    )
 
     if args.output:
         with open(args.output, "w") as f:
@@ -80,13 +107,13 @@ def embed_command(args):
     """Embed metadata into PDF."""
     logger.info(f"Embedding metadata into: {args.pdf_path}")
 
-    payload = {
-        "pdf_path": args.pdf_path,
-        "session_id": args.session_id,
-        "output_path": args.output,
-    }
-
-    result = handle_embed_operation(payload)
+    # Reuses the same deterministic output paths extract/map wrote to for
+    # this pdf_path — run extract and map first for the same pdf_path.
+    config = build_operation_config(pdf_path=args.pdf_path, session_id=args.session_id)
+    result = asyncio.run(
+        handle_embed_operation(config=config, session_id=args.session_id)
+    )
+    _copy_result_output(result, args.output, logger)
 
     logger.info("Metadata embedded successfully")
     print(json.dumps(result, indent=2))
@@ -98,22 +125,23 @@ def fill_command(args):
     """Fill PDF form with data."""
     logger.info(f"Filling PDF: {args.pdf_path}")
 
-    # Load data from JSON file
+    # Load data from JSON file (also validates it's well-formed JSON early)
     if args.data_file:
         with open(args.data_file) as f:
-            data = json.load(f)
+            json.load(f)
     else:
         logger.error("Data file is required for fill operation")
         sys.exit(1)
 
-    payload = {
-        "pdf_path": args.pdf_path,
-        "data": data,
-        "output_path": args.output,
-        "session_id": args.session_id,
-    }
-
-    result = handle_fill_pdf_operation(payload)
+    config = build_operation_config(
+        pdf_path=args.pdf_path,
+        input_json_path=args.data_file,
+        session_id=args.session_id,
+    )
+    result = asyncio.run(
+        handle_fill_pdf_operation(config=config, session_id=args.session_id)
+    )
+    _copy_result_output(result, args.output, logger)
 
     logger.info("PDF filled successfully")
     print(json.dumps(result, indent=2))
@@ -125,13 +153,21 @@ def make_embed_file_command(args):
     """Extract + Map + Embed in one operation."""
     logger.info(f"Creating embed file for: {args.pdf_path}")
 
-    payload = {
-        "pdf_path": args.pdf_path,
-        "session_id": args.session_id,
-        "output_path": args.output,
-    }
-
-    result = handle_make_embed_file_operation(payload)
+    config = build_operation_config(pdf_path=args.pdf_path, session_id=args.session_id)
+    mapping_config = get_ini_config().get_mapping_config()
+    # handle_make_embed_file_operation requires real user_id/pdf_doc_id (not
+    # Optional) — default to 1 for standalone CLI use with no multi-tenant
+    # identifiers.
+    result = asyncio.run(
+        handle_make_embed_file_operation(
+            config=config,
+            user_id=1,
+            pdf_doc_id=1,
+            session_id=args.session_id,
+            mapping_config=mapping_config,
+        )
+    )
+    _copy_result_output(result, args.output, logger)
 
     logger.info("Embed file created successfully")
     print(json.dumps(result, indent=2))
@@ -143,11 +179,8 @@ def check_embed_file_command(args):
     """Check if PDF has embedded metadata."""
     logger.info(f"Checking embed status for: {args.pdf_path}")
 
-    payload = {
-        "pdf_path": args.pdf_path,
-    }
-
-    result = handle_check_embed_file_operation(payload)
+    config = build_operation_config(pdf_path=args.pdf_path)
+    result = asyncio.run(handle_check_embed_file_operation(config=config))
 
     print(json.dumps(result, indent=2))
 
@@ -158,13 +191,16 @@ def run_all_command(args):
     """Run complete pipeline."""
     logger.info(f"Running complete pipeline for: {args.pdf_path}")
 
-    payload = {
-        "pdf_path": args.pdf_path,
-        "session_id": args.session_id,
-        "output_path": args.output,
-    }
-
-    result = handle_run_all_operation(payload)
+    mapping_config = get_ini_config().get_mapping_config()
+    result = asyncio.run(
+        handle_run_all_operation(
+            input_pdf=args.pdf_path,
+            input_json=args.input_json or "",
+            mapping_config=mapping_config,
+            session_id=args.session_id,
+        )
+    )
+    _copy_result_output(result, args.output, logger)
 
     logger.info("Pipeline completed successfully")
     print(json.dumps(result, indent=2))
@@ -226,6 +262,9 @@ Examples:
         help="Mapper type to use",
     )
     map_parser.add_argument("--session-id", help="Session ID for tracking")
+    map_parser.add_argument(
+        "--input-json", help="Path to input JSON data to map fields against (required)"
+    )
     map_parser.set_defaults(func=map_command)
 
     # Embed command
@@ -268,6 +307,9 @@ Examples:
     run_all_parser.add_argument("pdf_path", help="Path to input PDF")
     run_all_parser.add_argument("-o", "--output", required=True, help="Output PDF file")
     run_all_parser.add_argument("--session-id", help="Session ID for tracking")
+    run_all_parser.add_argument(
+        "--input-json", help="Path to input JSON data (required for the map stage)"
+    )
     run_all_parser.set_defaults(func=run_all_command)
 
     # Parse arguments

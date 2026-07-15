@@ -507,7 +507,12 @@ Endpoints:
 - `POST /error-analytics` — API 7
 - `GET  /health` — vector count
 
-All endpoints require `X-API-Key: dev-key` header (set `RAGPDF_API_KEY` to change).
+All endpoints require the `X-API-Key` header to match `RAGPDF_API_KEY`.
+**`RAGPDF_API_KEY` must be set** — there is no default key anymore; a
+missing value causes the server to refuse requests with a config error
+rather than falling back to a guessable key. For local-only
+experimentation you can instead set `RAGPDF_ALLOW_INSECURE_NO_AUTH=true`,
+but never do this in a deployment reachable by anyone else.
 
 ---
 

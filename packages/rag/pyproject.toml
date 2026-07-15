@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pdf-autofillr-rag"
-version = "0.2.4"
+version = "0.2.5"
 description = "Self-learning RAG field prediction SDK for PDF form filling."
 readme = "README.md"
 license = { file = "LICENSE" }

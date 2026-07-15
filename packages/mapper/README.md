@@ -34,7 +34,11 @@ pip install -r requirements-api.txt
 
 ### 3. Run API Server
 
+**Set `API_KEY` first** — the server refuses to serve requests without it
+(see [Environment Variables](#-environment-variables) below).
+
 ```bash
+export API_KEY=change-me-to-a-long-random-secret
 python api_server.py
 ```
 
@@ -135,6 +139,15 @@ python api_server.py
 # In another terminal, test it
 curl http://localhost:8000/health
 ```
+
+**Authentication is required.** Set `API_KEY` to a strong secret before
+starting the server — every endpoint except `/`, `/health`, `/docs`, and
+`/redoc` requires it as the `X-API-Key` header, or the server responds with
+a config error. (For local-only experimentation you can instead set
+`MAPPER_ALLOW_INSECURE_NO_AUTH=true`, but never do this in a deployment
+reachable by anyone else.) Cross-origin access defaults to open (`*`) for
+convenience during local development — set `MAPPER_CORS_ALLOWED_ORIGINS`
+(comma-separated) to lock this down before deploying.
 
 **Available endpoints:**
 - `GET /` - API info
@@ -281,6 +294,9 @@ Key environment variables (set in `.env`):
 | `AWS_ACCESS_KEY_ID` | 🔷 | AWS credentials (if using AWS) |
 | `AWS_SECRET_ACCESS_KEY` | 🔷 | AWS credentials (if using AWS) |
 | `AZURE_STORAGE_CONNECTION_STRING` | 🔷 | Azure credentials (if using Azure) |
+| `API_KEY` | ✅ (API server) | Shared secret clients send as `X-API-Key` |
+| `MAPPER_ALLOW_INSECURE_NO_AUTH` | ⬜ | `true` to explicitly run the API server without auth (local dev only) |
+| `MAPPER_CORS_ALLOWED_ORIGINS` | ⬜ | Comma-separated allowed origins for the API server |
 
 ---
 

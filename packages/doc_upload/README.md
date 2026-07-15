@@ -69,6 +69,8 @@ DOC_UPLOAD_LLM_API_KEY=sk-...
 DOC_UPLOAD_STORAGE=local
 DOC_UPLOAD_DATA_PATH=./extractor_data
 DOC_UPLOAD_CONFIG_PATH=./configs
+# Required to run the FastAPI server — see "FastAPI server" below.
+AUTH_TOKEN=change-me-to-a-long-random-secret
 ```
 
 ---
@@ -97,6 +99,12 @@ doc-upload-server
 uvicorn entrypoints.fastapi_app:app --reload --port 8001
 ```
 
+**Authentication is required.** Set `AUTH_TOKEN` to a strong secret before
+starting the server — every request must send it as the `X-API-Key` header,
+or the server responds with a config error. (For local-only experimentation
+you can instead set `DOC_UPLOAD_ALLOW_INSECURE_NO_AUTH=true`, but never do
+this in a deployment reachable by anyone else.)
+
 Then POST to `http://localhost:8001/extract`:
 ```json
 {
@@ -104,6 +112,15 @@ Then POST to `http://localhost:8001/extract`:
   "schema_path": "configs/form_keys.json"
 }
 ```
+with header `X-API-Key: <your AUTH_TOKEN>`.
+
+`document_path` and `schema_path` must resolve inside `DOC_UPLOAD_DATA_PATH`,
+`DOC_UPLOAD_CONFIG_PATH`, or a directory listed in
+`DOC_UPLOAD_ALLOWED_DOCUMENT_ROOTS` (comma-separated). Paths outside those
+directories — including via `..` traversal or symlinks — are rejected with
+HTTP 400. If your documents live somewhere else (e.g. an uploads folder),
+add that folder to `DOC_UPLOAD_ALLOWED_DOCUMENT_ROOTS` rather than removing
+the restriction.
 
 ---
 

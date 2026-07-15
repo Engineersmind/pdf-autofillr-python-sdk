@@ -525,10 +525,14 @@ from dotenv import load_dotenv; load_dotenv()
 os.environ.setdefault("RAGPDF_STORAGE","local")
 os.environ.setdefault("RAGPDF_DATA_PATH","./ragpdf_data")
 os.environ.setdefault("RAGPDF_VECTOR_STORE","local")
+# Auth is fail-closed now (no more built-in "dev-key" default), so this test
+# sets its own key explicitly rather than depending on whatever — if
+# anything — RAGPDF_API_KEY is set to in the developer's real .env.
+os.environ["RAGPDF_API_KEY"] = "run-all-tests-key"
 from ragpdf.entrypoints.aws_lambda import lambda_handler
 out = {{}}
 # system_info
-b = json.loads(lambda_handler({{"headers":{{"x-api-key":"dev-key"}},"body":json.dumps({{"api_name":"get_system_info"}})}},None)["body"])
+b = json.loads(lambda_handler({{"headers":{{"x-api-key":"run-all-tests-key"}},"body":json.dumps({{"api_name":"get_system_info"}})}},None)["body"])
 out["si_status"]  = b["status"]
 out["si_vectors"] = b["data"]["vector_db"]["total_vectors"]
 # predict
@@ -539,7 +543,7 @@ payload = {{"api_name":"get_rag_predictions","user_id":"lu","session_id":"ls",
             "fields":[{{"field_id":"lf001","field_name":field["field_name"],
                         "context":field.get("context",""),"section_context":field.get("section_context",""),
                         "headers":field.get("headers",[])}}]}}
-b2 = json.loads(lambda_handler({{"headers":{{"x-api-key":"dev-key"}},"body":json.dumps(payload)}},None)["body"])
+b2 = json.loads(lambda_handler({{"headers":{{"x-api-key":"run-all-tests-key"}},"body":json.dumps(payload)}},None)["body"])
 out["pred_status"]  = b2["status"]
 out["pred_matched"] = b2["data"]["summary"]["predicted_fields"]
 # predictions are saved to file, not in the lambda response dict
@@ -552,7 +556,7 @@ else:
     out["pred_name"] = "file_not_found"
 # bad key + bad api
 out["bad_key"] = lambda_handler({{"headers":{{"x-api-key":"wrongkey"}},"body":json.dumps({{"api_name":"get_system_info"}})}},None)["statusCode"]
-out["bad_api"] = lambda_handler({{"headers":{{"x-api-key":"dev-key"}},"body":json.dumps({{"api_name":"not_real"}})}},None)["statusCode"]
+out["bad_api"] = lambda_handler({{"headers":{{"x-api-key":"run-all-tests-key"}},"body":json.dumps({{"api_name":"not_real"}})}},None)["statusCode"]
 print(json.dumps(out))
 """
 tmp = Path("_lambda_tmp.py")

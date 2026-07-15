@@ -55,12 +55,25 @@ def _response(
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
+    import hmac
     import os
 
     try:
         api_key = req.headers.get("x-api-key", "")
         expected = os.getenv("RAGPDF_API_KEY", "")
-        if expected and api_key != expected:
+        allow_insecure_no_auth = (
+            os.getenv("RAGPDF_ALLOW_INSECURE_NO_AUTH", "false").lower() == "true"
+        )
+        if not expected:
+            if not allow_insecure_no_auth:
+                return _response(
+                    500,
+                    "Server misconfigured: RAGPDF_API_KEY is not set. Set "
+                    "RAGPDF_API_KEY to a strong secret, or set "
+                    "RAGPDF_ALLOW_INSECURE_NO_AUTH=true to explicitly run "
+                    "without authentication (not recommended).",
+                )
+        elif not api_key or not hmac.compare_digest(api_key, expected):
             return _response(401, "Invalid API key")
 
         body = req.get_json()
