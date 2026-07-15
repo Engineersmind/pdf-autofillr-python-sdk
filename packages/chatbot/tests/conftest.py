@@ -215,6 +215,11 @@ def fastapi_client(config_path, temp_dir):
     os.environ["chatbot_CONFIG_PATH"] = config_path
     os.environ["chatbot_DATA_PATH"] = str(temp_dir / "api_data")
     os.environ["chatbot_PDF_FILLER"] = "none"
+    # These tests exercise the conversation/session logic, not the auth
+    # layer (which has its own coverage) — opt into no-auth mode explicitly
+    # rather than relying on a default, since there no longer is one.
+    os.environ["CHATBOT_ALLOW_INSECURE_NO_AUTH"] = "true"
+    os.environ.pop("CHATBOT_API_KEY", None)
 
     # Re-import api_server fresh with patched env
     import api_server

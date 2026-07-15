@@ -413,7 +413,9 @@ uvicorn ragpdf.entrypoints.fastapi_app:app --host 0.0.0.0 --port 8000 --workers 
 ```
 
 Server at: **http://localhost:8000**  
-All endpoints require `X-API-Key: dev-key` header (set `RAGPDF_API_KEY` to change).
+All endpoints require the `X-API-Key` header to match `RAGPDF_API_KEY`, which
+you must set — there's no built-in default. The examples below assume
+`RAGPDF_API_KEY=local-test-key` for illustration; use your own value.
 
 ---
 
@@ -422,7 +424,7 @@ All endpoints require `X-API-Key: dev-key` header (set `RAGPDF_API_KEY` to chang
 ### `GET /health`
 
 ```bash
-curl -H "X-API-Key: dev-key" http://localhost:8000/health
+curl -H "X-API-Key: local-test-key" http://localhost:8000/health
 ```
 
 ---
@@ -432,7 +434,7 @@ curl -H "X-API-Key: dev-key" http://localhost:8000/health
 ```bash
 curl -s -X POST http://localhost:8000/predict \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: dev-key" \
+  -H "X-API-Key: local-test-key" \
   -d '{
     "user_id": "u1",
     "session_id": "s1",
@@ -462,7 +464,7 @@ curl -s -X POST http://localhost:8000/predict \
 ```bash
 curl -s -X POST http://localhost:8000/save-filled-pdf \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: dev-key" \
+  -H "X-API-Key: local-test-key" \
   -d '{
     "user_id": "u1", "session_id": "s1", "pdf_id": "p1",
     "llm_predictions": {"predictions": {"f001": {"predicted_field_name": "investor_full_legal_name", "confidence": 0.92}}},
@@ -477,7 +479,7 @@ curl -s -X POST http://localhost:8000/save-filled-pdf \
 ```bash
 curl -s -X POST http://localhost:8000/feedback \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: dev-key" \
+  -H "X-API-Key: local-test-key" \
   -d '{
     "user_id": "u1", "session_id": "s1", "pdf_id": "p1",
     "errors": [{"error_type": "wrong_field_name", "field_name": "investor_name", "field_type": "text", "value": "John", "feedback": "Should be full_legal_name", "page_number": 1, "corners": [[10,20],[200,20],[200,40],[10,40]]}]
@@ -491,12 +493,12 @@ curl -s -X POST http://localhost:8000/feedback \
 ```bash
 # Global
 curl -s -X POST http://localhost:8000/metrics \
-  -H "Content-Type: application/json" -H "X-API-Key: dev-key" \
+  -H "Content-Type: application/json" -H "X-API-Key: local-test-key" \
   -d '{"metric_type": "global"}' | python3 -m json.tool
 
 # Per-PDF
 curl -s -X POST http://localhost:8000/metrics \
-  -H "Content-Type: application/json" -H "X-API-Key: dev-key" \
+  -H "Content-Type: application/json" -H "X-API-Key: local-test-key" \
   -d '{"metric_type": "pdf", "user_id": "u1", "session_id": "s1", "pdf_id": "p1"}' \
   | python3 -m json.tool
 ```
@@ -506,7 +508,7 @@ curl -s -X POST http://localhost:8000/metrics \
 ### `GET /system-info` — API 6
 
 ```bash
-curl -H "X-API-Key: dev-key" http://localhost:8000/system-info | python3 -m json.tool
+curl -H "X-API-Key: local-test-key" http://localhost:8000/system-info | python3 -m json.tool
 ```
 
 ---
@@ -515,7 +517,7 @@ curl -H "X-API-Key: dev-key" http://localhost:8000/system-info | python3 -m json
 
 ```bash
 curl -s -X POST http://localhost:8000/error-analytics \
-  -H "Content-Type: application/json" -H "X-API-Key: dev-key" \
+  -H "Content-Type: application/json" -H "X-API-Key: local-test-key" \
   -d '{"date_from": "2026-01-01T00:00:00Z", "date_to": "2026-12-31T23:59:59Z"}' \
   | python3 -m json.tool
 ```
@@ -579,7 +581,7 @@ Local Lambda test:
 RAGPDF_EMBEDDING_BACKEND=noop RAGPDF_CORRECTOR_BACKEND=noop python -c "
 from ragpdf.entrypoints.aws_lambda import lambda_handler
 import json
-event = {'headers': {'x-api-key': 'dev-key'}, 'body': json.dumps({'api_name': 'get_system_info'})}
+event = {'headers': {'x-api-key': 'local-test-key'}, 'body': json.dumps({'api_name': 'get_system_info'})}
 print(lambda_handler(event, None))
 "
 ```
@@ -674,7 +676,7 @@ docker build -t ragpdf-module .
 docker run -p 8000:8000 \
   -e RAGPDF_EMBEDDING_BACKEND=sentence_transformer \
   -e RAGPDF_CORRECTOR_BACKEND=noop \
-  -e RAGPDF_API_KEY=dev-key \
+  -e RAGPDF_API_KEY=local-test-key \
   ragpdf-module
 
 # Run — from .env file
@@ -691,7 +693,7 @@ docker run -p 8000:8000 \
   -e RAGPDF_API_KEY=your-secret \
   ragpdf-module
 
-curl -H "X-API-Key: dev-key" http://localhost:8000/health
+curl -H "X-API-Key: local-test-key" http://localhost:8000/health
 ```
 
 ---
@@ -754,7 +756,7 @@ curl -H "X-API-Key: dev-key" http://localhost:8000/health
 
 | Variable | Default | Description |
 |---|---|---|
-| `RAGPDF_API_KEY` | `dev-key` | All endpoints require `X-API-Key: <value>` |
+| `RAGPDF_API_KEY` | *(required, no default)* | All endpoints require `X-API-Key: <value>`; server refuses to start serving requests until this is set (or `RAGPDF_ALLOW_INSECURE_NO_AUTH=true` for local dev only) |
 | `RAGPDF_SERVER_HOST` | `0.0.0.0` | Server host |
 | `RAGPDF_SERVER_PORT` | `8000` | Server port |
 | `RAGPDF_LOG_LEVEL` | `INFO` | Log level |

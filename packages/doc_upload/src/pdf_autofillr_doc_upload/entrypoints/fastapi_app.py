@@ -17,6 +17,7 @@ Endpoints:
 
 from __future__ import annotations
 
+import hmac
 import os
 import sys
 import uuid
@@ -37,9 +38,11 @@ except ImportError as e:
         "fastapi and uvicorn are required: pip install 'pdf-autofillr-doc-upload[server]'"
     ) from e
 
+from pdf_autofillr_doc_upload.storage.local_storage import PathAccessError
+
 app = FastAPI(
     title="pdf-autofillr-doc-upload",
-    version="0.1.5",
+    version="0.1.6",
     description="Document extraction + PDF filling API",
 )
 
@@ -97,6 +100,15 @@ def extract(
     client = _get_client()
     job_id = request.job_id or str(uuid.uuid4())
     try:
+        # document_path/schema_path here are untrusted HTTP input. Validate
+        # them against the allowed roots *before* they reach the storage
+        # backend — this is what actually prevents the arbitrary local file
+        # disclosure previously possible via this endpoint. LocalStorage's
+        # download_document()/load_schema() remain deliberately unrestricted
+        # for trusted, programmatic (non-HTTP) use of the library.
+        if hasattr(client.storage, "assert_path_allowed"):
+            client.storage.assert_path_allowed(request.document_path, purpose="document")
+            client.storage.assert_path_allowed(request.schema_path, purpose="schema")
         result = client.run(
             document_path=request.document_path,
             schema_path=request.schema_path,
@@ -116,6 +128,8 @@ def extract(
                 "output_path": result.get("output_path"),
             }
         )
+    except PathAccessError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
@@ -142,15 +156,28 @@ def get_job_output_flat(job_id: str, x_api_key: str | None = Header(default=None
 
 # ── API key helper ───────────────────────────────────────────────────────────
 
+# Set this explicitly to allow running with no auth (e.g. local dev only).
+# Anything other than "true" means auth is mandatory — the previous
+# behaviour of silently disabling auth when AUTH_TOKEN was unset allowed
+# unauthenticated arbitrary local file disclosure and is no longer allowed.
+_ALLOW_INSECURE_NO_AUTH = os.getenv("DOC_UPLOAD_ALLOW_INSECURE_NO_AUTH", "false").lower() == "true"
+
 
 def _check_api_key(provided: str | None) -> None:
     expected = os.environ.get("AUTH_TOKEN")
     if not expected:
-        return  # auth disabled
-    if not provided:
-        raise HTTPException(status_code=401, detail="Missing X-API-Key header")
-    if provided != expected:
-        raise HTTPException(status_code=403, detail="Invalid API token")
+        if _ALLOW_INSECURE_NO_AUTH:
+            return  # explicitly opted into no-auth mode
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "Server misconfigured: AUTH_TOKEN is not set. Set AUTH_TOKEN "
+                "to a strong secret, or set DOC_UPLOAD_ALLOW_INSECURE_NO_AUTH=true "
+                "to explicitly run without authentication (not recommended)."
+            ),
+        )
+    if not provided or not hmac.compare_digest(provided, expected):
+        raise HTTPException(status_code=401, detail="Missing or invalid X-API-Key header")
 
 
 def main():

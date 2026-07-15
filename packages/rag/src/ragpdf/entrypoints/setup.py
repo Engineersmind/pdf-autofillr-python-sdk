@@ -13,6 +13,7 @@ import json
 import math
 import os
 import random
+import secrets
 import shutil
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -69,10 +70,10 @@ def _copy_module_source(dest: str = "./ragpdf"):
 # ──────────────────────────────────────────────────────────────────────────────
 
 
-def _create_env(force: bool = False):
+def _create_env(force: bool = False, api_key: str = ""):
     _write_text(
         ".env",
-        """\
+        f"""\
 # pdf-autofillr-rag — environment config
 # Edit values below. Only fill sections relevant to your chosen backends.
 
@@ -132,7 +133,7 @@ RAGPDF_MAX_CONFIDENCE=0.99
 RAGPDF_MIN_CONFIDENCE=0.50
 
 # ── Server ────────────────────────────────────────────────────
-RAGPDF_API_KEY=dev-key
+RAGPDF_API_KEY={api_key}
 RAGPDF_SERVER_HOST=0.0.0.0
 RAGPDF_SERVER_PORT=8000
 
@@ -144,10 +145,10 @@ RAGPDF_LOG_LEVEL=INFO
     )
 
 
-def _create_config_ini(force: bool = False):
+def _create_config_ini(force: bool = False, api_key: str = ""):
     _write_text(
         "config.ini",
-        """\
+        f"""\
 [storage]
 backend     = local
 data_path   = ./data/rag
@@ -183,7 +184,7 @@ max_confidence       = 0.99
 min_confidence       = 0.50
 
 [server]
-api_key = dev-key
+api_key = {api_key}
 host    = 0.0.0.0
 port    = 8000
 """,
@@ -845,9 +846,13 @@ def main():
 
     print()
 
+    # Generate a unique secret for this install rather than shipping a known
+    # default — every prior installer wrote the same "dev-key" for everyone.
+    generated_api_key = secrets.token_urlsafe(32)
+
     # ── Always: .env, config.ini, data/rag/ ──────────────────
-    _create_env(force=args.force)
-    _create_config_ini(force=args.force)
+    _create_env(force=args.force, api_key=generated_api_key)
+    _create_config_ini(force=args.force, api_key=generated_api_key)
     _create_ragpdf_data(base=args.path, force=args.force)
 
     # ── Optional: copy module source ──────────────────────────
@@ -858,6 +863,11 @@ def main():
     print(f"""
 {'='*54}
 Setup complete.
+
+  A unique RAGPDF_API_KEY was generated for you in .env:
+    {generated_api_key}
+  Send it as the X-API-Key header on every request. Keep it secret —
+  anyone with it can call this server.
 
   1. Edit .env with your API keys / backends
   2. ragpdf system-info       ← verify setup

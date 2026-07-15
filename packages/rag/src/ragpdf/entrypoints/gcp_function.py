@@ -18,6 +18,7 @@ Local test (Functions Framework):
     # Body: {"api_name": "get_system_info"}
 """
 
+import hmac
 import json
 import logging
 import os
@@ -40,7 +41,27 @@ def ragpdf_handler(request):
     try:
         api_key = request.headers.get("x-api-key", "")
         expected = os.getenv("RAGPDF_API_KEY", "")
-        if expected and api_key != expected:
+        allow_insecure_no_auth = (
+            os.getenv("RAGPDF_ALLOW_INSECURE_NO_AUTH", "false").lower() == "true"
+        )
+        if not expected:
+            if not allow_insecure_no_auth:
+                return (
+                    json.dumps(
+                        {
+                            "status": "failure",
+                            "message": (
+                                "Server misconfigured: RAGPDF_API_KEY is not set. "
+                                "Set RAGPDF_API_KEY to a strong secret, or set "
+                                "RAGPDF_ALLOW_INSECURE_NO_AUTH=true to explicitly "
+                                "run without authentication (not recommended)."
+                            ),
+                        }
+                    ),
+                    500,
+                    {"Content-Type": "application/json"},
+                )
+        elif not api_key or not hmac.compare_digest(api_key, expected):
             return (
                 json.dumps({"status": "failure", "message": "Invalid API key"}),
                 401,

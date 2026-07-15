@@ -11,6 +11,7 @@ This provides a REST API interface for the mapper module with:
 The actual business logic is in src/handlers/operations.py
 """
 
+import hmac
 import logging
 from typing import Any, Optional
 
@@ -30,6 +31,10 @@ except ImportError:
 from pdf_autofillr_mapper.core.config import settings
 from pdf_autofillr_mapper.core.logger import setup_logging
 
+# Builds a fully-populated config object (config.local_* paths etc.) from a
+# bare pdf_path — see its docstring for why this exists.
+from pdf_autofillr_mapper.configs.local import build_operation_config
+
 # Import platform-agnostic handlers
 from pdf_autofillr_mapper.handlers.operations import (
     handle_check_embed_file_operation,
@@ -40,6 +45,9 @@ from pdf_autofillr_mapper.handlers.operations import (
     handle_map_operation,
     handle_run_all_operation,
 )
+
+import json
+import os
 
 # Setup logging
 setup_logging()
@@ -55,6 +63,11 @@ class OperationRequest(BaseModel):
 
     pdf_path: str = Field(..., description="Path to PDF file")
     session_id: Optional[str] = Field(None, description="Session ID for tracking")
+    user_id: Optional[int] = Field(None, description="User ID for tracking")
+    pdf_doc_id: Optional[int] = Field(None, description="PDF document ID for tracking")
+    input_json_path: Optional[str] = Field(
+        None, description="Path to input JSON data, if this operation needs it"
+    )
 
 
 class ExtractRequest(OperationRequest):
@@ -68,6 +81,9 @@ class MapRequest(OperationRequest):
 
     mapper_type: Optional[str] = Field(
         "ensemble", description="Mapper type: semantic, rag, headers, ensemble"
+    )
+    mapping_config: Optional[dict[str, Any]] = Field(
+        None, description="Mapping configuration overrides (all keys optional)"
     )
 
 
@@ -86,7 +102,13 @@ class FillRequest(OperationRequest):
 class MakeEmbedFileRequest(OperationRequest):
     """Request model for make_embed_file operation."""
 
-    pass
+    investor_type: str = Field("individual", description="Investor type for mapping")
+    mapping_config: Optional[dict[str, Any]] = Field(
+        None, description="Mapping configuration overrides (all keys optional)"
+    )
+    use_second_mapper: bool = Field(
+        False, description="Whether to use the second (RAG) mapper"
+    )
 
 
 class CheckEmbedFileRequest(OperationRequest):
@@ -113,29 +135,57 @@ else:
     app = FastAPI(
         title="PDF Mapper API",
         description="Platform-agnostic PDF field extraction, mapping, embedding, and filling API",
-        version="1.0.10",
+        version="1.0.11",
         docs_url="/docs",
         redoc_url="/redoc",
     )
 
-    # CORS middleware
+    # CORS middleware — restrict to an explicit allow-list in production via
+    # MAPPER_CORS_ALLOWED_ORIGINS (comma-separated). "*" is only used if that
+    # env var is left unset, which keeps local/dev usage simple but should
+    # never be relied on in a real deployment.
+    import os as _os
+
+    _cors_origins_env = _os.getenv("MAPPER_CORS_ALLOWED_ORIGINS", "")
+    _cors_origins = [o.strip() for o in _cors_origins_env.split(",") if o.strip()] or [
+        "*"
+    ]
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Configure this properly in production
-        allow_credentials=True,
-        allow_methods=["*"],
+        allow_origins=_cors_origins,
+        allow_credentials=_cors_origins != ["*"],
+        allow_methods=["GET", "POST"],
         allow_headers=["*"],
     )
 
     # =============================================================================
-    # Authentication (Simple API Key - enhance as needed)
+    # Authentication (API Key, fail-closed)
     # =============================================================================
 
+    # Set MAPPER_ALLOW_INSECURE_NO_AUTH=true to explicitly run without auth
+    # (local dev only). Otherwise a missing API key is a startup/config error,
+    # not a silent bypass — this closes the "auth disabled if unset" hole.
+    _allow_insecure_no_auth = (
+        _os.getenv("MAPPER_ALLOW_INSECURE_NO_AUTH", "false").lower() == "true"
+    )
+
     async def verify_api_key(x_api_key: str = Header(None)):
-        """Verify API key from header."""
-        # TODO: Implement proper authentication
+        """Verify API key from header. Fails closed if none is configured."""
         expected_key = settings.api_key if hasattr(settings, "api_key") else None
-        if expected_key and x_api_key != expected_key:
+        if not expected_key:
+            if _allow_insecure_no_auth:
+                return x_api_key
+            raise HTTPException(
+                status_code=500,
+                detail=(
+                    "Server misconfigured: no API key configured. Set the "
+                    "mapper API key setting (see settings.api_key / "
+                    "MAPPER_API_KEY), or set "
+                    "MAPPER_ALLOW_INSECURE_NO_AUTH=true to explicitly run "
+                    "without authentication (not recommended)."
+                ),
+            )
+        if not x_api_key or not hmac.compare_digest(x_api_key, expected_key):
             raise HTTPException(status_code=401, detail="Invalid API key")
         return x_api_key
 
@@ -153,7 +203,7 @@ else:
         """Root endpoint."""
         return {
             "service": "PDF Mapper API",
-            "version": "1.0.10",
+            "version": "1.0.11",
             "docs": "/docs",
         }
 
@@ -165,7 +215,19 @@ else:
     async def extract(request: ExtractRequest, api_key: str = Depends(verify_api_key)):
         """Extract fields from PDF."""
         try:
-            result = handle_extract_operation(request.dict())
+            config = build_operation_config(
+                pdf_path=request.pdf_path,
+                input_json_path=request.input_json_path,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
+            result = await handle_extract_operation(
+                config=config,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
             return OperationResponse(success=True, data=result)
         except Exception as e:
             logger.error(f"Extract operation failed: {str(e)}", exc_info=True)
@@ -175,7 +237,20 @@ else:
     async def map_fields(request: MapRequest, api_key: str = Depends(verify_api_key)):
         """Map PDF fields to target schema."""
         try:
-            result = handle_map_operation(request.dict())
+            config = build_operation_config(
+                pdf_path=request.pdf_path,
+                input_json_path=request.input_json_path,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
+            result = await handle_map_operation(
+                config=config,
+                mapping_config=request.mapping_config or {},
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
             return OperationResponse(success=True, data=result)
         except Exception as e:
             logger.error(f"Map operation failed: {str(e)}", exc_info=True)
@@ -187,7 +262,19 @@ else:
     ):
         """Embed metadata into PDF."""
         try:
-            result = handle_embed_operation(request.dict())
+            config = build_operation_config(
+                pdf_path=request.pdf_path,
+                input_json_path=request.input_json_path,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
+            result = await handle_embed_operation(
+                config=config,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
             return OperationResponse(success=True, data=result)
         except Exception as e:
             logger.error(f"Embed operation failed: {str(e)}", exc_info=True)
@@ -197,7 +284,31 @@ else:
     async def fill_pdf(request: FillRequest, api_key: str = Depends(verify_api_key)):
         """Fill PDF form with data."""
         try:
-            result = handle_fill_pdf_operation(request.dict())
+            config = build_operation_config(
+                pdf_path=request.pdf_path,
+                input_json_path=request.input_json_path,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
+            # handle_fill_pdf_operation reads fill data from
+            # config.local_input_json — write the caller's `data` there
+            # (this is what makes /fill self-contained: the caller sends
+            # data in the request body rather than a pre-existing file).
+            fill_data_path = config.local_input_json or os.path.join(
+                config.base_dir, f"{os.path.splitext(os.path.basename(request.pdf_path))[0]}_fill_data.json"
+            )
+            os.makedirs(os.path.dirname(fill_data_path), exist_ok=True)
+            with open(fill_data_path, "w", encoding="utf-8") as f:
+                json.dump(request.data, f)
+            config.local_input_json = fill_data_path
+
+            result = await handle_fill_pdf_operation(
+                config=config,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
             return OperationResponse(success=True, data=result)
         except Exception as e:
             logger.error(f"Fill operation failed: {str(e)}", exc_info=True)
@@ -209,7 +320,25 @@ else:
     ):
         """Extract + Map + Embed in one operation."""
         try:
-            result = handle_make_embed_file_operation(request.dict())
+            config = build_operation_config(
+                pdf_path=request.pdf_path,
+                input_json_path=request.input_json_path,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
+            # handle_make_embed_file_operation requires real user_id/pdf_doc_id
+            # (not Optional) — default to 1 for standalone/demo callers that
+            # don't track multi-tenant identifiers.
+            result = await handle_make_embed_file_operation(
+                config=config,
+                user_id=request.user_id or 1,
+                pdf_doc_id=request.pdf_doc_id or 1,
+                session_id=request.session_id,
+                investor_type=request.investor_type,
+                mapping_config=request.mapping_config or {},
+                use_second_mapper=request.use_second_mapper,
+            )
             return OperationResponse(success=True, data=result)
         except Exception as e:
             logger.error(f"Make embed file operation failed: {str(e)}", exc_info=True)
@@ -221,7 +350,17 @@ else:
     ):
         """Check if PDF has embedded metadata."""
         try:
-            result = handle_check_embed_file_operation(request.dict())
+            config = build_operation_config(
+                pdf_path=request.pdf_path,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
+            result = await handle_check_embed_file_operation(
+                config=config,
+                user_id=request.user_id,
+                session_id=request.session_id,
+            )
             return OperationResponse(success=True, data=result)
         except Exception as e:
             logger.error(f"Check embed file operation failed: {str(e)}", exc_info=True)
@@ -233,7 +372,14 @@ else:
     ):
         """Run complete pipeline: Extract + Map + Embed + Fill."""
         try:
-            result = handle_run_all_operation(request.dict())
+            result = await handle_run_all_operation(
+                input_pdf=request.pdf_path,
+                input_json=request.input_json_path or "",
+                mapping_config={},
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
             return OperationResponse(success=True, data=result)
         except Exception as e:
             logger.error(f"Run all operation failed: {str(e)}", exc_info=True)

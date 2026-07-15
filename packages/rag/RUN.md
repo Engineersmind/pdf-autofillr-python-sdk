@@ -78,10 +78,10 @@ RAGPDF_EMBEDDING_BACKEND=sentence_transformer
 
 Local Lambda test:
 ```bash
-RAGPDF_EMBEDDING_BACKEND=noop RAGPDF_CORRECTOR_BACKEND=noop python -c "
+RAGPDF_EMBEDDING_BACKEND=noop RAGPDF_CORRECTOR_BACKEND=noop RAGPDF_API_KEY=local-test-key python -c "
 from ragpdf.entrypoints.aws_lambda import lambda_handler
 import json
-event = {'headers': {'x-api-key': 'dev-key'}, 'body': json.dumps({'api_name': 'get_system_info'})}
+event = {'headers': {'x-api-key': 'local-test-key'}, 'body': json.dumps({'api_name': 'get_system_info'})}
 print(lambda_handler(event, None))
 "
 ```
@@ -175,5 +175,5 @@ RAGPDF_CONFIDENCE_GROWTH_RATE=1.05
 RAGPDF_MAX_CONFIDENCE=0.99
 RAGPDF_MIN_CONFIDENCE=0.50
 RAGPDF_TOP_K=5
-RAGPDF_API_KEY=dev-key
+RAGPDF_API_KEY=change-me-to-a-long-random-secret
 ```

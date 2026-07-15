@@ -20,6 +20,7 @@ Local test:
     "
 """
 
+import hmac
 import json
 import logging
 import os
@@ -31,6 +32,9 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 EXPECTED_API_KEY = os.getenv("RAGPDF_API_KEY", "")
+_ALLOW_INSECURE_NO_AUTH = (
+    os.getenv("RAGPDF_ALLOW_INSECURE_NO_AUTH", "false").lower() == "true"
+)
 _client: RAGPDFClient = None
 
 
@@ -61,7 +65,16 @@ def lambda_handler(event, context):
     try:
         headers = event.get("headers") or {}
         api_key = headers.get("x-api-key") or headers.get("X-Api-Key", "")
-        if EXPECTED_API_KEY and api_key != EXPECTED_API_KEY:
+        if not EXPECTED_API_KEY:
+            if not _ALLOW_INSECURE_NO_AUTH:
+                return _response(
+                    500,
+                    "Server misconfigured: RAGPDF_API_KEY is not set. Set "
+                    "RAGPDF_API_KEY to a strong secret, or set "
+                    "RAGPDF_ALLOW_INSECURE_NO_AUTH=true to explicitly run "
+                    "without authentication (not recommended).",
+                )
+        elif not api_key or not hmac.compare_digest(api_key, EXPECTED_API_KEY):
             return _response(401, "Invalid API key")
 
         raw = event.get("body", "{}")

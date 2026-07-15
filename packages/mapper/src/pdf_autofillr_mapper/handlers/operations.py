@@ -27,6 +27,10 @@ from pdf_autofillr_mapper.mappers.semantic_mapper import SemanticMapper
 from pdf_autofillr_mapper.utils.map_time_estimator import estimate_map_stage_time
 from pdf_autofillr_mapper.utils.storage_helper import get_storage_type
 
+# Used by handle_run_all_operation to build a real config object for each
+# stage — see build_operation_config's docstring for why this is needed.
+from pdf_autofillr_mapper.configs.local import build_operation_config
+
 # Import notification system (optional)
 try:
     from adapter_src.notifier import (
@@ -787,12 +791,33 @@ async def handle_run_all_operation(
     logger.info(f"Input JSON: {input_json}")
     logger.info(f"Storage type: {storage_type}")
 
+    # Each stage handler needs a populated storage config (config.local_*
+    # attributes) — not a bare path, and not None. Build it once and reuse
+    # it across all four stages, so they all read/write the same set of
+    # output files.
+    if storage_type != "local":
+        raise NotImplementedError(
+            f"handle_run_all_operation currently only supports storage_type="
+            f"'local' (got {storage_type!r} from input_pdf={input_pdf!r}). "
+            "Cloud-backed run-all requires an equivalent config builder for "
+            "that backend (see build_operation_config in configs/local.py "
+            "for the pattern to follow)."
+        )
+    config = build_operation_config(
+        pdf_path=input_pdf,
+        input_json_path=input_json,
+        user_id=user_id,
+        session_id=session_id,
+        pdf_doc_id=pdf_doc_id,
+    )
+
     pipeline_results = {}
 
     try:
         # Stage 1: Extract
         logger.info("\n[1/4] Starting EXTRACT stage...")
-        extract_result = await handle_extract_operation(  # type: ignore[call-arg]
+        extract_result = await handle_extract_operation(
+            config=config,
             user_id=user_id,
             session_id=session_id,
             notifier=notifier,
@@ -808,7 +833,7 @@ async def handle_run_all_operation(
         # Stage 2: Map
         logger.info("\n[2/4] Starting MAP stage...")
         map_result = await handle_map_operation(
-            config=None,  # type: ignore[call-arg]
+            config=config,
             mapping_config=mapping_config,
             user_id=user_id,
             session_id=session_id,
@@ -824,7 +849,7 @@ async def handle_run_all_operation(
         # Stage 3: Embed
         logger.info("\n[3/4] Starting EMBED stage...")
         embed_result = await handle_embed_operation(
-            config=None,  # type: ignore[call-arg]
+            config=config,
             user_id=user_id,
             session_id=session_id,
             notifier=notifier,
@@ -836,7 +861,8 @@ async def handle_run_all_operation(
 
         # Stage 4: Fill
         logger.info("\n[4/4] Starting FILL stage...")
-        fill_result = await handle_fill_operation(  # type: ignore[call-arg]
+        fill_result = await handle_fill_operation(
+            config=config,
             user_id=user_id,
             session_id=session_id,
             notifier=notifier,
@@ -927,9 +953,21 @@ async def handle_refresh_operation(
     logger.info(f"Storage type: {storage_type}")
     logger.info("Re-extracting PDF data to refresh configuration...")
 
+    if storage_type != "local":
+        raise NotImplementedError(
+            f"handle_refresh_operation currently only supports storage_type="
+            f"'local' (got {storage_type!r} from input_pdf={input_pdf!r})."
+        )
+    config = build_operation_config(
+        pdf_path=input_pdf,
+        user_id=user_id,
+        session_id=session_id,
+    )
+
     try:
         # Call extract operation (refresh is essentially a re-extract)
-        result = await handle_extract_operation(  # type: ignore[call-arg]
+        result = await handle_extract_operation(
+            config=config,
             user_id=user_id,
             session_id=session_id,
             notifier=notifier,
@@ -2638,7 +2676,8 @@ async def handle_make_form_fields_data_points(
     try:
 
         # Extract PDF data (includes form fields and headers)
-        extract_result = await handle_extract_operation(  # type: ignore[call-arg]
+        extract_result = await handle_extract_operation(
+            config=config,
             user_id=user_id,
             session_id=session_id,
             notifier=notifier,
@@ -2802,7 +2841,8 @@ async def handle_fill_pdf_operation(
                 }
 
         # Call the standard fill operation with S3 paths
-        fill_result = await handle_fill_operation(  # type: ignore[call-arg]
+        fill_result = await handle_fill_operation(
+            config=config,
             user_id=user_id,
             session_id=session_id,
             notifier=notifier,

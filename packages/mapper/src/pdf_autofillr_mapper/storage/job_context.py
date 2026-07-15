@@ -75,9 +75,9 @@ class JobContext:
         # ── Remote source paths (inputs) ──────────────────────────────────────
         self.source_input_pdf = resolver.remote_input_pdf(uid, sid, pid)
         # global_json = keys-only schema → used by handle_map_operation (embed pipeline)
-        self.source_global_json = resolver.remote_global_json(uid, sid, pid)
+        self.source_global_json = resolver.remote_global_json()
         # input_json  = per-user data    → used by handle_fill_operation (fill pipeline)
-        self.source_input_json = resolver.remote_input_json(uid, sid, pid)
+        self.source_input_json = resolver.remote_input_json(uid, sid)
 
         # AWS-style input aliases (operations.py uses hasattr guards on these)
         self.s3_input_pdf = self.source_input_pdf
@@ -101,7 +101,7 @@ class JobContext:
         self.dest_final_predictions = resolver.remote_final_predictions(uid, sid, pid)
         self.dest_llm_predictions = resolver.remote_llm_predictions(uid, sid, pid)
         self.dest_rag_predictions = resolver.remote_rag_predictions(uid, sid, pid)
-        self.dest_cache_registry = resolver.remote_cache_registry(uid, sid, pid)
+        self.dest_cache_registry = resolver.remote_cache_registry()
 
         # AWS-style output aliases (operations.py accesses these with hasattr guards)
         self.s3_extracted_json = self.dest_extracted_json

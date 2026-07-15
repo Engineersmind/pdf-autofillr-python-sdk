@@ -143,6 +143,14 @@ MAPPER_URL_PREFIX=/mapper
 
 ## 🌐 API Endpoints
 
+**Authentication is required.** Set `CHATBOT_API_KEY` to a strong secret
+before starting the server — every endpoint below requires it as the
+`X-API-Key` header, or the server responds with a config error. (For
+local-only experimentation you can instead set
+`CHATBOT_ALLOW_INSECURE_NO_AUTH=true`, but never do this in a deployment
+reachable by anyone else.) Cross-origin access is closed by default; set
+`CHATBOT_CORS_ALLOWED_ORIGINS` (comma-separated) to allow specific origins.
+
 | Endpoint | Method | Description |
 |---|---|---|
 | `/` | GET | API info |
@@ -151,6 +159,13 @@ MAPPER_URL_PREFIX=/mapper
 | `/chatbot/session/{user_id}/{session_id}` | GET | Get completed session data |
 | `/chatbot/session/{user_id}/{session_id}/fill-report` | GET | Fill statistics report |
 | `/chatbot/session/{user_id}/{session_id}` | DELETE | Delete session |
+
+`user_id` and `session_id` must be plain identifiers (no `/`, `\`, or `..`) —
+anything else is rejected with HTTP 400. Note that the API key is a single
+shared secret: it keeps outsiders out, but any caller holding it can address
+any `user_id`/`session_id`. If you expose this service to multiple
+mutually-untrusting end users directly (rather than via your own
+authenticated backend), add a per-user ownership check in front of it.
 
 See **[API_SERVER.md](API_SERVER.md)** for full request/response schemas.
 

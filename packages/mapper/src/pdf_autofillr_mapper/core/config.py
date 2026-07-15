@@ -91,6 +91,11 @@ class Settings(BaseSettings):
     openai_temperature: float = 0.1
     openai_max_tokens: int = 2048
 
+    # REST API authentication — required in production (see
+    # entrypoints/fastapi_app.py:verify_api_key). Reads from the API_KEY
+    # env var (no prefix, per Config.env_prefix below).
+    api_key: str = ""
+
     # File Paths Configuration
     # Input file paths
     data_input_dir: str = "data/input"

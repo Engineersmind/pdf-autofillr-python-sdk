@@ -12,6 +12,13 @@ ANTHROPIC_API_KEY           Passed through to LiteLLM for anthropic/* models
 DOC_UPLOAD_STORAGE          local | s3 | gcp | azure     (default: local)
 DOC_UPLOAD_DATA_PATH        Root for job data             (default: ./data/doc_upload)
 DOC_UPLOAD_CONFIG_PATH      configs/ directory            (default: ./configs)
+DOC_UPLOAD_ALLOWED_DOCUMENT_ROOTS
+                            Comma-separated extra directories that
+                            document_path may point into (local storage
+                            only). Paths outside DOC_UPLOAD_DATA_PATH,
+                            DOC_UPLOAD_CONFIG_PATH, and these roots are
+                            rejected — this closes local-file-disclosure
+                            via a crafted document_path/schema_path.
 
 AWS_OUTPUT_BUCKET           Required when DOC_UPLOAD_STORAGE=s3
 AWS_CONFIG_BUCKET           Required when DOC_UPLOAD_STORAGE=s3
@@ -81,6 +88,13 @@ class DocUploadSettings:
     )
     config_path: str = field(
         default_factory=lambda: os.getenv("DOC_UPLOAD_CONFIG_PATH", "./configs")
+    )
+    allowed_document_roots: list[str] = field(
+        default_factory=lambda: [
+            r
+            for r in os.getenv("DOC_UPLOAD_ALLOWED_DOCUMENT_ROOTS", "").split(",")
+            if r.strip()
+        ]
     )
 
     # ── PDF Filler ────────────────────────────────────────────────────

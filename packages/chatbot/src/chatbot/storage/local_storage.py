@@ -29,6 +29,10 @@ from typing import Any
 from chatbot.storage.base import StorageBackend
 
 
+class PathAccessError(PermissionError):
+    """Raised when a user_id/session_id would escape the data directory."""
+
+
 class LocalStorage(StorageBackend):
     """
     Stores all data as JSON files on the local filesystem.
@@ -41,19 +45,34 @@ class LocalStorage(StorageBackend):
     def __init__(
         self, data_path: str = "./data/chatbot", config_path: str = "./configs"
     ):
-        self.data_path = Path(data_path)
-        self.config_path = Path(config_path)
+        self.data_path = Path(data_path).resolve()
+        self.config_path = Path(config_path).resolve()
         self.data_path.mkdir(parents=True, exist_ok=True)
 
     # ── Paths ──────────────────────────────────────────────────────────
 
+    @staticmethod
+    def _safe_segment(value: str, *, label: str) -> str:
+        """
+        user_id/session_id become literal path segments. Reject anything
+        that isn't a plain single segment (no "/", "\\", or ".." tricks) so
+        these identifiers can never be used to escape data_path
+        (CWE-22 path traversal).
+        """
+        segment = Path(value).name
+        if not segment or segment != value or segment in (".", ".."):
+            raise PathAccessError(f"Invalid {label}: {value!r}")
+        return segment
+
     def _user_dir(self, user_id: str) -> Path:
-        p = self.data_path / user_id
+        safe_user_id = self._safe_segment(user_id, label="user_id")
+        p = self.data_path / safe_user_id
         p.mkdir(parents=True, exist_ok=True)
         return p
 
     def _session_dir(self, user_id: str, session_id: str) -> Path:
-        p = self._user_dir(user_id) / "sessions" / session_id
+        safe_session_id = self._safe_segment(session_id, label="session_id")
+        p = self._user_dir(user_id) / "sessions" / safe_session_id
         p.mkdir(parents=True, exist_ok=True)
         return p
 
@@ -173,7 +192,7 @@ class LocalStorage(StorageBackend):
     def delete_session(self, user_id, session_id):
         import shutil
 
-        session_dir = self._user_dir(user_id) / "sessions" / session_id
+        session_dir = self._session_dir(user_id, session_id)
         if session_dir.exists():
             shutil.rmtree(session_dir)
         return True

@@ -108,12 +108,18 @@ Once server is running, visit:
 
 ## Example Requests
 
+**Authentication is required.** Set `API_KEY` before starting the server —
+every request below must include the `X-API-Key` header, or the server
+responds with 401 (or 500 if `API_KEY` was never configured on the server
+at all). See the Quick Start section above.
+
 ### Using curl
 
 ```bash
 # Extract
 curl -X POST http://localhost:8000/mapper/extract \
   -H "Content-Type: application/json" \
+  -H "X-API-Key: $API_KEY" \
   -d '{
     "pdf_path": "/path/to/input.pdf",
     "user_id": 1,
@@ -123,6 +129,7 @@ curl -X POST http://localhost:8000/mapper/extract \
 # Make embed file
 curl -X POST http://localhost:8000/mapper/make-embed-file \
   -H "Content-Type: application/json" \
+  -H "X-API-Key: $API_KEY" \
   -d '{
     "pdf_path": "/path/to/input.pdf",
     "user_id": 1,

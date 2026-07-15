@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pdf-autofillr-doc-upload"
-version = "0.1.5"
+version = "0.1.6"
 description = "Document extraction pipeline — extract structured data from PDF/DOCX/PPTX/XLSX/JSON/CSV/MD and fill PDFs via the mapper module"
 readme = "README.md"
 license = { file = "LICENSE" }

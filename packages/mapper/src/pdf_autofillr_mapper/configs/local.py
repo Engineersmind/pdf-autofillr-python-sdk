@@ -260,3 +260,71 @@ class LocalStorageConfig(BaseStorageConfig):
         }
 
         return config
+
+
+def build_operation_config(
+    pdf_path: str,
+    input_json_path: Optional[str] = None,
+    base_dir: Optional[str] = None,
+    user_id: Optional[int] = None,
+    session_id: Optional[int] = None,
+    pdf_doc_id: Optional[int] = None,
+) -> "LocalStorageConfig":
+    """
+    Build a fully-populated LocalStorageConfig ready to pass straight into
+    handle_extract_operation/handle_map_operation/handle_embed_operation/
+    handle_fill_operation (via create_file_handlers()).
+
+    This exists because those handlers expect a config object with specific
+    `local_*` attributes already set (config.local_input_pdf,
+    config.local_extracted_json, etc. — see InputFileHandler/OutputFileHandler)
+    rather than a bare file path or a plain dict. Call sites that used to pass
+    a raw dict or omit config entirely (see CHANGELOG) were relying on a
+    calling convention this module never actually implemented; this is the
+    single place that builds a config those handlers can use correctly.
+
+    Output files are named after the input PDF's stem, but always written
+    under `base_dir` (default: LocalStorageConfig's own default,
+    <tempdir>/pdf_processing) rather than next to the input file — so
+    generated output never lands in whatever arbitrary directory a caller's
+    pdf_path happens to point at.
+
+    Args:
+        pdf_path: Path to the input PDF (local path).
+        input_json_path: Optional path to input JSON data for mapping.
+        base_dir: Directory to write generated output files into.
+        user_id, session_id, pdf_doc_id: Optional identifiers, stored on the
+            config for logging/tracking; not required by the handlers.
+
+    Returns:
+        A LocalStorageConfig with every local_* attribute the extract/map/
+        embed/fill handlers read already set.
+    """
+    config = LocalStorageConfig(base_dir=base_dir)
+
+    abs_pdf = os.path.abspath(pdf_path)
+    stem = Path(abs_pdf).stem
+
+    def out(suffix: str, ext: str) -> str:
+        return os.path.join(config.base_dir, f"{stem}{suffix}{ext}")
+
+    config.local_input_pdf = abs_pdf
+    config.local_input_json = os.path.abspath(input_json_path) if input_json_path else None
+
+    config.local_extracted_json = out("_extracted", ".json")
+    config.local_mapped_json = out("_mapped", ".json")
+    config.local_radio_json = out("_radio_groups", ".json")
+    config.local_embedded_pdf = out("_embedded", ".pdf")
+    config.local_filled_pdf = out("_filled", ".pdf")
+
+    # Dual-mapper / RAG-adjacent outputs — populated on demand by the
+    # handlers that use them; harmless to pre-declare the paths.
+    config.local_headers_with_fields = out("_headers_with_fields", ".json")
+    config.local_final_form_fields = out("_final_form_fields", ".json")
+    config.local_java_mapping = out("_java_mapping", ".json")
+
+    config.user_id = user_id
+    config.session_id = session_id
+    config.pdf_doc_id = pdf_doc_id
+
+    return config
