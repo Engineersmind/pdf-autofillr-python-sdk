@@ -29,22 +29,7 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
-          queries: security-and-quality
-          paths: |
-            packages/mapper/src
-            packages/chatbot/src
-            packages/doc_upload/src
-            packages/rag/src
-            packages/pdf_autofillr/src
-            plugins/core
-            plugins/pdf_autofillr
-          paths-ignore: |
-            packages/chatbot/entrypoints
-            packages/doc_upload/entrypoints
-            packages/mapper/entrypoints
-            packages/rag/entrypoints
-            examples/
-            benchmarks/
+          config-file: ./.github/codeql/codeql-config.yml
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v4

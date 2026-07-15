@@ -28,13 +28,13 @@ except ImportError:
     FastAPI = None  # type: ignore[no-redef, misc, assignment]
     HTTPException = None  # type: ignore[no-redef, misc, assignment]
 
-# Used in `except _ExceptableHTTPException: raise` guards below.
-# HTTPException can be None per the fallback above (fastapi not installed);
-# `except None:` is invalid Python (TypeError at runtime) and CodeQL flags
-# it statically. Alias to a real, always-valid exception class in that
-# case — these endpoints are unreachable without fastapi anyway, so the
-# alias never actually changes behavior for a real request.
-_ExceptableHTTPException = HTTPException if FASTAPI_AVAILABLE else Exception
+# NOTE: an earlier attempt aliased HTTPException to a guaranteed-non-None
+# class for use in `except _ExceptableHTTPException:` — CodeQL's static
+# analysis still traced the alias back to the nullable HTTPException value
+# through the conditional, so it kept flagging it. The actual fix (see the
+# two endpoints below) never puts a possibly-None value in an `except`
+# clause at all: it catches Exception unconditionally and checks the type
+# by name instead.
 
 from pdf_autofillr_mapper.core.config import settings
 from pdf_autofillr_mapper.core.logger import setup_logging
@@ -264,9 +264,15 @@ else:
                 pdf_doc_id=request.pdf_doc_id,
             )
             return OperationResponse(success=True, data=result)
-        except _ExceptableHTTPException:
-            raise
         except Exception as e:
+            # Re-raise real HTTP-status errors (the 400 raised above, etc.)
+            # unwrapped, rather than burying them as a generic 500. Checking
+            # by type name — instead of `except HTTPException:` — avoids
+            # ever putting a possibly-None value in an except clause:
+            # HTTPException is None when fastapi isn't installed (see the
+            # import fallback above), and `except None:` is invalid Python.
+            if type(e).__name__ == "HTTPException":
+                raise
             logger.error(f"Map operation failed: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
 
@@ -404,9 +410,9 @@ else:
                 pdf_doc_id=request.pdf_doc_id,
             )
             return OperationResponse(success=True, data=result)
-        except _ExceptableHTTPException:
-            raise
         except Exception as e:
+            if type(e).__name__ == "HTTPException":
+                raise
             logger.error(f"Run all operation failed: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
 
