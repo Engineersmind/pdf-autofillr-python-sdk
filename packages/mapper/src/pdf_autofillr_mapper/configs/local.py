@@ -328,3 +328,43 @@ def build_operation_config(
     config.pdf_doc_id = pdf_doc_id
 
     return config
+
+
+# Directories user-supplied path fields (pdf_path, extracted_json_path, etc.)
+# are allowed to point into on HTTP entrypoints. Defaults to the same
+# base_dir LocalStorageConfig writes output to; extend with
+# MAPPER_ALLOWED_INPUT_ROOTS (comma-separated) if your PDFs/JSON live
+# elsewhere (e.g. an uploads directory).
+def _allowed_input_roots() -> list[Path]:
+    roots = [Path(LocalStorageConfig().base_dir).resolve()]
+    extra = os.getenv("MAPPER_ALLOWED_INPUT_ROOTS", "")
+    roots += [Path(r).resolve() for r in extra.split(",") if r.strip()]
+    return roots
+
+
+def validate_request_path(raw_path: str, *, label: str) -> str:
+    """
+    Resolve `raw_path` and verify it lives inside one of the allowed input
+    roots (see _allowed_input_roots). Every HTTP-request field that ends up
+    being read from or written to disk (pdf_path, extracted_json_path,
+    input_json_path, embedded_pdf_path, mapping_json_path,
+    radio_groups_path, original_pdf_path) must go through this before being
+    used — otherwise an authenticated-but-malicious caller can read/write
+    arbitrary files on the server (CWE-22 / CodeQL py/path-injection).
+
+    Raises ValueError (callers should turn this into HTTP 400) if the path
+    escapes the allowed roots.
+    """
+    resolved = Path(raw_path).resolve()
+    for root in _allowed_input_roots():
+        try:
+            resolved.relative_to(root)
+            return str(resolved)
+        except ValueError:
+            continue
+    raise ValueError(
+        f"Invalid {label}: '{raw_path}' resolves to '{resolved}', which is "
+        f"outside the allowed directories "
+        f"{[str(r) for r in _allowed_input_roots()]}. Set "
+        f"MAPPER_ALLOWED_INPUT_ROOTS if your files live elsewhere."
+    )

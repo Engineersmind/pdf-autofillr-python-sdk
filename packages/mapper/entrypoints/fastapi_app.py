@@ -33,7 +33,7 @@ from pdf_autofillr_mapper.core.logger import setup_logging
 
 # Builds a fully-populated config object (config.local_* paths etc.) from a
 # bare pdf_path — see its docstring for why this exists.
-from pdf_autofillr_mapper.configs.local import build_operation_config
+from pdf_autofillr_mapper.configs.local import build_operation_config, validate_request_path
 
 # Import platform-agnostic handlers
 from pdf_autofillr_mapper.handlers.operations import (
@@ -216,8 +216,8 @@ else:
         """Extract fields from PDF."""
         try:
             config = build_operation_config(
-                pdf_path=request.pdf_path,
-                input_json_path=request.input_json_path,
+                pdf_path=validate_request_path(request.pdf_path, label="pdf_path"),
+                input_json_path=validate_request_path(request.input_json_path, label="input_json_path") if request.input_json_path else None,
                 user_id=request.user_id,
                 session_id=request.session_id,
                 pdf_doc_id=request.pdf_doc_id,
@@ -238,8 +238,8 @@ else:
         """Map PDF fields to target schema."""
         try:
             config = build_operation_config(
-                pdf_path=request.pdf_path,
-                input_json_path=request.input_json_path,
+                pdf_path=validate_request_path(request.pdf_path, label="pdf_path"),
+                input_json_path=validate_request_path(request.input_json_path, label="input_json_path") if request.input_json_path else None,
                 user_id=request.user_id,
                 session_id=request.session_id,
                 pdf_doc_id=request.pdf_doc_id,
@@ -263,8 +263,8 @@ else:
         """Embed metadata into PDF."""
         try:
             config = build_operation_config(
-                pdf_path=request.pdf_path,
-                input_json_path=request.input_json_path,
+                pdf_path=validate_request_path(request.pdf_path, label="pdf_path"),
+                input_json_path=validate_request_path(request.input_json_path, label="input_json_path") if request.input_json_path else None,
                 user_id=request.user_id,
                 session_id=request.session_id,
                 pdf_doc_id=request.pdf_doc_id,
@@ -285,8 +285,8 @@ else:
         """Fill PDF form with data."""
         try:
             config = build_operation_config(
-                pdf_path=request.pdf_path,
-                input_json_path=request.input_json_path,
+                pdf_path=validate_request_path(request.pdf_path, label="pdf_path"),
+                input_json_path=validate_request_path(request.input_json_path, label="input_json_path") if request.input_json_path else None,
                 user_id=request.user_id,
                 session_id=request.session_id,
                 pdf_doc_id=request.pdf_doc_id,
@@ -321,8 +321,8 @@ else:
         """Extract + Map + Embed in one operation."""
         try:
             config = build_operation_config(
-                pdf_path=request.pdf_path,
-                input_json_path=request.input_json_path,
+                pdf_path=validate_request_path(request.pdf_path, label="pdf_path"),
+                input_json_path=validate_request_path(request.input_json_path, label="input_json_path") if request.input_json_path else None,
                 user_id=request.user_id,
                 session_id=request.session_id,
                 pdf_doc_id=request.pdf_doc_id,
@@ -351,7 +351,7 @@ else:
         """Check if PDF has embedded metadata."""
         try:
             config = build_operation_config(
-                pdf_path=request.pdf_path,
+                pdf_path=validate_request_path(request.pdf_path, label="pdf_path"),
                 user_id=request.user_id,
                 session_id=request.session_id,
                 pdf_doc_id=request.pdf_doc_id,
@@ -373,8 +373,12 @@ else:
         """Run complete pipeline: Extract + Map + Embed + Fill."""
         try:
             result = await handle_run_all_operation(
-                input_pdf=request.pdf_path,
-                input_json=request.input_json_path or "",
+                input_pdf=validate_request_path(request.pdf_path, label="pdf_path"),
+                input_json=(
+                    validate_request_path(request.input_json_path, label="input_json_path")
+                    if request.input_json_path
+                    else ""
+                ),
                 mapping_config={},
                 user_id=request.user_id,
                 session_id=request.session_id,

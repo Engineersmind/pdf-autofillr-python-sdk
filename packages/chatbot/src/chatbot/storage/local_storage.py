@@ -23,6 +23,7 @@ File layout::
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -51,28 +52,49 @@ class LocalStorage(StorageBackend):
 
     # ── Paths ──────────────────────────────────────────────────────────
 
+    def _confine(self, candidate: Path, *, label: str) -> Path:
+        """
+        Resolve `candidate` and verify it is contained within self.data_path.
+        This is the actual guarantee against path traversal (CWE-22) — the
+        canonical resolve-then-confine check, not just segment shape
+        validation, so nothing (symlinks, encoded traversal, etc.) can slip
+        through.
+        """
+        resolved = candidate.resolve()
+        base = str(self.data_path) + os.sep
+        if not (str(resolved) == str(self.data_path) or str(resolved).startswith(base)):
+            raise PathAccessError(
+                f"Invalid {label}: resolved path '{resolved}' escapes "
+                f"data_path '{self.data_path}'"
+            )
+        return resolved
+
     @staticmethod
     def _safe_segment(value: str, *, label: str) -> str:
         """
         user_id/session_id become literal path segments. Reject anything
         that isn't a plain single segment (no "/", "\\", or ".." tricks) so
         these identifiers can never be used to escape data_path
-        (CWE-22 path traversal).
+        (CWE-22 path traversal). Used together with _confine() below, which
+        double-checks by resolving the final path against data_path.
         """
-        segment = Path(value).name
+        segment = os.path.basename(value)
         if not segment or segment != value or segment in (".", ".."):
             raise PathAccessError(f"Invalid {label}: {value!r}")
         return segment
 
     def _user_dir(self, user_id: str) -> Path:
         safe_user_id = self._safe_segment(user_id, label="user_id")
-        p = self.data_path / safe_user_id
+        p = self._confine(self.data_path / safe_user_id, label="user_id")
         p.mkdir(parents=True, exist_ok=True)
         return p
 
     def _session_dir(self, user_id: str, session_id: str) -> Path:
         safe_session_id = self._safe_segment(session_id, label="session_id")
-        p = self._user_dir(user_id) / "sessions" / safe_session_id
+        p = self._confine(
+            self._user_dir(user_id) / "sessions" / safe_session_id,
+            label="session_id",
+        )
         p.mkdir(parents=True, exist_ok=True)
         return p
 

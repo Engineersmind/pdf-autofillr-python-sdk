@@ -81,6 +81,44 @@ _DOWNLOAD_ROOT = Path(
     os.getenv("MAPPER_DOWNLOAD_ROOT", LocalStorageConfig().base_dir)
 ).resolve()
 
+# Directories user-supplied path fields (pdf_path, extracted_json_path, etc.)
+# are allowed to point into. Defaults to _DOWNLOAD_ROOT; extend with
+# MAPPER_ALLOWED_INPUT_ROOTS (comma-separated) if your PDFs/JSON live
+# elsewhere (e.g. an uploads directory).
+_ALLOWED_INPUT_ROOTS = [_DOWNLOAD_ROOT] + [
+    Path(r).resolve()
+    for r in os.getenv("MAPPER_ALLOWED_INPUT_ROOTS", "").split(",")
+    if r.strip()
+]
+
+
+def _validate_path(raw_path: str, *, label: str) -> str:
+    """
+    Resolve `raw_path` and verify it lives inside one of
+    _ALLOWED_INPUT_ROOTS. Every request field that ends up being read from
+    or written to disk (pdf_path, extracted_json_path, input_json_path,
+    embedded_pdf_path, mapping_json_path, radio_groups_path,
+    original_pdf_path) must go through this before being used — otherwise
+    an authenticated-but-malicious caller can read/write arbitrary files
+    on the server (CWE-22 / CodeQL py/path-injection).
+    """
+    resolved = Path(raw_path).resolve()
+    for root in _ALLOWED_INPUT_ROOTS:
+        try:
+            resolved.relative_to(root)
+            return str(resolved)
+        except ValueError:
+            continue
+    raise HTTPException(
+        status_code=400,
+        detail=(
+            f"Invalid {label}: '{raw_path}' resolves to '{resolved}', which "
+            f"is outside the allowed directories "
+            f"{[str(r) for r in _ALLOWED_INPUT_ROOTS]}. Set "
+            f"MAPPER_ALLOWED_INPUT_ROOTS if your files live elsewhere."
+        ),
+    )
+
 
 # ============================================================================
 # Request Models
@@ -196,8 +234,9 @@ async def extract(request: ExtractRequest, api_key: str = Depends(verify_api_key
     try:
         logger.info(f"API: Extract request for {request.pdf_path}")
 
+        validated_pdf_path = _validate_path(request.pdf_path, label="pdf_path")
         config = build_operation_config(
-            pdf_path=request.pdf_path,
+            pdf_path=validated_pdf_path,
             user_id=request.user_id,
             session_id=request.session_id,
             pdf_doc_id=request.pdf_doc_id,
@@ -228,10 +267,16 @@ async def map_fields(request: MapRequest, api_key: str = Depends(verify_api_key)
 
         mapping_config = get_ini_config().get_mapping_config()
 
+        validated_extracted_json = _validate_path(
+            request.extracted_json_path, label="extracted_json_path"
+        )
+        validated_input_json = _validate_path(
+            request.input_json_path, label="input_json_path"
+        )
         config = LocalStorageConfig()
-        config.local_extracted_json = os.path.abspath(request.extracted_json_path)
-        config.local_input_json = os.path.abspath(request.input_json_path)
-        stem = Path(request.extracted_json_path).stem
+        config.local_extracted_json = validated_extracted_json
+        config.local_input_json = validated_input_json
+        stem = Path(validated_extracted_json).stem
         config.local_mapped_json = os.path.join(config.base_dir, f"{stem}_mapped.json")
         config.local_radio_json = os.path.join(
             config.base_dir, f"{stem}_radio_groups.json"
@@ -263,12 +308,19 @@ async def embed(request: EmbedRequest, api_key: str = Depends(verify_api_key)):
     try:
         logger.info(f"API: Embed request for {request.original_pdf_path}")
 
+        validated_pdf_path = _validate_path(request.original_pdf_path, label="original_pdf_path")
         config = LocalStorageConfig()
-        config.local_input_pdf = os.path.abspath(request.original_pdf_path)
-        config.local_extracted_json = os.path.abspath(request.extracted_json_path)
-        config.local_mapped_json = os.path.abspath(request.mapping_json_path)
-        config.local_radio_json = os.path.abspath(request.radio_groups_path)
-        stem = Path(request.original_pdf_path).stem
+        config.local_input_pdf = validated_pdf_path
+        config.local_extracted_json = _validate_path(
+            request.extracted_json_path, label="extracted_json_path"
+        )
+        config.local_mapped_json = _validate_path(
+            request.mapping_json_path, label="mapping_json_path"
+        )
+        config.local_radio_json = _validate_path(
+            request.radio_groups_path, label="radio_groups_path"
+        )
+        stem = Path(validated_pdf_path).stem
         config.local_embedded_pdf = os.path.join(
             config.base_dir, f"{stem}_embedded.pdf"
         )
@@ -297,10 +349,15 @@ async def fill(request: FillRequest, api_key: str = Depends(verify_api_key)):
     try:
         logger.info(f"API: Fill request for {request.embedded_pdf_path}")
 
+        validated_embedded_pdf = _validate_path(
+            request.embedded_pdf_path, label="embedded_pdf_path"
+        )
         config = LocalStorageConfig()
-        config.local_embedded_pdf = os.path.abspath(request.embedded_pdf_path)
-        config.local_input_json = os.path.abspath(request.input_json_path)
-        stem = Path(request.embedded_pdf_path).stem
+        config.local_embedded_pdf = validated_embedded_pdf
+        config.local_input_json = _validate_path(
+            request.input_json_path, label="input_json_path"
+        )
+        stem = Path(validated_embedded_pdf).stem
         config.local_filled_pdf = os.path.join(config.base_dir, f"{stem}_filled.pdf")
 
         result = await handle_fill_operation(
@@ -329,7 +386,7 @@ async def make_embed_file(request: MakeEmbedRequest, api_key: str = Depends(veri
         logger.info(f"API: Make embed file request for {request.pdf_path}")
 
         config = build_operation_config(
-            pdf_path=request.pdf_path,
+            pdf_path=_validate_path(request.pdf_path, label="pdf_path"),
             user_id=request.user_id,
             session_id=request.session_id,
             pdf_doc_id=request.pdf_doc_id,
@@ -365,8 +422,12 @@ async def fill_pdf(request: FillPDFRequest, api_key: str = Depends(verify_api_ke
         logger.info(f"API: Fill PDF request for {request.embedded_pdf_path}")
 
         config = LocalStorageConfig()
-        config.local_embedded_pdf = os.path.abspath(request.embedded_pdf_path)
-        config.local_input_json = os.path.abspath(request.input_json_path)
+        config.local_embedded_pdf = _validate_path(
+            request.embedded_pdf_path, label="embedded_pdf_path"
+        )
+        config.local_input_json = _validate_path(
+            request.input_json_path, label="input_json_path"
+        )
 
         result = await handle_fill_pdf_operation(
             config=config,
@@ -393,7 +454,7 @@ async def check_embed_file(request: CheckEmbedRequest, api_key: str = Depends(ve
         logger.info(f"API: Check embed file for {request.pdf_path}")
 
         config = LocalStorageConfig()
-        config.local_embedded_pdf = os.path.abspath(request.pdf_path)
+        config.local_embedded_pdf = _validate_path(request.pdf_path, label="pdf_path")
 
         result = await handle_check_embed_file_operation(
             config=config, user_id=request.user_id, session_id=request.session_id
@@ -419,8 +480,8 @@ async def run_all(request: RunAllRequest, api_key: str = Depends(verify_api_key)
         mapping_config = get_ini_config().get_mapping_config()
 
         result = await handle_run_all_operation(
-            input_pdf=request.pdf_path,
-            input_json=request.input_json_path,
+            input_pdf=_validate_path(request.pdf_path, label="pdf_path"),
+            input_json=_validate_path(request.input_json_path, label="input_json_path"),
             mapping_config=mapping_config,
             user_id=request.user_id,
             session_id=request.session_id,
@@ -468,7 +529,9 @@ async def download_file(file_path: str, api_key: str = Depends(verify_api_key)):
         safe_file_path = file_path.lstrip("/\\")
         path = (_DOWNLOAD_ROOT / safe_file_path).resolve()
 
-        if not str(path).startswith(str(_DOWNLOAD_ROOT) + "/") and path != _DOWNLOAD_ROOT:
+        try:
+            path.relative_to(_DOWNLOAD_ROOT)
+        except ValueError:
             raise HTTPException(status_code=403, detail="Access denied")
 
         if not path.exists():

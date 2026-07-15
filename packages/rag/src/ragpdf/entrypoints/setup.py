@@ -38,13 +38,22 @@ def _write_json(path: str, data, force: bool = False):
     print(f"  created  {path}")
 
 
-def _write_text(path: str, content: str, force: bool = False):
+def _write_text(path: str, content: str, force: bool = False, *, secret: bool = False):
     if os.path.exists(path) and not force:
         print(f"  skip     {path}  (exists — not overwriting)")
         return
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
+    if secret:
+        # This file contains a generated secret (RAGPDF_API_KEY) — restrict
+        # it to owner read/write only. Storing it in a plaintext config file
+        # is unavoidable (the app reads it back at startup), but limiting
+        # filesystem access to it is the standard, real mitigation.
+        try:
+            os.chmod(path, 0o600)
+        except OSError:
+            pass  # best-effort; not all filesystems (e.g. some Windows setups) support this
     print(f"  created  {path}")
 
 
@@ -142,6 +151,7 @@ RAGPDF_DEBUG=false
 RAGPDF_LOG_LEVEL=INFO
 """,
         force,
+        secret=True,
     )
 
 
@@ -189,6 +199,7 @@ host    = 0.0.0.0
 port    = 8000
 """,
         force,
+        secret=True,
     )
 
 
@@ -859,15 +870,19 @@ def main():
     if copy_source:
         _copy_module_source(dest="./ragpdf")
 
+    # Never echo the full secret to stdout — terminal scrollback, CI logs,
+    # and screen recordings can all leak it. Show a masked preview only;
+    # the real value is in .env (chmod 600) for the user to open directly.
+    _masked_key = generated_api_key[:4] + "…" + generated_api_key[-4:]
+
     # ── Done ──────────────────────────────────────────────────
     print(f"""
 {'='*54}
 Setup complete.
 
-  A unique RAGPDF_API_KEY was generated for you in .env:
-    {generated_api_key}
-  Send it as the X-API-Key header on every request. Keep it secret —
-  anyone with it can call this server.
+  A unique RAGPDF_API_KEY was generated for you in .env ({_masked_key}).
+  Open .env to see the full value — send it as the X-API-Key header on
+  every request. Keep it secret — anyone with it can call this server.
 
   1. Edit .env with your API keys / backends
   2. ragpdf system-info       ← verify setup
