@@ -38,10 +38,10 @@ def _write_json(path: str, data, force: bool = False):
     print(f"  created  {path}")
 
 
-def _write_text(path: str, content: str, force: bool = False, *, secret: bool = False):
+def _write_text(path: str, content: str, force: bool = False, *, secret: bool = False) -> bool:
     if os.path.exists(path) and not force:
         print(f"  skip     {path}  (exists — not overwriting)")
-        return
+        return False
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
@@ -55,6 +55,7 @@ def _write_text(path: str, content: str, force: bool = False, *, secret: bool = 
         except OSError:
             pass  # best-effort; not all filesystems (e.g. some Windows setups) support this
     print(f"  created  {path}")
+    return True
 
 
 def _copy_module_source(dest: str = "./ragpdf"):
@@ -79,8 +80,18 @@ def _copy_module_source(dest: str = "./ragpdf"):
 # ──────────────────────────────────────────────────────────────────────────────
 
 
-def _create_env(force: bool = False, api_key: str = ""):
-    _write_text(
+def _create_env(force: bool = False, api_key: str = "") -> bool:
+    # NOTE on CodeQL "Clear-text storage of sensitive information": this
+    # function necessarily writes RAGPDF_API_KEY into .env as plain text —
+    # the running server reads it back at startup, so there is no way to
+    # avoid storing it in a form the app itself can consume without an
+    # external secrets manager, which is out of scope for a local dev
+    # installer. The mitigation actually applied is restricting the file to
+    # chmod 600 (see _write_text(secret=True) below) and never echoing the
+    # full value to stdout (see the masked preview in main()). This finding
+    # should be dismissed in GitHub's UI as "Won't fix" with this reasoning,
+    # not treated as an outstanding code change.
+    return _write_text(
         ".env",
         f"""\
 # pdf-autofillr-rag — environment config
@@ -155,8 +166,10 @@ RAGPDF_LOG_LEVEL=INFO
     )
 
 
-def _create_config_ini(force: bool = False, api_key: str = ""):
-    _write_text(
+def _create_config_ini(force: bool = False, api_key: str = "") -> bool:
+    # See the identical note in _create_env() above — same accepted,
+    # necessary cleartext storage, same chmod 600 mitigation.
+    return _write_text(
         "config.ini",
         f"""\
 [storage]
@@ -862,8 +875,8 @@ def main():
     generated_api_key = secrets.token_urlsafe(32)
 
     # ── Always: .env, config.ini, data/rag/ ──────────────────
-    _create_env(force=args.force, api_key=generated_api_key)
-    _create_config_ini(force=args.force, api_key=generated_api_key)
+    env_written = _create_env(force=args.force, api_key=generated_api_key)
+    config_ini_written = _create_config_ini(force=args.force, api_key=generated_api_key)
     _create_ragpdf_data(base=args.path, force=args.force)
 
     # ── Optional: copy module source ──────────────────────────
@@ -873,16 +886,40 @@ def main():
     # Never echo the full secret to stdout — terminal scrollback, CI logs,
     # and screen recordings can all leak it. Show a masked preview only;
     # the real value is in .env (chmod 600) for the user to open directly.
+    # codeql[py/clear-text-logging-sensitive-data] -- this derives a masked
+    # preview (first/last 4 chars only) specifically so the full secret is
+    # never in the printed output; CodeQL's taint tracking still flags any
+    # value derived from generated_api_key regardless of masking. Reviewed:
+    # the full key is never logged, only this truncated preview.
     _masked_key = generated_api_key[:4] + "…" + generated_api_key[-4:]
+
+    if env_written or config_ini_written:
+        _key_line = (
+            f"  A unique RAGPDF_API_KEY was generated for you in "
+            f"{'.env' if env_written else ''}"
+            f"{' and ' if env_written and config_ini_written else ''}"
+            f"{'config.ini' if config_ini_written else ''} ({_masked_key}).\n"
+            "  Open .env to see the full value — send it as the X-API-Key\n"
+            "  header on every request. Keep it secret — anyone with it can\n"
+            "  call this server."
+        )
+    else:
+        # Neither file was written (both already existed and --force wasn't
+        # passed) — the generated key above was never persisted anywhere.
+        _key_line = (
+            "  .env and config.ini already exist and were left untouched, so\n"
+            "  the newly generated key below was NOT saved. Whatever\n"
+            "  RAGPDF_API_KEY is already in your .env is what's active — this\n"
+            f"  freshly generated one ({_masked_key}) was discarded. Re-run with\n"
+            "  --force if you want to replace it."
+        )
 
     # ── Done ──────────────────────────────────────────────────
     print(f"""
 {'='*54}
 Setup complete.
 
-  A unique RAGPDF_API_KEY was generated for you in .env ({_masked_key}).
-  Open .env to see the full value — send it as the X-API-Key header on
-  every request. Keep it secret — anyone with it can call this server.
+{_key_line}
 
   1. Edit .env with your API keys / backends
   2. ragpdf system-info       ← verify setup

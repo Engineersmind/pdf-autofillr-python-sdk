@@ -312,7 +312,7 @@ def build_operation_config(
     config.local_input_json = os.path.abspath(input_json_path) if input_json_path else None
 
     config.local_extracted_json = out("_extracted", ".json")
-    config.local_mapped_json = out("_mapped", ".json")
+    config.local_mapped_json = out("_mapped_fields", ".json")
     config.local_radio_json = out("_radio_groups", ".json")
     config.local_embedded_pdf = out("_embedded", ".pdf")
     config.local_filled_pdf = out("_filled", ".pdf")

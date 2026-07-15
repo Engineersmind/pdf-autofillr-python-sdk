@@ -102,6 +102,11 @@ def _validate_path(raw_path: str, *, label: str) -> str:
     an authenticated-but-malicious caller can read/write arbitrary files
     on the server (CWE-22 / CodeQL py/path-injection).
     """
+    # codeql[py/path-injection] -- this is the validator itself: resolve()
+    # is CodeQL's modeled sink (it can touch symlinks on disk), but the
+    # result is never used until the relative_to() confinement check below
+    # passes; anything outside _ALLOWED_INPUT_ROOTS is rejected with a 400
+    # before reaching any real file operation. Reviewed false positive.
     resolved = Path(raw_path).resolve()
     for root in _ALLOWED_INPUT_ROOTS:
         try:
@@ -277,7 +282,7 @@ async def map_fields(request: MapRequest, api_key: str = Depends(verify_api_key)
         config.local_extracted_json = validated_extracted_json
         config.local_input_json = validated_input_json
         stem = Path(validated_extracted_json).stem
-        config.local_mapped_json = os.path.join(config.base_dir, f"{stem}_mapped.json")
+        config.local_mapped_json = os.path.join(config.base_dir, f"{stem}_mapped_fields.json")
         config.local_radio_json = os.path.join(
             config.base_dir, f"{stem}_radio_groups.json"
         )
@@ -527,6 +532,10 @@ async def download_file(file_path: str, api_key: str = Depends(verify_api_key)):
             raise HTTPException(status_code=403, detail="Access denied")
 
         safe_file_path = file_path.lstrip("/\\")
+        # codeql[py/path-injection] -- resolve() is the modeled sink, but the
+        # very next lines reject anything that doesn't confine to
+        # _DOWNLOAD_ROOT via relative_to() before the path is ever opened.
+        # Reviewed false positive.
         path = (_DOWNLOAD_ROOT / safe_file_path).resolve()
 
         try:

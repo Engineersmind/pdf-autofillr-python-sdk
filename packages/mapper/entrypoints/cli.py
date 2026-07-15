@@ -263,7 +263,9 @@ Examples:
     )
     map_parser.add_argument("--session-id", help="Session ID for tracking")
     map_parser.add_argument(
-        "--input-json", help="Path to input JSON data to map fields against (required)"
+        "--input-json",
+        required=True,
+        help="Path to input JSON data to map fields against (required)",
     )
     map_parser.set_defaults(func=map_command)
 
@@ -308,7 +310,9 @@ Examples:
     run_all_parser.add_argument("-o", "--output", required=True, help="Output PDF file")
     run_all_parser.add_argument("--session-id", help="Session ID for tracking")
     run_all_parser.add_argument(
-        "--input-json", help="Path to input JSON data (required for the map stage)"
+        "--input-json",
+        required=True,
+        help="Path to input JSON data (required for the map stage)",
     )
     run_all_parser.set_defaults(func=run_all_command)
 

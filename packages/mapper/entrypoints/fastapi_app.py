@@ -179,8 +179,7 @@ else:
                 status_code=500,
                 detail=(
                     "Server misconfigured: no API key configured. Set the "
-                    "mapper API key setting (see settings.api_key / "
-                    "MAPPER_API_KEY), or set "
+                    "API_KEY env var (settings.api_key), or set "
                     "MAPPER_ALLOW_INSECURE_NO_AUTH=true to explicitly run "
                     "without authentication (not recommended)."
                 ),
@@ -237,9 +236,14 @@ else:
     async def map_fields(request: MapRequest, api_key: str = Depends(verify_api_key)):
         """Map PDF fields to target schema."""
         try:
+            if not request.input_json_path:
+                raise HTTPException(
+                    status_code=400,
+                    detail="input_json_path is required for /map (nothing to map fields against).",
+                )
             config = build_operation_config(
                 pdf_path=validate_request_path(request.pdf_path, label="pdf_path"),
-                input_json_path=validate_request_path(request.input_json_path, label="input_json_path") if request.input_json_path else None,
+                input_json_path=validate_request_path(request.input_json_path, label="input_json_path"),
                 user_id=request.user_id,
                 session_id=request.session_id,
                 pdf_doc_id=request.pdf_doc_id,
@@ -252,6 +256,8 @@ else:
                 pdf_doc_id=request.pdf_doc_id,
             )
             return OperationResponse(success=True, data=result)
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(f"Map operation failed: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
@@ -284,8 +290,9 @@ else:
     async def fill_pdf(request: FillRequest, api_key: str = Depends(verify_api_key)):
         """Fill PDF form with data."""
         try:
+            validated_pdf_path = validate_request_path(request.pdf_path, label="pdf_path")
             config = build_operation_config(
-                pdf_path=validate_request_path(request.pdf_path, label="pdf_path"),
+                pdf_path=validated_pdf_path,
                 input_json_path=validate_request_path(request.input_json_path, label="input_json_path") if request.input_json_path else None,
                 user_id=request.user_id,
                 session_id=request.session_id,
@@ -295,8 +302,11 @@ else:
             # config.local_input_json — write the caller's `data` there
             # (this is what makes /fill self-contained: the caller sends
             # data in the request body rather than a pre-existing file).
+            # Uses the already-validated pdf_path (not the raw request field)
+            # so this filename derivation and everything downstream works
+            # from a single already-confined value.
             fill_data_path = config.local_input_json or os.path.join(
-                config.base_dir, f"{os.path.splitext(os.path.basename(request.pdf_path))[0]}_fill_data.json"
+                config.base_dir, f"{os.path.splitext(os.path.basename(validated_pdf_path))[0]}_fill_data.json"
             )
             os.makedirs(os.path.dirname(fill_data_path), exist_ok=True)
             with open(fill_data_path, "w", encoding="utf-8") as f:
@@ -372,19 +382,22 @@ else:
     ):
         """Run complete pipeline: Extract + Map + Embed + Fill."""
         try:
+            if not request.input_json_path:
+                raise HTTPException(
+                    status_code=400,
+                    detail="input_json_path is required for /run-all (needed by the map stage).",
+                )
             result = await handle_run_all_operation(
                 input_pdf=validate_request_path(request.pdf_path, label="pdf_path"),
-                input_json=(
-                    validate_request_path(request.input_json_path, label="input_json_path")
-                    if request.input_json_path
-                    else ""
-                ),
+                input_json=validate_request_path(request.input_json_path, label="input_json_path"),
                 mapping_config={},
                 user_id=request.user_id,
                 session_id=request.session_id,
                 pdf_doc_id=request.pdf_doc_id,
             )
             return OperationResponse(success=True, data=result)
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(f"Run all operation failed: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
