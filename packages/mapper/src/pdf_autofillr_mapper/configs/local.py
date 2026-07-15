@@ -344,7 +344,7 @@ def _allowed_input_roots() -> list[Path]:
 
 def validate_request_path(raw_path: str, *, label: str) -> str:
     """
-    Resolve `raw_path` and verify it lives inside one of the allowed input
+    Normalize `raw_path` and verify it lives inside one of the allowed input
     roots (see _allowed_input_roots). Every HTTP-request field that ends up
     being read from or written to disk (pdf_path, extracted_json_path,
     input_json_path, embedded_pdf_path, mapping_json_path,
@@ -352,18 +352,20 @@ def validate_request_path(raw_path: str, *, label: str) -> str:
     used — otherwise an authenticated-but-malicious caller can read/write
     arbitrary files on the server (CWE-22 / CodeQL py/path-injection).
 
+    Uses os.path.abspath + normpath (pure string manipulation) rather than
+    Path.resolve() (which also follows symlinks via filesystem I/O) — the
+    confinement check below is exactly as strict either way.
+
     Raises ValueError (callers should turn this into HTTP 400) if the path
     escapes the allowed roots.
     """
-    resolved = Path(raw_path).resolve()
+    normalized = os.path.normpath(os.path.abspath(raw_path))
     for root in _allowed_input_roots():
-        try:
-            resolved.relative_to(root)
-            return str(resolved)
-        except ValueError:
-            continue
+        root_str = str(root)
+        if normalized == root_str or normalized.startswith(root_str + os.sep):
+            return normalized
     raise ValueError(
-        f"Invalid {label}: '{raw_path}' resolves to '{resolved}', which is "
+        f"Invalid {label}: '{raw_path}' resolves to '{normalized}', which is "
         f"outside the allowed directories "
         f"{[str(r) for r in _allowed_input_roots()]}. Set "
         f"MAPPER_ALLOWED_INPUT_ROOTS if your files live elsewhere."

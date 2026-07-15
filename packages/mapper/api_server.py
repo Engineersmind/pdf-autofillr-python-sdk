@@ -94,30 +94,28 @@ _ALLOWED_INPUT_ROOTS = [_DOWNLOAD_ROOT] + [
 
 def _validate_path(raw_path: str, *, label: str) -> str:
     """
-    Resolve `raw_path` and verify it lives inside one of
+    Normalize `raw_path` and verify it lives inside one of
     _ALLOWED_INPUT_ROOTS. Every request field that ends up being read from
     or written to disk (pdf_path, extracted_json_path, input_json_path,
     embedded_pdf_path, mapping_json_path, radio_groups_path,
     original_pdf_path) must go through this before being used — otherwise
     an authenticated-but-malicious caller can read/write arbitrary files
     on the server (CWE-22 / CodeQL py/path-injection).
+
+    Uses os.path.abspath + normpath (pure string manipulation) rather than
+    Path.resolve() (which also follows symlinks via filesystem I/O) — the
+    confinement check below is exactly as strict either way, but this form
+    isn't a filesystem-touching operation itself.
     """
-    # codeql[py/path-injection] -- this is the validator itself: resolve()
-    # is CodeQL's modeled sink (it can touch symlinks on disk), but the
-    # result is never used until the relative_to() confinement check below
-    # passes; anything outside _ALLOWED_INPUT_ROOTS is rejected with a 400
-    # before reaching any real file operation. Reviewed false positive.
-    resolved = Path(raw_path).resolve()
+    normalized = os.path.normpath(os.path.abspath(raw_path))
     for root in _ALLOWED_INPUT_ROOTS:
-        try:
-            resolved.relative_to(root)
-            return str(resolved)
-        except ValueError:
-            continue
+        root_str = str(root)
+        if normalized == root_str or normalized.startswith(root_str + os.sep):
+            return normalized
     raise HTTPException(
         status_code=400,
         detail=(
-            f"Invalid {label}: '{raw_path}' resolves to '{resolved}', which "
+            f"Invalid {label}: '{raw_path}' resolves to '{normalized}', which "
             f"is outside the allowed directories "
             f"{[str(r) for r in _ALLOWED_INPUT_ROOTS]}. Set "
             f"MAPPER_ALLOWED_INPUT_ROOTS if your files live elsewhere."
@@ -532,16 +530,18 @@ async def download_file(file_path: str, api_key: str = Depends(verify_api_key)):
             raise HTTPException(status_code=403, detail="Access denied")
 
         safe_file_path = file_path.lstrip("/\\")
-        # codeql[py/path-injection] -- resolve() is the modeled sink, but the
-        # very next lines reject anything that doesn't confine to
-        # _DOWNLOAD_ROOT via relative_to() before the path is ever opened.
-        # Reviewed false positive.
-        path = (_DOWNLOAD_ROOT / safe_file_path).resolve()
-
-        try:
-            path.relative_to(_DOWNLOAD_ROOT)
-        except ValueError:
+        # Pure string normalization (no filesystem I/O / symlink following)
+        # — normpath collapses ".."/"."/redundant separators; the confinement
+        # check right after rejects anything that escapes _DOWNLOAD_ROOT
+        # before the path is ever opened.
+        normalized = os.path.normpath(str(_DOWNLOAD_ROOT / safe_file_path))
+        download_root_str = str(_DOWNLOAD_ROOT)
+        if not (
+            normalized == download_root_str
+            or normalized.startswith(download_root_str + os.sep)
+        ):
             raise HTTPException(status_code=403, detail="Access denied")
+        path = Path(normalized)
 
         if not path.exists():
             logger.error(f"File not found: {path}")

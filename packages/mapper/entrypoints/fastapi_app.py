@@ -28,6 +28,14 @@ except ImportError:
     FastAPI = None  # type: ignore[no-redef, misc, assignment]
     HTTPException = None  # type: ignore[no-redef, misc, assignment]
 
+# Used in `except _ExceptableHTTPException: raise` guards below.
+# HTTPException can be None per the fallback above (fastapi not installed);
+# `except None:` is invalid Python (TypeError at runtime) and CodeQL flags
+# it statically. Alias to a real, always-valid exception class in that
+# case — these endpoints are unreachable without fastapi anyway, so the
+# alias never actually changes behavior for a real request.
+_ExceptableHTTPException = HTTPException if FASTAPI_AVAILABLE else Exception
+
 from pdf_autofillr_mapper.core.config import settings
 from pdf_autofillr_mapper.core.logger import setup_logging
 
@@ -256,7 +264,7 @@ else:
                 pdf_doc_id=request.pdf_doc_id,
             )
             return OperationResponse(success=True, data=result)
-        except HTTPException:
+        except _ExceptableHTTPException:
             raise
         except Exception as e:
             logger.error(f"Map operation failed: {str(e)}", exc_info=True)
@@ -396,7 +404,7 @@ else:
                 pdf_doc_id=request.pdf_doc_id,
             )
             return OperationResponse(success=True, data=result)
-        except HTTPException:
+        except _ExceptableHTTPException:
             raise
         except Exception as e:
             logger.error(f"Run all operation failed: {str(e)}", exc_info=True)

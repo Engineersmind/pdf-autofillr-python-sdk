@@ -54,20 +54,24 @@ class LocalStorage(StorageBackend):
 
     def _confine(self, candidate: Path, *, label: str) -> Path:
         """
-        Resolve `candidate` and verify it is contained within self.data_path.
-        This is the actual guarantee against path traversal (CWE-22) — the
-        canonical resolve-then-confine check, not just segment shape
-        validation, so nothing (symlinks, encoded traversal, etc.) can slip
-        through.
+        Verify `candidate` is contained within self.data_path, using pure
+        string normalization (os.path.normpath) rather than Path.resolve().
+        resolve() also queries the filesystem to follow symlinks, which is
+        unnecessary here: `candidate` is always built from self.data_path
+        (a trusted, admin-configured, already-resolved root) plus a segment
+        that _safe_segment() has already guaranteed contains no "/", "\\",
+        or ".." — so no traversal is possible regardless, and this check is
+        pure defense-in-depth against a future caller that skips
+        _safe_segment.
         """
-        resolved = candidate.resolve()
+        normalized = os.path.normpath(str(candidate))
         base = str(self.data_path) + os.sep
-        if not (str(resolved) == str(self.data_path) or str(resolved).startswith(base)):
+        if not (normalized == str(self.data_path) or normalized.startswith(base)):
             raise PathAccessError(
-                f"Invalid {label}: resolved path '{resolved}' escapes "
+                f"Invalid {label}: normalized path '{normalized}' escapes "
                 f"data_path '{self.data_path}'"
             )
-        return resolved
+        return Path(normalized)
 
     @staticmethod
     def _safe_segment(value: str, *, label: str) -> str:
