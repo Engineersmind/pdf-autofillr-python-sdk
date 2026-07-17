@@ -33,6 +33,6 @@ max_confidence = 0.99
 min_confidence = 0.50
 
 [server]
-api_key = dev-key
+api_key = change-me-to-a-long-random-secret
 port = 8000
 host = 0.0.0.0

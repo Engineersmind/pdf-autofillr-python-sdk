@@ -1472,7 +1472,7 @@ class DetailedFitzExtractor:
     ):
         fid = self.global_fid
         bbox = BoundingBox(
-            l=rect.x0, t=rect.y0, r=rect.x1, b=rect.y1, rounding=self.rounding
+            left=rect.x0, t=rect.y0, r=rect.x1, b=rect.y1, rounding=self.rounding
         )
 
         field_type_str = self._get_field_type_new(widget)
@@ -1640,7 +1640,7 @@ class DetailedFitzExtractor:
                 previous_x1 = x1
 
             bbox = BoundingBox(
-                l=min(w[1][0] for w in words),
+                left=min(w[1][0] for w in words),
                 t=line_key[0],
                 r=max(w[1][2] for w in words),
                 b=line_key[1],

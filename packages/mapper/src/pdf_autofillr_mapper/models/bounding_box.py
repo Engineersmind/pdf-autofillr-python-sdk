@@ -23,6 +23,11 @@ class BoundingBox:
                 "BoundingBox must have either (right, bottom) or (width, height)"
             )
 
+    @property
+    def l(self):  # noqa: E743 - matches the (l, t, r, b) naming used throughout callers
+        """Alias for `left` — several extractor call sites read `bbox.l` directly."""
+        return self.left
+
     def to_dict(self):
         """Returns the bounding box as a dictionary with rounded values."""
         return {

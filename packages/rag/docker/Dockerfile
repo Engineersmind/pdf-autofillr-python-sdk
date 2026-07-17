@@ -39,7 +39,11 @@ COPY .env.example .env.example
 RUN mkdir -p /data/ragpdf_data /data/chroma_data
 VOLUME ["/data"]
 
-# All config via env vars (see .env.example)
+# All config via env vars (see .env.example).
+# RAGPDF_API_KEY is intentionally NOT set here — bake a real secret into an
+# image and it ships to everyone who pulls it. Provide it at runtime instead,
+# e.g. `docker run -e RAGPDF_API_KEY=... ...` or via your orchestrator's
+# secrets mechanism. The server refuses to start serving requests without it.
 ENV RAGPDF_DATA_PATH=/data/ragpdf_data \
     RAGPDF_CHROMA_PATH=/data/chroma_data \
     RAGPDF_STORAGE=local \
@@ -47,7 +51,6 @@ ENV RAGPDF_DATA_PATH=/data/ragpdf_data \
     RAGPDF_EMBEDDING_BACKEND=sentence_transformer \
     RAGPDF_ST_MODEL=all-MiniLM-L6-v2 \
     RAGPDF_CORRECTOR_BACKEND=noop \
-    RAGPDF_API_KEY=dev-key \
     RAGPDF_SERVER_HOST=0.0.0.0 \
     RAGPDF_SERVER_PORT=8000 \
     RAGPDF_LOG_LEVEL=INFO \

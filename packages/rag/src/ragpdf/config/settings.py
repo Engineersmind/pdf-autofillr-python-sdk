@@ -108,7 +108,9 @@ MAX_CONFIDENCE = float(os.getenv("RAGPDF_MAX_CONFIDENCE", "0.99"))
 MIN_CONFIDENCE = float(os.getenv("RAGPDF_MIN_CONFIDENCE", "0.50"))
 
 # ── Server ─────────────────────────────────────────────────────────────────────
-RAGPDF_API_KEY = os.getenv("RAGPDF_API_KEY", "dev-key")
+# No default: a hardcoded fallback here would silently protect any
+# deployment that forgets to set this with a publicly-known key.
+RAGPDF_API_KEY = os.getenv("RAGPDF_API_KEY")
 RAGPDF_SERVER_HOST = os.getenv("RAGPDF_SERVER_HOST", "0.0.0.0")
 RAGPDF_SERVER_PORT = int(os.getenv("RAGPDF_SERVER_PORT", "8000"))
 RAGPDF_SERVER_MODE = os.getenv("RAGPDF_SERVER_MODE", "false").lower() == "true"

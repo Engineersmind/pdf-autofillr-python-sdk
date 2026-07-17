@@ -12,15 +12,19 @@ This provides HTTP API endpoints for the mapper module operations.
 
 """
 
+import hmac
+import os
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
-from pdf_autofillr_mapper.configs.local import LocalStorageConfig
+from pdf_autofillr_mapper.configs.local import LocalStorageConfig, build_operation_config, validate_request_path
+from pdf_autofillr_mapper.core.config import settings
 from pdf_autofillr_mapper.core.logger import logger
+from pdf_autofillr_mapper.utils.ini_config import get_ini_config
 from pdf_autofillr_mapper.handlers.operations import (
     handle_check_embed_file_operation,
     handle_embed_operation,
@@ -35,8 +39,85 @@ from pdf_autofillr_mapper.handlers.operations import (
 app = FastAPI(
     title="PDF Autofiller Mapper API",
     description="API for PDF form field extraction, mapping, embedding, and filling",
-    version="1.0.10",
+    version="1.0.11",
 )
+
+# ============================================================================
+# Authentication (API Key, fail-closed) — mirrors entrypoints/fastapi_app.py
+# ============================================================================
+
+# Set MAPPER_ALLOW_INSECURE_NO_AUTH=true to explicitly run without auth
+# (local dev only). Otherwise a missing API key is a startup/config error,
+# not a silent bypass. This app previously had NO authentication on any
+# endpoint at all, including /mapper/* operations that read arbitrary local
+# file paths (pdf_path) and /download/{file_path} which serves files back.
+_ALLOW_INSECURE_NO_AUTH = os.getenv("MAPPER_ALLOW_INSECURE_NO_AUTH", "false").lower() == "true"
+
+
+async def verify_api_key(x_api_key: str = Header(None)):
+    expected_key = settings.api_key if hasattr(settings, "api_key") else None
+    if not expected_key:
+        if _ALLOW_INSECURE_NO_AUTH:
+            return x_api_key
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "Server misconfigured: no API key configured. Set the "
+                "mapper API key (API_KEY env var), or set "
+                "MAPPER_ALLOW_INSECURE_NO_AUTH=true to explicitly run "
+                "without authentication (not recommended)."
+            ),
+        )
+    if not x_api_key or not hmac.compare_digest(x_api_key, expected_key):
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return x_api_key
+
+
+# Directory /download is allowed to serve from. Previously this endpoint
+# allowed anything under the server process's current working directory,
+# which typically also contains source code, .env files, and other secrets
+# — not just generated output. Restricted to the actual output directory.
+_DOWNLOAD_ROOT = Path(
+    os.getenv("MAPPER_DOWNLOAD_ROOT", LocalStorageConfig().base_dir)
+).resolve()
+
+# Directories user-supplied path fields (pdf_path, extracted_json_path, etc.)
+# are allowed to point into. Defaults to _DOWNLOAD_ROOT; extend with
+# MAPPER_ALLOWED_INPUT_ROOTS (comma-separated) if your PDFs/JSON live
+# elsewhere (e.g. an uploads directory).
+_ALLOWED_INPUT_ROOTS = [_DOWNLOAD_ROOT] + [
+    Path(r).resolve()
+    for r in os.getenv("MAPPER_ALLOWED_INPUT_ROOTS", "").split(",")
+    if r.strip()
+]
+
+
+def _validate_path(raw_path: str, *, label: str) -> str:
+    """
+    Thin adapter over the shared validate_request_path() in
+    configs/local.py — that function is the single source of truth for
+    path confinement logic; this file previously had its own parallel
+    copy of the same algorithm, which risked drifting out of sync (e.g. a
+    future edge-case fix applied to one copy and not the other).
+
+    api_server.py keeps its own _ALLOWED_INPUT_ROOTS (rather than always
+    using configs/local.py's _allowed_input_roots()) because it
+    additionally honors MAPPER_DOWNLOAD_ROOT — passed through explicitly
+    via the `roots=` parameter so behavior here is unchanged.
+
+    Also fixes a path-disclosure bug in the old copy: it embedded the
+    resolved path directly into the HTTPException detail returned to the
+    client. The error is logged server-side with the real detail;
+    the client gets a fixed, non-leaking message.
+    """
+    try:
+        return validate_request_path(raw_path, label=label, roots=_ALLOWED_INPUT_ROOTS)
+    except ValueError as e:
+        logger.warning(str(e))
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid {label}: path is outside the allowed directories.",
+        )
 
 
 # ============================================================================
@@ -121,7 +202,7 @@ async def root():
     """API root endpoint"""
     return {
         "name": "PDF Autofiller Mapper API",
-        "version": "1.0.10",
+        "version": "1.0.11",
         "status": "running",
         "endpoints": {
             "extract": "/mapper/extract",
@@ -144,7 +225,7 @@ async def health():
 
 
 @app.post("/mapper/extract")
-async def extract(request: ExtractRequest):
+async def extract(request: ExtractRequest, api_key: str = Depends(verify_api_key)):
     """
     Extract fields from PDF
 
@@ -153,8 +234,15 @@ async def extract(request: ExtractRequest):
     try:
         logger.info(f"API: Extract request for {request.pdf_path}")
 
+        validated_pdf_path = _validate_path(request.pdf_path, label="pdf_path")
+        config = build_operation_config(
+            pdf_path=validated_pdf_path,
+            user_id=request.user_id,
+            session_id=request.session_id,
+            pdf_doc_id=request.pdf_doc_id,
+        )
         result = await handle_extract_operation(
-            input_file=request.pdf_path,
+            config=config,
             user_id=request.user_id,
             session_id=request.session_id,
             pdf_doc_id=request.pdf_doc_id,
@@ -168,7 +256,7 @@ async def extract(request: ExtractRequest):
 
 
 @app.post("/mapper/map")
-async def map_fields(request: MapRequest):
+async def map_fields(request: MapRequest, api_key: str = Depends(verify_api_key)):
     """
     Map fields to target schema
 
@@ -177,13 +265,25 @@ async def map_fields(request: MapRequest):
     try:
         logger.info(f"API: Map request for {request.extracted_json_path}")
 
-        from pdf_autofillr_mapper.core.config import get_mapping_config
+        mapping_config = get_ini_config().get_mapping_config()
 
-        mapping_config = get_mapping_config()
+        validated_extracted_json = _validate_path(
+            request.extracted_json_path, label="extracted_json_path"
+        )
+        validated_input_json = _validate_path(
+            request.input_json_path, label="input_json_path"
+        )
+        config = LocalStorageConfig()
+        config.local_extracted_json = validated_extracted_json
+        config.local_input_json = validated_input_json
+        stem = Path(validated_extracted_json).stem
+        config.local_mapped_json = os.path.join(config.base_dir, f"{stem}_mapped_fields.json")
+        config.local_radio_json = os.path.join(
+            config.base_dir, f"{stem}_radio_groups.json"
+        )
 
         result = await handle_map_operation(
-            extracted_json_path=request.extracted_json_path,
-            input_json_path=request.input_json_path,
+            config=config,
             mapping_config=mapping_config,
             user_id=request.user_id,
             session_id=request.session_id,
@@ -199,7 +299,7 @@ async def map_fields(request: MapRequest):
 
 
 @app.post("/mapper/embed")
-async def embed(request: EmbedRequest):
+async def embed(request: EmbedRequest, api_key: str = Depends(verify_api_key)):
     """
     Embed metadata into PDF
 
@@ -208,11 +308,25 @@ async def embed(request: EmbedRequest):
     try:
         logger.info(f"API: Embed request for {request.original_pdf_path}")
 
+        validated_pdf_path = _validate_path(request.original_pdf_path, label="original_pdf_path")
+        config = LocalStorageConfig()
+        config.local_input_pdf = validated_pdf_path
+        config.local_extracted_json = _validate_path(
+            request.extracted_json_path, label="extracted_json_path"
+        )
+        config.local_mapped_json = _validate_path(
+            request.mapping_json_path, label="mapping_json_path"
+        )
+        config.local_radio_json = _validate_path(
+            request.radio_groups_path, label="radio_groups_path"
+        )
+        stem = Path(validated_pdf_path).stem
+        config.local_embedded_pdf = os.path.join(
+            config.base_dir, f"{stem}_embedded.pdf"
+        )
+
         result = await handle_embed_operation(
-            original_pdf_path=request.original_pdf_path,
-            extracted_json_path=request.extracted_json_path,
-            mapping_json_path=request.mapping_json_path,
-            radio_groups_path=request.radio_groups_path,
+            config=config,
             user_id=request.user_id,
             session_id=request.session_id,
             pdf_doc_id=request.pdf_doc_id,
@@ -226,7 +340,7 @@ async def embed(request: EmbedRequest):
 
 
 @app.post("/mapper/fill")
-async def fill(request: FillRequest):
+async def fill(request: FillRequest, api_key: str = Depends(verify_api_key)):
     """
     Fill PDF with data
 
@@ -235,9 +349,19 @@ async def fill(request: FillRequest):
     try:
         logger.info(f"API: Fill request for {request.embedded_pdf_path}")
 
+        validated_embedded_pdf = _validate_path(
+            request.embedded_pdf_path, label="embedded_pdf_path"
+        )
+        config = LocalStorageConfig()
+        config.local_embedded_pdf = validated_embedded_pdf
+        config.local_input_json = _validate_path(
+            request.input_json_path, label="input_json_path"
+        )
+        stem = Path(validated_embedded_pdf).stem
+        config.local_filled_pdf = os.path.join(config.base_dir, f"{stem}_filled.pdf")
+
         result = await handle_fill_operation(
-            embedded_pdf_path=request.embedded_pdf_path,
-            input_json_path=request.input_json_path,
+            config=config,
             user_id=request.user_id,
             session_id=request.session_id,
             pdf_doc_id=request.pdf_doc_id,
@@ -251,7 +375,7 @@ async def fill(request: FillRequest):
 
 
 @app.post("/mapper/make-embed-file")
-async def make_embed_file(request: MakeEmbedRequest):
+async def make_embed_file(request: MakeEmbedRequest, api_key: str = Depends(verify_api_key)):
     """
     Make embed file (Extract -> Map -> Embed pipeline)
 
@@ -261,11 +385,14 @@ async def make_embed_file(request: MakeEmbedRequest):
     try:
         logger.info(f"API: Make embed file request for {request.pdf_path}")
 
-        config = LocalStorageConfig(local_input_pdf=request.pdf_path)
+        config = build_operation_config(
+            pdf_path=_validate_path(request.pdf_path, label="pdf_path"),
+            user_id=request.user_id,
+            session_id=request.session_id,
+            pdf_doc_id=request.pdf_doc_id,
+        )
 
-        from pdf_autofillr_mapper.core.config import get_mapping_config
-
-        mapping_config = get_mapping_config()
+        mapping_config = get_ini_config().get_mapping_config()
 
         result = await handle_make_embed_file_operation(
             config=config,
@@ -285,7 +412,7 @@ async def make_embed_file(request: MakeEmbedRequest):
 
 
 @app.post("/mapper/fill-pdf")
-async def fill_pdf(request: FillPDFRequest):
+async def fill_pdf(request: FillPDFRequest, api_key: str = Depends(verify_api_key)):
     """
     Fill PDF (with safety checks)
 
@@ -294,9 +421,12 @@ async def fill_pdf(request: FillPDFRequest):
     try:
         logger.info(f"API: Fill PDF request for {request.embedded_pdf_path}")
 
-        config = LocalStorageConfig(
-            local_embedded_pdf=request.embedded_pdf_path,
-            local_input_json=request.input_json_path,
+        config = LocalStorageConfig()
+        config.local_embedded_pdf = _validate_path(
+            request.embedded_pdf_path, label="embedded_pdf_path"
+        )
+        config.local_input_json = _validate_path(
+            request.input_json_path, label="input_json_path"
         )
 
         result = await handle_fill_pdf_operation(
@@ -314,7 +444,7 @@ async def fill_pdf(request: FillPDFRequest):
 
 
 @app.post("/mapper/check-embed-file")
-async def check_embed_file(request: CheckEmbedRequest):
+async def check_embed_file(request: CheckEmbedRequest, api_key: str = Depends(verify_api_key)):
     """
     Check if PDF has embedded metadata
 
@@ -323,7 +453,8 @@ async def check_embed_file(request: CheckEmbedRequest):
     try:
         logger.info(f"API: Check embed file for {request.pdf_path}")
 
-        config = LocalStorageConfig(local_embedded_pdf=request.pdf_path)
+        config = LocalStorageConfig()
+        config.local_embedded_pdf = _validate_path(request.pdf_path, label="pdf_path")
 
         result = await handle_check_embed_file_operation(
             config=config, user_id=request.user_id, session_id=request.session_id
@@ -337,7 +468,7 @@ async def check_embed_file(request: CheckEmbedRequest):
 
 
 @app.post("/mapper/run-all")
-async def run_all(request: RunAllRequest):
+async def run_all(request: RunAllRequest, api_key: str = Depends(verify_api_key)):
     """
     Run complete pipeline (Extract -> Map -> Embed -> Fill)
 
@@ -346,13 +477,11 @@ async def run_all(request: RunAllRequest):
     try:
         logger.info(f"API: Run all request for {request.pdf_path}")
 
-        from pdf_autofillr_mapper.core.config import get_mapping_config
-
-        mapping_config = get_mapping_config()
+        mapping_config = get_ini_config().get_mapping_config()
 
         result = await handle_run_all_operation(
-            input_pdf=request.pdf_path,
-            input_json=request.input_json_path,
+            input_pdf=_validate_path(request.pdf_path, label="pdf_path"),
+            input_json=_validate_path(request.input_json_path, label="input_json_path"),
             mapping_config=mapping_config,
             user_id=request.user_id,
             session_id=request.session_id,
@@ -367,7 +496,7 @@ async def run_all(request: RunAllRequest):
 
 
 @app.get("/download/{file_path:path}")
-async def download_file(file_path: str):
+async def download_file(file_path: str, api_key: str = Depends(verify_api_key)):
     """
     Download file from local storage
 
@@ -375,7 +504,11 @@ async def download_file(file_path: str):
     from the local storage. Useful for local deployment scenarios where the
     SDK is on a different machine than the mapper.
 
-    Security: File path is validated to prevent directory traversal attacks.
+    Security: File path is validated to prevent directory traversal attacks,
+    and must resolve inside the mapper's output directory (MAPPER_DOWNLOAD_ROOT,
+    default: the same base_dir LocalStorageConfig writes output to) — not just
+    "somewhere under the server's current working directory", which could
+    include source code, .env files, and other secrets.
 
     Args:
         file_path: Path to file (relative or absolute)
@@ -385,7 +518,6 @@ async def download_file(file_path: str):
 
     Example:
         GET /download/output/filled_1234.pdf
-        GET /download//absolute/path/to/file.json
 
     """
     try:
@@ -395,10 +527,17 @@ async def download_file(file_path: str):
             raise HTTPException(status_code=403, detail="Access denied")
 
         safe_file_path = file_path.lstrip("/\\")
-        path = (Path.cwd() / safe_file_path).resolve()
-
-        allowed_root = Path.cwd().resolve()
-        if not str(path).startswith(str(allowed_root) + "/") and path != allowed_root:
+        # Must use resolve() (follows symlinks), not normpath (pure string
+        # manipulation, no filesystem I/O) — a symlink inside
+        # _DOWNLOAD_ROOT pointing outside it would pass a normpath-only
+        # check but read from the symlink target. See the identical fix
+        # and rationale in chatbot/storage/local_storage.py's _confine().
+        path = (_DOWNLOAD_ROOT / safe_file_path).resolve()
+        download_root_str = str(_DOWNLOAD_ROOT)
+        if not (
+            str(path) == download_root_str
+            or str(path).startswith(download_root_str + os.sep)
+        ):
             raise HTTPException(status_code=403, detail="Access denied")
 
         if not path.exists():

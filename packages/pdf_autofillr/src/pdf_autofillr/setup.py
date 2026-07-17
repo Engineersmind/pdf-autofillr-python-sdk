@@ -264,7 +264,7 @@ RAGPDF_MAX_CONFIDENCE=0.99
 RAGPDF_MIN_CONFIDENCE=0.50
 
 # ── RAG SERVER (only when RAG_MODE=http) ──────────────────────
-RAGPDF_API_KEY=dev-key
+RAGPDF_API_KEY=change-me-to-a-long-random-secret
 # RAGPDF_SERVER_HOST=0.0.0.0
 # RAGPDF_SERVER_PORT=8000
 

@@ -23,10 +23,15 @@ File layout::
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
 from chatbot.storage.base import StorageBackend
+
+
+class PathAccessError(PermissionError):
+    """Raised when a user_id/session_id would escape the data directory."""
 
 
 class LocalStorage(StorageBackend):
@@ -41,19 +46,64 @@ class LocalStorage(StorageBackend):
     def __init__(
         self, data_path: str = "./data/chatbot", config_path: str = "./configs"
     ):
-        self.data_path = Path(data_path)
-        self.config_path = Path(config_path)
+        self.data_path = Path(data_path).resolve()
+        self.config_path = Path(config_path).resolve()
         self.data_path.mkdir(parents=True, exist_ok=True)
 
     # ── Paths ──────────────────────────────────────────────────────────
 
+    def _confine(self, candidate: Path, *, label: str) -> Path:
+        """
+        Resolve `candidate` (following symlinks) and verify it is
+        contained within self.data_path.
+
+        This MUST use Path.resolve(), not pure string normalization
+        (os.path.normpath) — an earlier version used normpath on the
+        reasoning that _safe_segment() already forbids "/", "\\", and ".."
+        in the segment, so no traversal string could reach here. That
+        reasoning missed a real attack: a caller with write access to
+        data_path (e.g. via a legitimate upload elsewhere in the app) can
+        create a symlink whose *name* is a perfectly valid single segment
+        (passes _safe_segment) but whose *target* points outside
+        data_path entirely (e.g. data_path/evil_link -> /etc). normpath
+        never touches the filesystem, so it can't detect that — only
+        resolve() (which follows symlinks) can.
+        """
+        resolved = candidate.resolve()
+        base = str(self.data_path) + os.sep
+        if not (str(resolved) == str(self.data_path) or str(resolved).startswith(base)):
+            raise PathAccessError(
+                f"Invalid {label}: resolved path '{resolved}' escapes "
+                f"data_path '{self.data_path}'"
+            )
+        return resolved
+
+    @staticmethod
+    def _safe_segment(value: str, *, label: str) -> str:
+        """
+        user_id/session_id become literal path segments. Reject anything
+        that isn't a plain single segment (no "/", "\\", or ".." tricks) so
+        these identifiers can never be used to escape data_path
+        (CWE-22 path traversal). Used together with _confine() below, which
+        double-checks by resolving the final path against data_path.
+        """
+        segment = os.path.basename(value)
+        if not segment or segment != value or segment in (".", ".."):
+            raise PathAccessError(f"Invalid {label}: {value!r}")
+        return segment
+
     def _user_dir(self, user_id: str) -> Path:
-        p = self.data_path / user_id
+        safe_user_id = self._safe_segment(user_id, label="user_id")
+        p = self._confine(self.data_path / safe_user_id, label="user_id")
         p.mkdir(parents=True, exist_ok=True)
         return p
 
     def _session_dir(self, user_id: str, session_id: str) -> Path:
-        p = self._user_dir(user_id) / "sessions" / session_id
+        safe_session_id = self._safe_segment(session_id, label="session_id")
+        p = self._confine(
+            self._user_dir(user_id) / "sessions" / safe_session_id,
+            label="session_id",
+        )
         p.mkdir(parents=True, exist_ok=True)
         return p
 
@@ -173,7 +223,7 @@ class LocalStorage(StorageBackend):
     def delete_session(self, user_id, session_id):
         import shutil
 
-        session_dir = self._user_dir(user_id) / "sessions" / session_id
+        session_dir = self._session_dir(user_id, session_id)
         if session_dir.exists():
             shutil.rmtree(session_dir)
         return True

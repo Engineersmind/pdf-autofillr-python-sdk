@@ -6,6 +6,21 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [0.2.5] - 2026-07-14
+
+### Security
+- **[High] Hardcoded default API key** — `EXPECTED_API_KEY` fell back to the
+  literal string `"dev-key"` when `RAGPDF_API_KEY` wasn't set, so any
+  deployment that forgot to configure it was protected by a publicly-known
+  credential (CWE-798). There is no default now: the server fails closed
+  with a config error unless `RAGPDF_API_KEY` is set, or
+  `RAGPDF_ALLOW_INSECURE_NO_AUTH=true` is explicitly set for local dev.
+- API key comparison uses `hmac.compare_digest` to avoid timing side-channels.
+
+### Added
+- `RAGPDF_ALLOW_INSECURE_NO_AUTH` — explicit opt-in to run without auth
+  (local dev only).
+
 ## [Unreleased]
 
 ### Changed

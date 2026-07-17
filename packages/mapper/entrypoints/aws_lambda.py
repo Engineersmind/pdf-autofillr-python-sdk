@@ -33,6 +33,7 @@ from pdf_autofillr_mapper.handlers.operations import (
     handle_run_all_operation,
 )
 from pdf_autofillr_mapper.utils.data_combiner import combine_user_and_session_data
+from pdf_autofillr_mapper.utils.storage_helper import get_storage_type
 
 # Import notification system
 try:
@@ -320,6 +321,33 @@ async def route_operation(event: dict, operation: str, notifier):
             if not input_json:
                 raise ValueError("Missing required parameter: input_json")
 
+        # handle_run_all_operation currently only supports storage_type
+        # "local" (see build_operation_config in configs/local.py — no
+        # equivalent config builder exists yet for S3/Azure/GCP). Session
+        # and doc-id workflows above resolve input_pdf/input_json to real
+        # S3 URLs, so intercept here with a clear, structured response
+        # rather than letting the pipeline's NotImplementedError surface
+        # as an unhandled 500. This does not restore S3 support for
+        # run-all — it was already broken by the same underlying gap —
+        # it just stops silently returning a confusing crash for a
+        # previously-reachable code path.
+        storage_type = get_storage_type(input_pdf)
+        if storage_type != "local":
+            return {
+                "statusCode": 501,
+                "body": json.dumps(
+                    {
+                        "error": (
+                            f"run_all is not yet supported for storage_type="
+                            f"{storage_type!r}. Only local-path run_all is "
+                            f"currently implemented; extract/map/embed/fill "
+                            f"can still be called individually against "
+                            f"{storage_type} inputs."
+                        )
+                    }
+                ),
+            }
+
         # Call source-agnostic handler
         return await handle_run_all_operation(
             input_pdf=input_pdf,
@@ -479,8 +507,8 @@ async def route_operation(event: dict, operation: str, notifier):
                     extractor = DetailedFitzExtractor(
                         config={}
                     )  # Pass empty config for quick extraction
-                    quick_extract = await extractor.extract_to_json(
-                        local_pdf_path, output_file=None
+                    quick_extract = extractor.extract(
+                        local_pdf_path, storage_config={"type": "local", "path": None}
                     )
                     pdf_hash = quick_extract.get("pdf_hash")
 

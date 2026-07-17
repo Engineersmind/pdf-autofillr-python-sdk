@@ -27,32 +27,43 @@ import os
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from fastapi import FastAPI, HTTPException  # noqa: E402
+from fastapi import FastAPI, Header, HTTPException  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from fastapi.responses import JSONResponse  # noqa: E402
 from pydantic import BaseModel  # noqa: E402
 
 from chatbot import FormConfig, chatbotClient  # noqa: E402
+from chatbot.auth import check_api_key, cors_origins  # noqa: E402
 from chatbot.storage.factory import StorageFactory  # noqa: E402
+from chatbot.storage.local_storage import PathAccessError  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="chatbot (bare routes)",
     description="chatbot sub-app — /chat instead of /chatbot/chat.",
-    version="0.3.0",
+    version="0.4.0",
 )
+
+# CORS + auth logic lives in chatbot.auth (shared across all 3 chatbot
+# entrypoints — see that module's docstring for why).
+_cors_origins = cors_origins()
 app.add_middleware(
-    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_methods=["GET", "POST", "DELETE"],
+    allow_headers=["*"],
 )
 
 _client: chatbotClient | None = None
+
+_check_api_key = check_api_key
 
 
 def _build_pdf_filler():
@@ -75,8 +86,8 @@ def _build_pdf_filler():
 def get_client() -> chatbotClient:
     global _client
     if _client is None:
-        storage = StorageFactory.create()
         config_path = os.getenv("chatbot_CONFIG_PATH", "./configs")
+        storage = StorageFactory.create()
         _client = chatbotClient(
             # api_key read from CHATBOT_LLM_API_KEY env var automatically
             storage=storage,
@@ -108,7 +119,8 @@ class SessionDataResponse(BaseModel):
 
 
 @app.post("/chat", response_model=ChatResponse)
-def chat(req: ChatRequest):
+def chat(req: ChatRequest, x_api_key: str | None = Header(default=None)):
+    _check_api_key(x_api_key)
     try:
         client = get_client()
         pdf_path = req.pdf_path or os.getenv("chatbot_PDF_PATH", "")
@@ -124,6 +136,8 @@ def chat(req: ChatRequest):
             session_complete=complete,
             filled_data=data if complete else None,
         )
+    except PathAccessError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
@@ -132,8 +146,14 @@ def chat(req: ChatRequest):
 
 
 @app.get("/session/{user_id}/{session_id}", response_model=SessionDataResponse)
-def get_session(user_id: str, session_id: str):
-    data = get_client().get_session_data(user_id, session_id)
+def get_session(
+    user_id: str, session_id: str, x_api_key: str | None = Header(default=None)
+):
+    _check_api_key(x_api_key)
+    try:
+        data = get_client().get_session_data(user_id, session_id)
+    except PathAccessError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     if data is None:
         raise HTTPException(
             status_code=404, detail="Session not found or not complete."
@@ -142,22 +162,37 @@ def get_session(user_id: str, session_id: str):
 
 
 @app.get("/session/{user_id}/{session_id}/fill-report")
-def get_fill_report(user_id: str, session_id: str, format: str = "json"):
+def get_fill_report(
+    user_id: str,
+    session_id: str,
+    format: str = "json",
+    x_api_key: str | None = Header(default=None),
+):
+    _check_api_key(x_api_key)
     client = get_client()
-    if format == "text":
-        text = client.get_fill_report_text(user_id, session_id)
-        if text is None:
-            raise HTTPException(status_code=404, detail="Fill report not found.")
-        return {"report": text}
-    report = client.get_fill_report(user_id, session_id)
+    try:
+        if format == "text":
+            text = client.get_fill_report_text(user_id, session_id)
+            if text is None:
+                raise HTTPException(status_code=404, detail="Fill report not found.")
+            return {"report": text}
+        report = client.get_fill_report(user_id, session_id)
+    except PathAccessError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     if report is None:
         raise HTTPException(status_code=404, detail="Fill report not found.")
     return report
 
 
 @app.delete("/session/{user_id}/{session_id}")
-def delete_session(user_id: str, session_id: str):
-    get_client().delete_session(user_id, session_id)
+def delete_session(
+    user_id: str, session_id: str, x_api_key: str | None = Header(default=None)
+):
+    _check_api_key(x_api_key)
+    try:
+        get_client().delete_session(user_id, session_id)
+    except PathAccessError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     return {"deleted": True}
 
 
@@ -165,6 +200,7 @@ def delete_session(user_id: str, session_id: str):
 def health():
     return {
         "status": "ok",
+        "version": "0.4.0",
         "storage": os.getenv("chatbot_STORAGE", "local"),
         "pdf_filler": os.getenv("chatbot_PDF_FILLER", "none"),
     }

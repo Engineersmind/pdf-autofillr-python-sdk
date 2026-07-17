@@ -46,6 +46,7 @@ _INPUT_JSON = "final_output_flat.json"  # session root handoff file
 # Mapper output files — all prefixed with {pid}_
 _EXTRACTED_JSON = "{pid}_extracted.json"
 _MAPPED_JSON = "{pid}_mapping.json"
+_SEMANTIC_MAPPING_JSON = "{pid}_semantic_mapping.json"
 _RADIO_JSON = "{pid}_radio_groups.json"
 _HEADERS_FIELDS = "{pid}_headers_with_fields.json"
 _FINAL_FIELDS = "{pid}_final_form_fields.json"
@@ -114,6 +115,11 @@ class PathResolver:
 
     def remote_mapped(self, uid, sid, pid) -> str:
         return self._sc.mapper_path(uid, sid, pid, _f(_MAPPED_JSON, pid))
+
+    def remote_semantic_mapping(self, uid, sid, pid) -> str:
+        """Raw semantic-mapper output — kept alongside the final mapped JSON
+        for reference/debugging/caching (see handle_map_operation)."""
+        return self._sc.mapper_path(uid, sid, pid, _f(_SEMANTIC_MAPPING_JSON, pid))
 
     def remote_radio(self, uid, sid, pid) -> str:
         return self._sc.mapper_path(uid, sid, pid, _f(_RADIO_JSON, pid))

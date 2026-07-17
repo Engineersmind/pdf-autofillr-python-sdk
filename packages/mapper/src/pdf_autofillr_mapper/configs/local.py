@@ -260,3 +260,123 @@ class LocalStorageConfig(BaseStorageConfig):
         }
 
         return config
+
+
+def build_operation_config(
+    pdf_path: str,
+    input_json_path: Optional[str] = None,
+    base_dir: Optional[str] = None,
+    user_id: Optional[int] = None,
+    session_id: Optional[int] = None,
+    pdf_doc_id: Optional[int] = None,
+) -> "LocalStorageConfig":
+    """
+    Build a fully-populated LocalStorageConfig ready to pass straight into
+    handle_extract_operation/handle_map_operation/handle_embed_operation/
+    handle_fill_operation (via create_file_handlers()).
+
+    This exists because those handlers expect a config object with specific
+    `local_*` attributes already set (config.local_input_pdf,
+    config.local_extracted_json, etc. — see InputFileHandler/OutputFileHandler)
+    rather than a bare file path or a plain dict. Call sites that used to pass
+    a raw dict or omit config entirely (see CHANGELOG) were relying on a
+    calling convention this module never actually implemented; this is the
+    single place that builds a config those handlers can use correctly.
+
+    Output files are named after the input PDF's stem, but always written
+    under `base_dir` (default: LocalStorageConfig's own default,
+    <tempdir>/pdf_processing) rather than next to the input file — so
+    generated output never lands in whatever arbitrary directory a caller's
+    pdf_path happens to point at.
+
+    Args:
+        pdf_path: Path to the input PDF (local path).
+        input_json_path: Optional path to input JSON data for mapping.
+        base_dir: Directory to write generated output files into.
+        user_id, session_id, pdf_doc_id: Optional identifiers, stored on the
+            config for logging/tracking; not required by the handlers.
+
+    Returns:
+        A LocalStorageConfig with every local_* attribute the extract/map/
+        embed/fill handlers read already set.
+    """
+    config = LocalStorageConfig(base_dir=base_dir)
+
+    abs_pdf = os.path.abspath(pdf_path)
+    stem = Path(abs_pdf).stem
+
+    def out(suffix: str, ext: str) -> str:
+        return os.path.join(config.base_dir, f"{stem}{suffix}{ext}")
+
+    config.local_input_pdf = abs_pdf
+    config.local_input_json = os.path.abspath(input_json_path) if input_json_path else None
+
+    config.local_extracted_json = out("_extracted", ".json")
+    config.local_mapped_json = out("_mapped_fields", ".json")
+    config.local_radio_json = out("_radio_groups", ".json")
+    config.local_embedded_pdf = out("_embedded", ".pdf")
+    config.local_filled_pdf = out("_filled", ".pdf")
+
+    # Dual-mapper / RAG-adjacent outputs — populated on demand by the
+    # handlers that use them; harmless to pre-declare the paths.
+    config.local_headers_with_fields = out("_headers_with_fields", ".json")
+    config.local_final_form_fields = out("_final_form_fields", ".json")
+    config.local_java_mapping = out("_java_mapping", ".json")
+
+    config.user_id = user_id
+    config.session_id = session_id
+    config.pdf_doc_id = pdf_doc_id
+
+    return config
+
+
+# Directories user-supplied path fields (pdf_path, extracted_json_path, etc.)
+# are allowed to point into on HTTP entrypoints. Defaults to the same
+# base_dir LocalStorageConfig writes output to; extend with
+# MAPPER_ALLOWED_INPUT_ROOTS (comma-separated) if your PDFs/JSON live
+# elsewhere (e.g. an uploads directory).
+def _allowed_input_roots() -> list[Path]:
+    roots = [Path(LocalStorageConfig().base_dir).resolve()]
+    extra = os.getenv("MAPPER_ALLOWED_INPUT_ROOTS", "")
+    roots += [Path(r).resolve() for r in extra.split(",") if r.strip()]
+    return roots
+
+
+def validate_request_path(
+    raw_path: str, *, label: str, roots: "list[Path] | None" = None
+) -> str:
+    """
+    Resolve `raw_path` (following symlinks) and verify it lives inside one
+    of `roots` (defaults to _allowed_input_roots()). Every HTTP-request
+    field that ends up being read from or written to disk (pdf_path,
+    extracted_json_path, input_json_path, embedded_pdf_path,
+    mapping_json_path, radio_groups_path, original_pdf_path) must go
+    through this before being used — otherwise an
+    authenticated-but-malicious caller can read/write arbitrary files on
+    the server (CWE-22 / CodeQL py/path-injection).
+
+    Must use Path.resolve(), not os.path.normpath/abspath — a symlink
+    inside an allowed root pointing outside it would pass a
+    normpath-only check but read from the symlink target.
+
+    `roots` lets callers (e.g. api_server.py, whose allowed roots
+    additionally honor MAPPER_DOWNLOAD_ROOT) supply their own list while
+    still sharing this single confinement implementation, rather than
+    each maintaining a parallel copy that can silently drift apart.
+
+    Raises ValueError (callers should turn this into HTTP 400 — using a
+    fixed message, not the one on this exception, which embeds the
+    resolved path and would otherwise leak server directory structure to
+    the client) if the path escapes the allowed roots.
+    """
+    normalized = str(Path(raw_path).resolve())
+    for root in (roots if roots is not None else _allowed_input_roots()):
+        root_str = str(root)
+        if normalized == root_str or normalized.startswith(root_str + os.sep):
+            return normalized
+    raise ValueError(
+        f"Invalid {label}: '{raw_path}' resolves to '{normalized}', which is "
+        f"outside the allowed directories "
+        f"{[str(r) for r in (roots if roots is not None else _allowed_input_roots())]}. "
+        f"Set MAPPER_ALLOWED_INPUT_ROOTS if your files live elsewhere."
+    )

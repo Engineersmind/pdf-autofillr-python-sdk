@@ -9,6 +9,7 @@ Run:
 Swagger UI: http://localhost:8000/docs
 """
 
+import hmac
 import os
 from typing import Any
 
@@ -18,9 +19,12 @@ from pydantic import BaseModel
 
 from ragpdf import RAGPDFClient
 
-app = FastAPI(title="pdf-autofillr-rag", version="0.1.1")
+app = FastAPI(title="pdf-autofillr-rag", version="0.2.5")
 
-EXPECTED_API_KEY = os.getenv("RAGPDF_API_KEY", "dev-key")
+# No safe default: a hardcoded fallback key ("dev-key") would mean any
+# deployment that forgets to set RAGPDF_API_KEY is protected by a
+# publicly-known secret. Set RAGPDF_ALLOW_INSECURE_NO_AUTH=true to
+# explicitly run without auth (local dev only).
 client: RAGPDFClient = None
 
 
@@ -31,7 +35,24 @@ def startup():
 
 
 def _auth(x_api_key: str = Header(None)):
-    if x_api_key != EXPECTED_API_KEY:
+    # Read per-request, not at module import time — see local_server.py
+    # for the full rationale (late env-var injection e.g. from a secrets
+    # manager would otherwise leave EXPECTED_API_KEY permanently None).
+    expected = os.environ.get("RAGPDF_API_KEY")
+    allow_insecure = os.environ.get("RAGPDF_ALLOW_INSECURE_NO_AUTH", "").lower() == "true"
+    if not expected:
+        if allow_insecure:
+            return
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "Server misconfigured: RAGPDF_API_KEY is not set. Set "
+                "RAGPDF_API_KEY to a strong secret, or set "
+                "RAGPDF_ALLOW_INSECURE_NO_AUTH=true to explicitly run "
+                "without authentication (not recommended)."
+            ),
+        )
+    if not x_api_key or not hmac.compare_digest(x_api_key, expected):
         raise HTTPException(status_code=401, detail="Invalid API key")
 
 

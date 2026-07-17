@@ -11,6 +11,7 @@ This provides a REST API interface for the mapper module with:
 The actual business logic is in src/handlers/operations.py
 """
 
+import hmac
 import logging
 from typing import Any, Optional
 
@@ -27,8 +28,20 @@ except ImportError:
     FastAPI = None  # type: ignore[no-redef, misc, assignment]
     HTTPException = None  # type: ignore[no-redef, misc, assignment]
 
+# NOTE: an earlier attempt aliased HTTPException to a guaranteed-non-None
+# class for use in `except _ExceptableHTTPException:` — CodeQL's static
+# analysis still traced the alias back to the nullable HTTPException value
+# through the conditional, so it kept flagging it. The actual fix (see the
+# two endpoints below) never puts a possibly-None value in an `except`
+# clause at all: it catches Exception unconditionally and checks the type
+# by name instead.
+
 from pdf_autofillr_mapper.core.config import settings
 from pdf_autofillr_mapper.core.logger import setup_logging
+
+# Builds a fully-populated config object (config.local_* paths etc.) from a
+# bare pdf_path — see its docstring for why this exists.
+from pdf_autofillr_mapper.configs.local import build_operation_config, validate_request_path
 
 # Import platform-agnostic handlers
 from pdf_autofillr_mapper.handlers.operations import (
@@ -40,6 +53,9 @@ from pdf_autofillr_mapper.handlers.operations import (
     handle_map_operation,
     handle_run_all_operation,
 )
+
+import json
+import os
 
 # Setup logging
 setup_logging()
@@ -55,6 +71,11 @@ class OperationRequest(BaseModel):
 
     pdf_path: str = Field(..., description="Path to PDF file")
     session_id: Optional[str] = Field(None, description="Session ID for tracking")
+    user_id: Optional[int] = Field(None, description="User ID for tracking")
+    pdf_doc_id: Optional[int] = Field(None, description="PDF document ID for tracking")
+    input_json_path: Optional[str] = Field(
+        None, description="Path to input JSON data, if this operation needs it"
+    )
 
 
 class ExtractRequest(OperationRequest):
@@ -68,6 +89,9 @@ class MapRequest(OperationRequest):
 
     mapper_type: Optional[str] = Field(
         "ensemble", description="Mapper type: semantic, rag, headers, ensemble"
+    )
+    mapping_config: Optional[dict[str, Any]] = Field(
+        None, description="Mapping configuration overrides (all keys optional)"
     )
 
 
@@ -86,7 +110,13 @@ class FillRequest(OperationRequest):
 class MakeEmbedFileRequest(OperationRequest):
     """Request model for make_embed_file operation."""
 
-    pass
+    investor_type: str = Field("individual", description="Investor type for mapping")
+    mapping_config: Optional[dict[str, Any]] = Field(
+        None, description="Mapping configuration overrides (all keys optional)"
+    )
+    use_second_mapper: bool = Field(
+        False, description="Whether to use the second (RAG) mapper"
+    )
 
 
 class CheckEmbedFileRequest(OperationRequest):
@@ -113,29 +143,56 @@ else:
     app = FastAPI(
         title="PDF Mapper API",
         description="Platform-agnostic PDF field extraction, mapping, embedding, and filling API",
-        version="1.0.10",
+        version="1.0.11",
         docs_url="/docs",
         redoc_url="/redoc",
     )
 
-    # CORS middleware
+    # CORS middleware — restrict to an explicit allow-list via
+    # MAPPER_CORS_ALLOWED_ORIGINS (comma-separated). Unset/empty means NO
+    # cross-origin access (fail closed), matching chatbot/doc_upload's
+    # behavior. A previous version fell back to ["*"] when this env var
+    # was unset — the opposite of every other package, and the opposite
+    # of what the CHANGELOG for this fix claimed.
+    import os as _os
+
+    _cors_origins_env = _os.getenv("MAPPER_CORS_ALLOWED_ORIGINS", "")
+    _cors_origins = [o.strip() for o in _cors_origins_env.split(",") if o.strip()]
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Configure this properly in production
-        allow_credentials=True,
-        allow_methods=["*"],
+        allow_origins=_cors_origins,
+        allow_credentials=bool(_cors_origins) and "*" not in _cors_origins,
+        allow_methods=["GET", "POST"],
         allow_headers=["*"],
     )
 
     # =============================================================================
-    # Authentication (Simple API Key - enhance as needed)
+    # Authentication (API Key, fail-closed)
     # =============================================================================
 
+    # Set MAPPER_ALLOW_INSECURE_NO_AUTH=true to explicitly run without auth
+    # (local dev only). Otherwise a missing API key is a startup/config error,
+    # not a silent bypass — this closes the "auth disabled if unset" hole.
+    _allow_insecure_no_auth = (
+        _os.getenv("MAPPER_ALLOW_INSECURE_NO_AUTH", "false").lower() == "true"
+    )
+
     async def verify_api_key(x_api_key: str = Header(None)):
-        """Verify API key from header."""
-        # TODO: Implement proper authentication
+        """Verify API key from header. Fails closed if none is configured."""
         expected_key = settings.api_key if hasattr(settings, "api_key") else None
-        if expected_key and x_api_key != expected_key:
+        if not expected_key:
+            if _allow_insecure_no_auth:
+                return x_api_key
+            raise HTTPException(
+                status_code=500,
+                detail=(
+                    "Server misconfigured: no API key configured. Set the "
+                    "API_KEY env var (settings.api_key), or set "
+                    "MAPPER_ALLOW_INSECURE_NO_AUTH=true to explicitly run "
+                    "without authentication (not recommended)."
+                ),
+            )
+        if not x_api_key or not hmac.compare_digest(x_api_key, expected_key):
             raise HTTPException(status_code=401, detail="Invalid API key")
         return x_api_key
 
@@ -153,7 +210,7 @@ else:
         """Root endpoint."""
         return {
             "service": "PDF Mapper API",
-            "version": "1.0.10",
+            "version": "1.0.11",
             "docs": "/docs",
         }
 
@@ -165,8 +222,25 @@ else:
     async def extract(request: ExtractRequest, api_key: str = Depends(verify_api_key)):
         """Extract fields from PDF."""
         try:
-            result = handle_extract_operation(request.dict())
+            config = build_operation_config(
+                pdf_path=validate_request_path(request.pdf_path, label="pdf_path"),
+                input_json_path=validate_request_path(request.input_json_path, label="input_json_path") if request.input_json_path else None,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
+            result = await handle_extract_operation(
+                config=config,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
             return OperationResponse(success=True, data=result)
+        except ValueError:
+            # validate_request_path raises ValueError with the resolved
+            # path embedded in the message — never pass that to the
+            # client (CWE-209 info disclosure). Fixed, generic message.
+            raise HTTPException(status_code=400, detail="Invalid path")
         except Exception as e:
             logger.error(f"Extract operation failed: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
@@ -175,9 +249,37 @@ else:
     async def map_fields(request: MapRequest, api_key: str = Depends(verify_api_key)):
         """Map PDF fields to target schema."""
         try:
-            result = handle_map_operation(request.dict())
+            if not request.input_json_path:
+                raise HTTPException(
+                    status_code=400,
+                    detail="input_json_path is required for /map (nothing to map fields against).",
+                )
+            config = build_operation_config(
+                pdf_path=validate_request_path(request.pdf_path, label="pdf_path"),
+                input_json_path=validate_request_path(request.input_json_path, label="input_json_path"),
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
+            result = await handle_map_operation(
+                config=config,
+                mapping_config=request.mapping_config or {},
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
             return OperationResponse(success=True, data=result)
         except Exception as e:
+            # Re-raise real HTTP-status errors (the 400 raised above, etc.)
+            # unwrapped, rather than burying them as a generic 500. Checking
+            # by type name — instead of `except HTTPException:` — avoids
+            # ever putting a possibly-None value in an except clause:
+            # HTTPException is None when fastapi isn't installed (see the
+            # import fallback above), and `except None:` is invalid Python.
+            if type(e).__name__ == "HTTPException":
+                raise
+            if isinstance(e, ValueError):
+                raise HTTPException(status_code=400, detail="Invalid path") from e
             logger.error(f"Map operation failed: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
 
@@ -187,8 +289,22 @@ else:
     ):
         """Embed metadata into PDF."""
         try:
-            result = handle_embed_operation(request.dict())
+            config = build_operation_config(
+                pdf_path=validate_request_path(request.pdf_path, label="pdf_path"),
+                input_json_path=validate_request_path(request.input_json_path, label="input_json_path") if request.input_json_path else None,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
+            result = await handle_embed_operation(
+                config=config,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
             return OperationResponse(success=True, data=result)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid path")
         except Exception as e:
             logger.error(f"Embed operation failed: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
@@ -197,8 +313,38 @@ else:
     async def fill_pdf(request: FillRequest, api_key: str = Depends(verify_api_key)):
         """Fill PDF form with data."""
         try:
-            result = handle_fill_pdf_operation(request.dict())
+            validated_pdf_path = validate_request_path(request.pdf_path, label="pdf_path")
+            config = build_operation_config(
+                pdf_path=validated_pdf_path,
+                input_json_path=validate_request_path(request.input_json_path, label="input_json_path") if request.input_json_path else None,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
+            # handle_fill_pdf_operation reads fill data from
+            # config.local_input_json — write the caller's `data` there
+            # (this is what makes /fill self-contained: the caller sends
+            # data in the request body rather than a pre-existing file).
+            # Uses the already-validated pdf_path (not the raw request field)
+            # so this filename derivation and everything downstream works
+            # from a single already-confined value.
+            fill_data_path = config.local_input_json or os.path.join(
+                config.base_dir, f"{os.path.splitext(os.path.basename(validated_pdf_path))[0]}_fill_data.json"
+            )
+            os.makedirs(os.path.dirname(fill_data_path), exist_ok=True)
+            with open(fill_data_path, "w", encoding="utf-8") as f:
+                json.dump(request.data, f)
+            config.local_input_json = fill_data_path
+
+            result = await handle_fill_pdf_operation(
+                config=config,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
             return OperationResponse(success=True, data=result)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid path")
         except Exception as e:
             logger.error(f"Fill operation failed: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
@@ -209,8 +355,28 @@ else:
     ):
         """Extract + Map + Embed in one operation."""
         try:
-            result = handle_make_embed_file_operation(request.dict())
+            config = build_operation_config(
+                pdf_path=validate_request_path(request.pdf_path, label="pdf_path"),
+                input_json_path=validate_request_path(request.input_json_path, label="input_json_path") if request.input_json_path else None,
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
+            # handle_make_embed_file_operation requires real user_id/pdf_doc_id
+            # (not Optional) — default to 1 for standalone/demo callers that
+            # don't track multi-tenant identifiers.
+            result = await handle_make_embed_file_operation(
+                config=config,
+                user_id=request.user_id or 1,
+                pdf_doc_id=request.pdf_doc_id or 1,
+                session_id=request.session_id,
+                investor_type=request.investor_type,
+                mapping_config=request.mapping_config or {},
+                use_second_mapper=request.use_second_mapper,
+            )
             return OperationResponse(success=True, data=result)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid path")
         except Exception as e:
             logger.error(f"Make embed file operation failed: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
@@ -221,8 +387,20 @@ else:
     ):
         """Check if PDF has embedded metadata."""
         try:
-            result = handle_check_embed_file_operation(request.dict())
+            config = build_operation_config(
+                pdf_path=validate_request_path(request.pdf_path, label="pdf_path"),
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
+            result = await handle_check_embed_file_operation(
+                config=config,
+                user_id=request.user_id,
+                session_id=request.session_id,
+            )
             return OperationResponse(success=True, data=result)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid path")
         except Exception as e:
             logger.error(f"Check embed file operation failed: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
@@ -233,9 +411,25 @@ else:
     ):
         """Run complete pipeline: Extract + Map + Embed + Fill."""
         try:
-            result = handle_run_all_operation(request.dict())
+            if not request.input_json_path:
+                raise HTTPException(
+                    status_code=400,
+                    detail="input_json_path is required for /run-all (needed by the map stage).",
+                )
+            result = await handle_run_all_operation(
+                input_pdf=validate_request_path(request.pdf_path, label="pdf_path"),
+                input_json=validate_request_path(request.input_json_path, label="input_json_path"),
+                mapping_config={},
+                user_id=request.user_id,
+                session_id=request.session_id,
+                pdf_doc_id=request.pdf_doc_id,
+            )
             return OperationResponse(success=True, data=result)
         except Exception as e:
+            if type(e).__name__ == "HTTPException":
+                raise
+            if isinstance(e, ValueError):
+                raise HTTPException(status_code=400, detail="Invalid path") from e
             logger.error(f"Run all operation failed: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
 
