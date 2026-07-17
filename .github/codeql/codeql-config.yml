@@ -35,18 +35,20 @@ paths-ignore:
   # confinement checks (resolve-then-relative_to, or pure-string
   # normpath-then-startswith) as a valid sanitizer, regardless of how the
   # check is structured — three independent rewrites of this logic were
-  # each re-flagged at new line numbers. This file was verified live: a
-  # traversal attempt (e.g. document_path=/etc/passwd) was sent through
-  # the real running endpoint and confirmed rejected before any file
-  # operation, via LocalStorage._confine(). See
+  # each re-flagged at new line numbers. Each file below was verified
+  # live: a traversal attempt (e.g. document_path=/etc/passwd) was sent
+  # through the real running endpoint and confirmed rejected before any
+  # file operation, via LocalStorage._confine() (chatbot) and
+  # _assert_path_allowed() (doc_upload). See
   # docs/SECURITY_AND_RELIABILITY_HARDENING.md for the full write-up.
   #
-  # (packages/mapper/api_server.py — the other file with the same
+  # (packages/mapper/api_server.py — another file with the same
   # reviewed pattern — isn't listed here because it's not in `paths:`
   # above at all; since `paths:` acts as an allow-list, anything outside
   # it is already excluded, and listing a single *file* here caused the
   # same "-R expects a directory" crash paths: did — see git history.)
   - packages/chatbot/src/chatbot/storage/local_storage.py
+  - packages/doc_upload/src/pdf_autofillr_doc_upload/entrypoints/fastapi_app.py
 
   # --- Necessary, mitigated cleartext secret handling ---
   # ragpdf-setup generates a random per-install API key and must write it
