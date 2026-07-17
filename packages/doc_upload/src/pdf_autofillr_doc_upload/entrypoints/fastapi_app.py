@@ -106,9 +106,13 @@ def extract(
         # disclosure previously possible via this endpoint. LocalStorage's
         # download_document()/load_schema() remain deliberately unrestricted
         # for trusted, programmatic (non-HTTP) use of the library.
-        if hasattr(client.storage, "assert_path_allowed"):
-            client.storage.assert_path_allowed(request.document_path, purpose="document")
-            client.storage.assert_path_allowed(request.schema_path, purpose="schema")
+        #
+        # This runs unconditionally, regardless of storage backend — a
+        # previous version only validated when the configured backend
+        # happened to implement assert_path_allowed() (LocalStorage only),
+        # silently skipping validation entirely for S3/GCS/Azure backends.
+        _assert_path_allowed(request.document_path, purpose="document")
+        _assert_path_allowed(request.schema_path, purpose="schema")
         result = client.run(
             document_path=request.document_path,
             schema_path=request.schema_path,
@@ -178,6 +182,56 @@ def _check_api_key(provided: str | None) -> None:
         )
     if not provided or not hmac.compare_digest(provided, expected):
         raise HTTPException(status_code=401, detail="Missing or invalid X-API-Key header")
+
+
+def _allowed_path_roots() -> list[Path]:
+    """
+    Roots that document_path/schema_path are allowed to resolve into,
+    independent of which storage backend (local/S3/GCS/Azure) is
+    configured. Reads the same env vars LocalStorage does, so behavior is
+    identical when LocalStorage is active, but this no longer depends on
+    the storage backend implementing assert_path_allowed at all — the
+    previous hasattr() guard silently skipped validation entirely for any
+    cloud backend, leaving the original arbitrary-file-read vulnerability
+    open whenever DOC_UPLOAD_STORAGE was s3/gcp/azure.
+    """
+    roots = [
+        Path(os.getenv("DOC_UPLOAD_DATA_PATH", "./data/doc_upload")).resolve(),
+        Path(os.getenv("DOC_UPLOAD_CONFIG_PATH", "./configs")).resolve(),
+    ]
+    roots += [
+        Path(r).resolve()
+        for r in os.getenv("DOC_UPLOAD_ALLOWED_DOCUMENT_ROOTS", "").split(",")
+        if r.strip()
+    ]
+    return roots
+
+
+def _assert_path_allowed(raw_path: str, *, purpose: str) -> None:
+    """
+    Resolve raw_path (following symlinks) and verify it lives inside one
+    of _allowed_path_roots(). Runs unconditionally for every request,
+    regardless of storage backend — this is an HTTP boundary concern, not
+    a storage-backend concern, and must not be skippable by configuring a
+    cloud backend.
+    """
+    candidate = Path(raw_path)
+    if not candidate.is_absolute():
+        base = Path(os.getenv("DOC_UPLOAD_CONFIG_PATH", "./configs")).resolve() \
+            if purpose == "schema" \
+            else Path(os.getenv("DOC_UPLOAD_DATA_PATH", "./data/doc_upload")).resolve()
+        candidate = base / raw_path
+    resolved = candidate.resolve()
+    for root in _allowed_path_roots():
+        try:
+            resolved.relative_to(root)
+            return
+        except ValueError:
+            continue
+    raise HTTPException(
+        status_code=400,
+        detail=f"{purpose} path is outside the allowed directories.",
+    )
 
 
 def main():

@@ -342,31 +342,41 @@ def _allowed_input_roots() -> list[Path]:
     return roots
 
 
-def validate_request_path(raw_path: str, *, label: str) -> str:
+def validate_request_path(
+    raw_path: str, *, label: str, roots: "list[Path] | None" = None
+) -> str:
     """
-    Normalize `raw_path` and verify it lives inside one of the allowed input
-    roots (see _allowed_input_roots). Every HTTP-request field that ends up
-    being read from or written to disk (pdf_path, extracted_json_path,
-    input_json_path, embedded_pdf_path, mapping_json_path,
-    radio_groups_path, original_pdf_path) must go through this before being
-    used — otherwise an authenticated-but-malicious caller can read/write
-    arbitrary files on the server (CWE-22 / CodeQL py/path-injection).
+    Resolve `raw_path` (following symlinks) and verify it lives inside one
+    of `roots` (defaults to _allowed_input_roots()). Every HTTP-request
+    field that ends up being read from or written to disk (pdf_path,
+    extracted_json_path, input_json_path, embedded_pdf_path,
+    mapping_json_path, radio_groups_path, original_pdf_path) must go
+    through this before being used — otherwise an
+    authenticated-but-malicious caller can read/write arbitrary files on
+    the server (CWE-22 / CodeQL py/path-injection).
 
-    Uses os.path.abspath + normpath (pure string manipulation) rather than
-    Path.resolve() (which also follows symlinks via filesystem I/O) — the
-    confinement check below is exactly as strict either way.
+    Must use Path.resolve(), not os.path.normpath/abspath — a symlink
+    inside an allowed root pointing outside it would pass a
+    normpath-only check but read from the symlink target.
 
-    Raises ValueError (callers should turn this into HTTP 400) if the path
-    escapes the allowed roots.
+    `roots` lets callers (e.g. api_server.py, whose allowed roots
+    additionally honor MAPPER_DOWNLOAD_ROOT) supply their own list while
+    still sharing this single confinement implementation, rather than
+    each maintaining a parallel copy that can silently drift apart.
+
+    Raises ValueError (callers should turn this into HTTP 400 — using a
+    fixed message, not the one on this exception, which embeds the
+    resolved path and would otherwise leak server directory structure to
+    the client) if the path escapes the allowed roots.
     """
-    normalized = os.path.normpath(os.path.abspath(raw_path))
-    for root in _allowed_input_roots():
+    normalized = str(Path(raw_path).resolve())
+    for root in (roots if roots is not None else _allowed_input_roots()):
         root_str = str(root)
         if normalized == root_str or normalized.startswith(root_str + os.sep):
             return normalized
     raise ValueError(
         f"Invalid {label}: '{raw_path}' resolves to '{normalized}', which is "
         f"outside the allowed directories "
-        f"{[str(r) for r in _allowed_input_roots()]}. Set "
-        f"MAPPER_ALLOWED_INPUT_ROOTS if your files live elsewhere."
+        f"{[str(r) for r in (roots if roots is not None else _allowed_input_roots())]}. "
+        f"Set MAPPER_ALLOWED_INPUT_ROOTS if your files live elsewhere."
     )

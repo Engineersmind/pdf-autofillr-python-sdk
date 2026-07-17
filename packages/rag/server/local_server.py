@@ -15,11 +15,6 @@ from ragpdf import RAGPDFClient
 
 app = FastAPI(title="ragpdf-sdk dev server", version="0.1.1")
 
-# No safe default — see packages/rag CHANGELOG for why "dev-key" was removed.
-EXPECTED_API_KEY = os.getenv("RAGPDF_API_KEY")
-_ALLOW_INSECURE_NO_AUTH = (
-    os.getenv("RAGPDF_ALLOW_INSECURE_NO_AUTH", "false").lower() == "true"
-)
 client: RAGPDFClient = None
 
 
@@ -30,8 +25,16 @@ def startup():
 
 
 def _auth(x_api_key: str = Header(None)):
-    if not EXPECTED_API_KEY:
-        if _ALLOW_INSECURE_NO_AUTH:
+    # Read per-request, not at module import time — if RAGPDF_API_KEY is
+    # injected into the environment after this module is imported (e.g. a
+    # secrets-manager sidecar, a Kubernetes secret mount, or a test that
+    # sets os.environ after import), a module-level constant would stay
+    # None for the entire process lifetime and every request would 500
+    # forever even though the key is genuinely present in os.environ.
+    expected = os.environ.get("RAGPDF_API_KEY")
+    allow_insecure = os.environ.get("RAGPDF_ALLOW_INSECURE_NO_AUTH", "").lower() == "true"
+    if not expected:
+        if allow_insecure:
             return
         raise HTTPException(
             status_code=500,
@@ -42,7 +45,7 @@ def _auth(x_api_key: str = Header(None)):
                 "without authentication (not recommended)."
             ),
         )
-    if not x_api_key or not hmac.compare_digest(x_api_key, EXPECTED_API_KEY):
+    if not x_api_key or not hmac.compare_digest(x_api_key, expected):
         raise HTTPException(status_code=401, detail="Invalid API key")
 
 

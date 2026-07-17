@@ -22,7 +22,6 @@ Mount example::
 
 from __future__ import annotations
 
-import hmac
 import logging
 import os
 import sys
@@ -40,6 +39,7 @@ from fastapi.responses import JSONResponse  # noqa: E402
 from pydantic import BaseModel  # noqa: E402
 
 from chatbot import FormConfig, chatbotClient  # noqa: E402
+from chatbot.auth import check_api_key, cors_origins  # noqa: E402
 from chatbot.storage.factory import StorageFactory  # noqa: E402
 from chatbot.storage.local_storage import PathAccessError  # noqa: E402
 
@@ -51,11 +51,9 @@ app = FastAPI(
     version="0.4.0",
 )
 
-# CORS: restrict to an explicit allow-list. "*" origins combined with any
-# form of credentialed access is unsafe in production — set
-# CHATBOT_CORS_ALLOWED_ORIGINS to a comma-separated list of real origins.
-_cors_origins_env = os.getenv("CHATBOT_CORS_ALLOWED_ORIGINS", "")
-_cors_origins = [o.strip() for o in _cors_origins_env.split(",") if o.strip()] or []
+# CORS + auth logic lives in chatbot.auth (shared across all 3 chatbot
+# entrypoints — see that module's docstring for why).
+_cors_origins = cors_origins()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,
@@ -65,30 +63,7 @@ app.add_middleware(
 
 _client: chatbotClient | None = None
 
-# Every request must present a valid API key. There is no safe default —
-# the server refuses to start serving requests until CHATBOT_API_KEY is set,
-# closing the "no auth configured => no auth required" hole.
-_ALLOW_INSECURE_NO_AUTH = (
-    os.getenv("CHATBOT_ALLOW_INSECURE_NO_AUTH", "false").lower() == "true"
-)
-
-
-def _check_api_key(provided: str | None) -> None:
-    expected = os.environ.get("CHATBOT_API_KEY")
-    if not expected:
-        if _ALLOW_INSECURE_NO_AUTH:
-            return  # explicitly opted into no-auth mode (local dev only)
-        raise HTTPException(
-            status_code=500,
-            detail=(
-                "Server misconfigured: CHATBOT_API_KEY is not set. Set "
-                "CHATBOT_API_KEY to a strong secret, or set "
-                "CHATBOT_ALLOW_INSECURE_NO_AUTH=true to explicitly run "
-                "without authentication (not recommended)."
-            ),
-        )
-    if not provided or not hmac.compare_digest(provided, expected):
-        raise HTTPException(status_code=401, detail="Missing or invalid X-API-Key header")
+_check_api_key = check_api_key
 
 
 def _build_pdf_filler():

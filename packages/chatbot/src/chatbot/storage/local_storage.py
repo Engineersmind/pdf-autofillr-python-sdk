@@ -54,24 +54,29 @@ class LocalStorage(StorageBackend):
 
     def _confine(self, candidate: Path, *, label: str) -> Path:
         """
-        Verify `candidate` is contained within self.data_path, using pure
-        string normalization (os.path.normpath) rather than Path.resolve().
-        resolve() also queries the filesystem to follow symlinks, which is
-        unnecessary here: `candidate` is always built from self.data_path
-        (a trusted, admin-configured, already-resolved root) plus a segment
-        that _safe_segment() has already guaranteed contains no "/", "\\",
-        or ".." — so no traversal is possible regardless, and this check is
-        pure defense-in-depth against a future caller that skips
-        _safe_segment.
+        Resolve `candidate` (following symlinks) and verify it is
+        contained within self.data_path.
+
+        This MUST use Path.resolve(), not pure string normalization
+        (os.path.normpath) — an earlier version used normpath on the
+        reasoning that _safe_segment() already forbids "/", "\\", and ".."
+        in the segment, so no traversal string could reach here. That
+        reasoning missed a real attack: a caller with write access to
+        data_path (e.g. via a legitimate upload elsewhere in the app) can
+        create a symlink whose *name* is a perfectly valid single segment
+        (passes _safe_segment) but whose *target* points outside
+        data_path entirely (e.g. data_path/evil_link -> /etc). normpath
+        never touches the filesystem, so it can't detect that — only
+        resolve() (which follows symlinks) can.
         """
-        normalized = os.path.normpath(str(candidate))
+        resolved = candidate.resolve()
         base = str(self.data_path) + os.sep
-        if not (normalized == str(self.data_path) or normalized.startswith(base)):
+        if not (str(resolved) == str(self.data_path) or str(resolved).startswith(base)):
             raise PathAccessError(
-                f"Invalid {label}: normalized path '{normalized}' escapes "
+                f"Invalid {label}: resolved path '{resolved}' escapes "
                 f"data_path '{self.data_path}'"
             )
-        return Path(normalized)
+        return resolved
 
     @staticmethod
     def _safe_segment(value: str, *, label: str) -> str:

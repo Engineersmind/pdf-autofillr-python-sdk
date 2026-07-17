@@ -15,6 +15,7 @@ import os
 import random
 import secrets
 import shutil
+import sys
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Helpers
@@ -928,6 +929,14 @@ Setup complete.
 {'  4. Edit ./ragpdf/ to customise backends' if copy_source else ''}
 {'='*54}
 """)
+
+    if not (env_written or config_ini_written):
+        # Neither file was written — an operator running this to rotate a
+        # key after a suspected leak needs a programmatic way to detect
+        # that rotation did NOT happen. Exiting 0 here (as before) let
+        # this look identical to a successful rotation to any calling
+        # script or CI step.
+        sys.exit(1)
 
 
 if __name__ == "__main__":

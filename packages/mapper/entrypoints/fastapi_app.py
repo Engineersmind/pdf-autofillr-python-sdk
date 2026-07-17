@@ -148,20 +148,20 @@ else:
         redoc_url="/redoc",
     )
 
-    # CORS middleware — restrict to an explicit allow-list in production via
-    # MAPPER_CORS_ALLOWED_ORIGINS (comma-separated). "*" is only used if that
-    # env var is left unset, which keeps local/dev usage simple but should
-    # never be relied on in a real deployment.
+    # CORS middleware — restrict to an explicit allow-list via
+    # MAPPER_CORS_ALLOWED_ORIGINS (comma-separated). Unset/empty means NO
+    # cross-origin access (fail closed), matching chatbot/doc_upload's
+    # behavior. A previous version fell back to ["*"] when this env var
+    # was unset — the opposite of every other package, and the opposite
+    # of what the CHANGELOG for this fix claimed.
     import os as _os
 
     _cors_origins_env = _os.getenv("MAPPER_CORS_ALLOWED_ORIGINS", "")
-    _cors_origins = [o.strip() for o in _cors_origins_env.split(",") if o.strip()] or [
-        "*"
-    ]
+    _cors_origins = [o.strip() for o in _cors_origins_env.split(",") if o.strip()]
     app.add_middleware(
         CORSMiddleware,
         allow_origins=_cors_origins,
-        allow_credentials=_cors_origins != ["*"],
+        allow_credentials=bool(_cors_origins) and "*" not in _cors_origins,
         allow_methods=["GET", "POST"],
         allow_headers=["*"],
     )
@@ -236,6 +236,11 @@ else:
                 pdf_doc_id=request.pdf_doc_id,
             )
             return OperationResponse(success=True, data=result)
+        except ValueError:
+            # validate_request_path raises ValueError with the resolved
+            # path embedded in the message — never pass that to the
+            # client (CWE-209 info disclosure). Fixed, generic message.
+            raise HTTPException(status_code=400, detail="Invalid path")
         except Exception as e:
             logger.error(f"Extract operation failed: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
@@ -273,6 +278,8 @@ else:
             # import fallback above), and `except None:` is invalid Python.
             if type(e).__name__ == "HTTPException":
                 raise
+            if isinstance(e, ValueError):
+                raise HTTPException(status_code=400, detail="Invalid path") from e
             logger.error(f"Map operation failed: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
 
@@ -296,6 +303,8 @@ else:
                 pdf_doc_id=request.pdf_doc_id,
             )
             return OperationResponse(success=True, data=result)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid path")
         except Exception as e:
             logger.error(f"Embed operation failed: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
@@ -334,6 +343,8 @@ else:
                 pdf_doc_id=request.pdf_doc_id,
             )
             return OperationResponse(success=True, data=result)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid path")
         except Exception as e:
             logger.error(f"Fill operation failed: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
@@ -364,6 +375,8 @@ else:
                 use_second_mapper=request.use_second_mapper,
             )
             return OperationResponse(success=True, data=result)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid path")
         except Exception as e:
             logger.error(f"Make embed file operation failed: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
@@ -386,6 +399,8 @@ else:
                 session_id=request.session_id,
             )
             return OperationResponse(success=True, data=result)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid path")
         except Exception as e:
             logger.error(f"Check embed file operation failed: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
@@ -413,6 +428,8 @@ else:
         except Exception as e:
             if type(e).__name__ == "HTTPException":
                 raise
+            if isinstance(e, ValueError):
+                raise HTTPException(status_code=400, detail="Invalid path") from e
             logger.error(f"Run all operation failed: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=str(e)) from e
 

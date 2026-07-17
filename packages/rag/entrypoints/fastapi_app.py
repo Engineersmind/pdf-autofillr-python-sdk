@@ -25,10 +25,6 @@ app = FastAPI(title="pdf-autofillr-rag", version="0.2.5")
 # deployment that forgets to set RAGPDF_API_KEY is protected by a
 # publicly-known secret. Set RAGPDF_ALLOW_INSECURE_NO_AUTH=true to
 # explicitly run without auth (local dev only).
-EXPECTED_API_KEY = os.getenv("RAGPDF_API_KEY")
-_ALLOW_INSECURE_NO_AUTH = (
-    os.getenv("RAGPDF_ALLOW_INSECURE_NO_AUTH", "false").lower() == "true"
-)
 client: RAGPDFClient = None
 
 
@@ -39,8 +35,13 @@ def startup():
 
 
 def _auth(x_api_key: str = Header(None)):
-    if not EXPECTED_API_KEY:
-        if _ALLOW_INSECURE_NO_AUTH:
+    # Read per-request, not at module import time — see local_server.py
+    # for the full rationale (late env-var injection e.g. from a secrets
+    # manager would otherwise leave EXPECTED_API_KEY permanently None).
+    expected = os.environ.get("RAGPDF_API_KEY")
+    allow_insecure = os.environ.get("RAGPDF_ALLOW_INSECURE_NO_AUTH", "").lower() == "true"
+    if not expected:
+        if allow_insecure:
             return
         raise HTTPException(
             status_code=500,
@@ -51,7 +52,7 @@ def _auth(x_api_key: str = Header(None)):
                 "without authentication (not recommended)."
             ),
         )
-    if not x_api_key or not hmac.compare_digest(x_api_key, EXPECTED_API_KEY):
+    if not x_api_key or not hmac.compare_digest(x_api_key, expected):
         raise HTTPException(status_code=401, detail="Invalid API key")
 
 

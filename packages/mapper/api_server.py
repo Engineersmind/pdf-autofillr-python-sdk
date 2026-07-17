@@ -21,7 +21,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
-from pdf_autofillr_mapper.configs.local import LocalStorageConfig, build_operation_config
+from pdf_autofillr_mapper.configs.local import LocalStorageConfig, build_operation_config, validate_request_path
 from pdf_autofillr_mapper.core.config import settings
 from pdf_autofillr_mapper.core.logger import logger
 from pdf_autofillr_mapper.utils.ini_config import get_ini_config
@@ -94,33 +94,30 @@ _ALLOWED_INPUT_ROOTS = [_DOWNLOAD_ROOT] + [
 
 def _validate_path(raw_path: str, *, label: str) -> str:
     """
-    Normalize `raw_path` and verify it lives inside one of
-    _ALLOWED_INPUT_ROOTS. Every request field that ends up being read from
-    or written to disk (pdf_path, extracted_json_path, input_json_path,
-    embedded_pdf_path, mapping_json_path, radio_groups_path,
-    original_pdf_path) must go through this before being used — otherwise
-    an authenticated-but-malicious caller can read/write arbitrary files
-    on the server (CWE-22 / CodeQL py/path-injection).
+    Thin adapter over the shared validate_request_path() in
+    configs/local.py — that function is the single source of truth for
+    path confinement logic; this file previously had its own parallel
+    copy of the same algorithm, which risked drifting out of sync (e.g. a
+    future edge-case fix applied to one copy and not the other).
 
-    Uses os.path.abspath + normpath (pure string manipulation) rather than
-    Path.resolve() (which also follows symlinks via filesystem I/O) — the
-    confinement check below is exactly as strict either way, but this form
-    isn't a filesystem-touching operation itself.
+    api_server.py keeps its own _ALLOWED_INPUT_ROOTS (rather than always
+    using configs/local.py's _allowed_input_roots()) because it
+    additionally honors MAPPER_DOWNLOAD_ROOT — passed through explicitly
+    via the `roots=` parameter so behavior here is unchanged.
+
+    Also fixes a path-disclosure bug in the old copy: it embedded the
+    resolved path directly into the HTTPException detail returned to the
+    client. The error is logged server-side with the real detail;
+    the client gets a fixed, non-leaking message.
     """
-    normalized = os.path.normpath(os.path.abspath(raw_path))
-    for root in _ALLOWED_INPUT_ROOTS:
-        root_str = str(root)
-        if normalized == root_str or normalized.startswith(root_str + os.sep):
-            return normalized
-    raise HTTPException(
-        status_code=400,
-        detail=(
-            f"Invalid {label}: '{raw_path}' resolves to '{normalized}', which "
-            f"is outside the allowed directories "
-            f"{[str(r) for r in _ALLOWED_INPUT_ROOTS]}. Set "
-            f"MAPPER_ALLOWED_INPUT_ROOTS if your files live elsewhere."
-        ),
-    )
+    try:
+        return validate_request_path(raw_path, label=label, roots=_ALLOWED_INPUT_ROOTS)
+    except ValueError as e:
+        logger.warning(str(e))
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid {label}: path is outside the allowed directories.",
+        )
 
 
 # ============================================================================
@@ -530,18 +527,18 @@ async def download_file(file_path: str, api_key: str = Depends(verify_api_key)):
             raise HTTPException(status_code=403, detail="Access denied")
 
         safe_file_path = file_path.lstrip("/\\")
-        # Pure string normalization (no filesystem I/O / symlink following)
-        # — normpath collapses ".."/"."/redundant separators; the confinement
-        # check right after rejects anything that escapes _DOWNLOAD_ROOT
-        # before the path is ever opened.
-        normalized = os.path.normpath(str(_DOWNLOAD_ROOT / safe_file_path))
+        # Must use resolve() (follows symlinks), not normpath (pure string
+        # manipulation, no filesystem I/O) — a symlink inside
+        # _DOWNLOAD_ROOT pointing outside it would pass a normpath-only
+        # check but read from the symlink target. See the identical fix
+        # and rationale in chatbot/storage/local_storage.py's _confine().
+        path = (_DOWNLOAD_ROOT / safe_file_path).resolve()
         download_root_str = str(_DOWNLOAD_ROOT)
         if not (
-            normalized == download_root_str
-            or normalized.startswith(download_root_str + os.sep)
+            str(path) == download_root_str
+            or str(path).startswith(download_root_str + os.sep)
         ):
             raise HTTPException(status_code=403, detail="Access denied")
-        path = Path(normalized)
 
         if not path.exists():
             logger.error(f"File not found: {path}")
