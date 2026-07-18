@@ -6,6 +6,48 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [0.2.6] - 2026-07-18
+
+### Security
+- **[High] Path traversal in `LocalStorage`** — `_full_path()`, `load_json()`,
+  `load_jsonl()`, and `copy_file()` built filesystem paths from `key` with
+  no validation at all (CWE-22). `key` is constructed elsewhere from
+  `user_id`/`session_id`/`pdf_id`, which reach here directly from HTTP
+  request bodies via the prediction/feedback pipelines — a crafted
+  `user_id` like `../../../etc` reached `open()` unchecked. Added
+  `_validated_path()`, which resolves the path (following symlinks, not
+  just string-normalizing it) and confines it to `data_path` before any
+  file operation.
+- **[Medium] Log injection** — 10 sites across
+  `storage/{s3,gcs,azure,local}_storage.py`,
+  `pipeline/{prediction,processing}_pipeline.py`,
+  `vector_stores/{pinecone,local_vector}_store.py`, and
+  `services/case_classifier.py` interpolated user-controlled values
+  (`user_id`, `session_id`, `pdf_id`, `vector_id`, `field_name`, storage
+  keys) directly into log messages, letting a crafted value forge a fake
+  log line via an embedded newline (CWE-117). Added a shared
+  `safe_for_log()` helper in `utils/helpers.py` and applied it at every
+  flagged call site.
+
+### Fixed
+- `LocalStorage`'s confinement check now uses `Path.is_relative_to()`
+  instead of string prefix matching, for a more robust, semantic
+  containment check (equivalent behavior, cleaner implementation).
+- Fixed a docstring in `safe_for_log()` that said it "strips" characters
+  when it actually replaces them with a visible escape sequence.
+
+### Testing
+- Added unit tests for `safe_for_log()` covering newline, carriage
+  return, and CRLF escaping, plus a realistic forged-log-line case and
+  non-string input.
+- Added rejection-case unit tests for `LocalStorage`'s path confinement:
+  `../..` traversal on every affected method, an absolute path outside
+  `data_path`, and — most importantly — a real symlink created inside
+  `data_path` pointing outside it, confirming the switch from
+  `os.path.normpath` to `Path.resolve()` actually closes that escape
+  (the test is skipped, not failed, on platforms without symlink
+  support).
+
 ## [0.2.5] - 2026-07-14
 
 ### Security

@@ -4,7 +4,7 @@ from datetime import datetime
 
 def safe_for_log(value) -> str:
     """
-    Strip characters that let user-controlled input forge fake log
+    Replace characters that let user-controlled input forge fake log
     entries (CWE-117 / CodeQL py/log-injection) — a value like
     "alice\\n2026-01-01 00:00:00 CRITICAL fake admin login" would
     otherwise appear as a second, fabricated log line. Replaces

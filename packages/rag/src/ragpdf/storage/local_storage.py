@@ -43,7 +43,7 @@ class LocalStorage(StorageBackend):
         """
         base = Path(self.data_path).resolve()
         resolved = (base / key).resolve()
-        if not (resolved == base or str(resolved).startswith(str(base) + os.sep)):
+        if not resolved.is_relative_to(base):
             raise PathAccessError(f"Invalid key: {key!r} escapes data_path")
         return str(resolved)
 

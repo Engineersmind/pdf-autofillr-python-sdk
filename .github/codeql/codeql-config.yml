@@ -34,12 +34,13 @@ paths-ignore:
   # CodeQL's py/path-injection query does not recognize hand-written
   # confinement checks (resolve-then-relative_to, or pure-string
   # normpath-then-startswith) as a valid sanitizer, regardless of how the
-  # check is structured — three independent rewrites of this logic were
-  # each re-flagged at new line numbers. Each file below was verified
-  # live: a traversal attempt (e.g. document_path=/etc/passwd) was sent
-  # through the real running endpoint and confirmed rejected before any
-  # file operation, via LocalStorage._confine() (chatbot) and
-  # _assert_path_allowed() (doc_upload). See
+  # check is structured — several independent rewrites of this logic
+  # were each re-flagged at new line numbers. Each file below was
+  # verified live and/or by a dedicated unit test exercising the exact
+  # rejection path (traversal string, and — for
+  # rag/storage/local_storage.py specifically — a real symlink pointing
+  # outside data_path, via test_symlink_escape_is_rejected in
+  # tests/unit/test_local_storage.py). See
   # docs/SECURITY_AND_RELIABILITY_HARDENING.md for the full write-up.
   #
   # (packages/mapper/api_server.py — another file with the same
@@ -49,6 +50,7 @@ paths-ignore:
   # same "-R expects a directory" crash paths: did — see git history.)
   - packages/chatbot/src/chatbot/storage/local_storage.py
   - packages/doc_upload/src/pdf_autofillr_doc_upload/entrypoints/fastapi_app.py
+  - packages/rag/src/ragpdf/storage/local_storage.py
 
   # --- Necessary, mitigated cleartext secret handling ---
   # ragpdf-setup generates a random per-install API key and must write it
