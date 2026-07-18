@@ -98,8 +98,9 @@ class LocalStorage(StorageBackend):
         return True
 
     def load_json_from_path(self, full_path: str) -> dict | None:
-        """Load from absolute filesystem path."""
-        if not os.path.exists(full_path):
+        """Load JSON from a path constrained to this storage backend's data_path."""
+        path = self._validated_path(full_path)
+        if not os.path.exists(path):
             return None
-        with open(full_path, encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             return json.load(f)

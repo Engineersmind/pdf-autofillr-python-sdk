@@ -72,6 +72,17 @@ def test_legitimate_multi_segment_key_still_works(storage):
     assert storage.load_json(key) == {"ok": True}
 
 
+def test_load_json_from_path_accepts_path_inside_data_path(storage, tmp_path):
+    storage.save_json("test.json", {"ok": True})
+    inside_path = str(tmp_path / "test.json")
+    assert storage.load_json_from_path(inside_path) == {"ok": True}
+
+
+def test_load_json_from_path_rejects_path_outside_data_path(storage):
+    with pytest.raises(PathAccessError):
+        storage.load_json_from_path("/etc/passwd")
+
+
 def test_symlink_escape_is_rejected(storage, tmp_path):
     # A symlink *inside* data_path whose target points *outside* it. The
     # symlink's own name is a perfectly ordinary, single-segment key with
