@@ -2,6 +2,22 @@
 from datetime import datetime
 
 
+def safe_for_log(value) -> str:
+    """
+    Strip characters that let user-controlled input forge fake log
+    entries (CWE-117 / CodeQL py/log-injection) — a value like
+    "alice\\n2026-01-01 00:00:00 CRITICAL fake admin login" would
+    otherwise appear as a second, fabricated log line. Replaces
+    newlines/carriage returns with a visible escape so the forged-line
+    attempt is visible as data, not interpreted as a line break.
+
+    Use this to wrap any user-controlled value (user_id, session_id,
+    pdf_id, field_name, vector_id, key, etc.) immediately before it's
+    interpolated into a logger.*() call.
+    """
+    return str(value).replace("\r\n", "\\r\\n").replace("\n", "\\n").replace("\r", "\\r")
+
+
 def generate_submission_id(user_id, session_id, pdf_id, pdf_hash, storage):
     """
     Generate a submission ID with frequency tracking.

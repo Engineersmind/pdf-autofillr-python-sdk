@@ -15,7 +15,7 @@ from ragpdf.config.settings import (
     PREDICTION_THRESHOLD,
     TOP_K,
 )
-from ragpdf.utils.helpers import generate_vector_id
+from ragpdf.utils.helpers import generate_vector_id, safe_for_log
 from ragpdf.vector_stores.base import VectorStoreBackend
 
 logger = logging.getLogger(__name__)
@@ -285,7 +285,7 @@ class LocalVectorStore(VectorStoreBackend):
                 **metadata,
             }
         )
-        logger.info(f"Added vector {vector_id}: {field_name}")
+        logger.info(f"Added vector {safe_for_log(vector_id)}: {safe_for_log(field_name)}")
         return vector_id
 
     def update_confidence(

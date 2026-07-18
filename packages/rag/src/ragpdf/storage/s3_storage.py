@@ -3,6 +3,7 @@ import json
 import logging
 
 from ragpdf.storage.base import StorageBackend
+from ragpdf.utils.helpers import safe_for_log
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ class S3Storage(StorageBackend):
             Body=json.dumps(data, indent=2).encode("utf-8"),
             ContentType="application/json",
         )
-        logger.debug(f"S3 saved: s3://{self.bucket}/{self._key(key)}")
+        logger.debug(f"S3 saved: s3://{self.bucket}/{safe_for_log(self._key(key))}")
 
     def load_json(self, key: str) -> dict | None:
         try:

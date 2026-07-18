@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from ragpdf.config.settings import PREDICTION_THRESHOLD
+from ragpdf.utils.helpers import safe_for_log
 from ragpdf.utils.constants import (
     CASE_A,
     CASE_B,
@@ -113,8 +114,8 @@ class CaseClassifier:
             "case_breakdown": case_breakdown,
         }
         logger.info(
-            f"Case classification: A={case_breakdown[CASE_A]['count']} "
-            f"B={case_breakdown[CASE_B]['count']} C={case_breakdown[CASE_C]['count']} "
-            f"D={case_breakdown[CASE_D]['count']} E={case_breakdown[CASE_E]['count']}"
+            f"Case classification: A={safe_for_log(case_breakdown[CASE_A]['count'])} "
+            f"B={safe_for_log(case_breakdown[CASE_B]['count'])} C={safe_for_log(case_breakdown[CASE_C]['count'])} "
+            f"D={safe_for_log(case_breakdown[CASE_D]['count'])} E={safe_for_log(case_breakdown[CASE_E]['count'])}"
         )
         return result
