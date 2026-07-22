@@ -5,7 +5,7 @@ from datetime import datetime
 from ragpdf.models.predictor import FieldPredictor
 from ragpdf.storage.base import StorageBackend
 from ragpdf.utils.constants import PDF_HASH_MAPPING_KEY
-from ragpdf.utils.helpers import generate_submission_id
+from ragpdf.utils.helpers import generate_submission_id, safe_for_log
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class PredictionPipeline:
             user_id, session_id, pdf_id, pdf_hash, self.storage
         )
         logger.info(
-            f"Submission {submission_id} (freq={frequency}, dup={is_duplicate})"
+            f"Submission {safe_for_log(submission_id)} (freq={frequency}, dup={is_duplicate})"
         )
 
         meta_path = f"predictions/{user_id}/{session_id}/{pdf_id}/metadata"

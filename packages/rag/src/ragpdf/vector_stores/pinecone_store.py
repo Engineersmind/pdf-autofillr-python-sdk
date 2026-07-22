@@ -18,6 +18,7 @@ import logging
 
 from ragpdf.config.settings import PREDICTION_THRESHOLD, TOP_K
 from ragpdf.vector_stores.base import VectorStoreBackend
+from ragpdf.utils.helpers import safe_for_log
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +149,7 @@ class PineconeStore(VectorStoreBackend):
             ],
             namespace=self._namespace,
         )
-        logger.info(f"Pinecone: added vector {vector_id} for {field_name}")
+        logger.info(f"Pinecone: added vector {safe_for_log(vector_id)} for {safe_for_log(field_name)}")
         return vector_id
 
     def update_confidence(

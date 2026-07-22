@@ -7,6 +7,7 @@ from ragpdf.services.case_classifier import CaseClassifier
 from ragpdf.services.metrics_service import MetricsService
 from ragpdf.services.time_series_service import TimeSeriesService
 from ragpdf.storage.base import StorageBackend
+from ragpdf.utils.helpers import safe_for_log
 from ragpdf.utils.constants import (
     CASE_A,
     CASE_B,
@@ -124,7 +125,10 @@ class ProcessingPipeline:
             metrics=metrics,
         )
 
-        logger.info(f"Processing pipeline complete for {user_id}/{session_id}/{pdf_id}")
+        logger.info(
+            f"Processing pipeline complete for "
+            f"{safe_for_log(user_id)}/{safe_for_log(session_id)}/{safe_for_log(pdf_id)}"
+        )
         return {
             "submission_id": submission_id,
             "case_classification": cc.get("case_breakdown"),

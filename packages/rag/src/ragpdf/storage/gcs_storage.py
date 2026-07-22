@@ -14,6 +14,7 @@ import json
 import logging
 
 from ragpdf.storage.base import StorageBackend
+from ragpdf.utils.helpers import safe_for_log
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ class GCSStorage(StorageBackend):
         blob.upload_from_string(
             json.dumps(data, indent=2), content_type="application/json"
         )
-        logger.debug(f"GCS saved: gs://{self._bucket_name}/{self._blob_name(key)}")
+        logger.debug(f"GCS saved: gs://{self._bucket_name}/{safe_for_log(self._blob_name(key))}")
 
     def load_json(self, key: str) -> dict | None:
         try:
