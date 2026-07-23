@@ -39,7 +39,7 @@ from ragpdf.storage.s3_storage import S3Storage
 from ragpdf.vector_stores.local_vector_store import LocalVectorStore
 from ragpdf.vector_stores.s3_vector_store import S3VectorStore
 
-__version__ = "0.2.4"
+__version__ = "0.2.5"
 __all__ = [
     "RAGPDFClient",
     "LocalStorage",

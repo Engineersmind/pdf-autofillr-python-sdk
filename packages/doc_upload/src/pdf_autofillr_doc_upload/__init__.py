@@ -27,7 +27,7 @@ from pdf_autofillr_doc_upload.storage.gcp_storage import GCSStorage
 from pdf_autofillr_doc_upload.storage.local_storage import LocalStorage
 from pdf_autofillr_doc_upload.storage.s3_storage import S3Storage
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 
 
 def copy_sample_configs(destination: str = ".") -> None:

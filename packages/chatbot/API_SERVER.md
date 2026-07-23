@@ -25,7 +25,7 @@ API info and endpoint map.
 ```json
 {
   "name": "chatbot Onboarding API",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "status": "running",
   "endpoints": { ... }
 }
@@ -40,7 +40,7 @@ Health check. Returns current storage mode and PDF filler mode.
 ```json
 {
   "status": "ok",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "storage": "local",
   "pdf_filler": "none"
 }

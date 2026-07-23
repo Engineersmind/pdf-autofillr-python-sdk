@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="pdf-autofillr-chatbot API",
     description="Conversational investor onboarding — collects data and fills PDF forms.",
-    version="0.4.0",
+    version="0.3.1",
 )
 
 # CORS + auth logic lives in chatbot.auth (shared across all 3 chatbot
@@ -105,7 +105,7 @@ class SessionDataResponse(BaseModel):
 
 @app.get("/")
 def root():
-    return {"name": "pdf-autofillr-chatbot", "version": "0.4.0", "docs": "/docs"}
+    return {"name": "pdf-autofillr-chatbot", "version": "0.3.1", "docs": "/docs"}
 
 
 @app.post("/chatbot/chat", response_model=ChatResponse)
@@ -190,7 +190,7 @@ def delete_session(
 def health():
     return {
         "status": "ok",
-        "version": "0.4.0",
+        "version": "0.3.1",
         "storage": os.getenv("chatbot_STORAGE", "local"),
         "pdf_filler": os.getenv("chatbot_PDF_FILLER", "none"),
     }

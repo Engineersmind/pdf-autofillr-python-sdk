@@ -107,22 +107,22 @@ Same rules as external contributors — no exceptions for internal team:
 
 | Tag | PyPI package | Version |
 |-----|-------------|---------|
-| `mapper-v*` | pdf-autofillr-mapper | **1.0.10** |
-| `chatbot-v*` | pdf-autofillr-chatbot | **0.3.0** |
-| `doc-upload-v*` | pdf-autofillr-doc-upload | **0.1.5** |
-| `rag-v*` | pdf-autofillr-rag | **0.2.4** |
-| `umbrella-v*` | pdf-autofillr (umbrella) | **1.1.4** |
+| `mapper-v*` | pdf-autofillr-mapper | **1.0.11** |
+| `chatbot-v*` | pdf-autofillr-chatbot | **0.3.1** |
+| `doc-upload-v*` | pdf-autofillr-doc-upload | **0.1.6** |
+| `rag-v*` | pdf-autofillr-rag | **0.2.5** |
+| `umbrella-v*` | pdf-autofillr (umbrella) | **1.1.5** |
 | `core-v*` | pdf-autofiller-core | **1.0.0** |
 | `plugins-v*` | pdf-autofiller-plugins | **0.1.0** |
 
 ### Tagging a release
 
 ```bash
-git tag mapper-v1.0.10    && git push origin mapper-v1.0.10
-git tag chatbot-v0.3.0    && git push origin chatbot-v0.3.0
-git tag doc-upload-v0.1.5 && git push origin doc-upload-v0.1.5
-git tag rag-v0.2.4        && git push origin rag-v0.2.4
-git tag umbrella-v1.1.4   && git push origin umbrella-v1.1.4
+git tag mapper-v1.0.11    && git push origin mapper-v1.0.11
+git tag chatbot-v0.3.1    && git push origin chatbot-v0.3.1
+git tag doc-upload-v0.1.6 && git push origin doc-upload-v0.1.6
+git tag rag-v0.2.5        && git push origin rag-v0.2.5
+git tag umbrella-v1.1.5   && git push origin umbrella-v1.1.5
 git tag core-v1.0.0       && git push origin core-v1.0.0
 git tag plugins-v0.1.0    && git push origin plugins-v0.1.0
 ```

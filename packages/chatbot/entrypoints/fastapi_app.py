@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="chatbot (bare routes)",
     description="chatbot sub-app — /chat instead of /chatbot/chat.",
-    version="0.4.0",
+    version="0.3.1",
 )
 
 # CORS + auth logic lives in chatbot.auth (shared across all 3 chatbot
@@ -200,7 +200,7 @@ def delete_session(
 def health():
     return {
         "status": "ok",
-        "version": "0.4.0",
+        "version": "0.3.1",
         "storage": os.getenv("chatbot_STORAGE", "local"),
         "pdf_filler": os.getenv("chatbot_PDF_FILLER", "none"),
     }

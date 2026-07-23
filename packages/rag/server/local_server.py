@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 from ragpdf import RAGPDFClient
 
-app = FastAPI(title="ragpdf-sdk dev server", version="0.1.1")
+app = FastAPI(title="ragpdf-sdk dev server", version="0.2.5")
 
 client: RAGPDFClient = None
 

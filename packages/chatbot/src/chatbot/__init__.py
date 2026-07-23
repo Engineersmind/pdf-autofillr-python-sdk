@@ -13,7 +13,7 @@ from chatbot.storage.gcp_storage import GCSStorage
 from chatbot.storage.local_storage import LocalStorage
 from chatbot.storage.s3_storage import S3Storage
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 
 def copy_sample_configs(destination: str = ".") -> None:

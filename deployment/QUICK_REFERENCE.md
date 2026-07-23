@@ -30,11 +30,11 @@ docker build -f deployment/docker/rag/Dockerfile       -t pdf-autofillr-rag .
 ## Release tags
 
 ```bash
-git tag mapper-v1.0.8     && git push origin mapper-v1.0.8
-git tag chatbot-v0.2.9    && git push origin chatbot-v0.2.9
-git tag doc-upload-v0.1.5 && git push origin doc-upload-v0.1.5
-git tag rag-v0.2.4        && git push origin rag-v0.2.4
-git tag umbrella-v1.1.3   && git push origin umbrella-v1.1.3
+git tag mapper-v1.0.11     && git push origin mapper-v1.0.11
+git tag chatbot-v0.3.1    && git push origin chatbot-v0.3.1
+git tag doc-upload-v0.1.6 && git push origin doc-upload-v0.1.6
+git tag rag-v0.2.5        && git push origin rag-v0.2.5
+git tag umbrella-v1.1.5   && git push origin umbrella-v1.1.5
 ```
 
 ## Docs
