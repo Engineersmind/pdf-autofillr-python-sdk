@@ -6,7 +6,7 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
-## [0.2.6] - 2026-07-18
+## [0.2.5] - 2026-07-18
 
 ### Security
 - **[High] Path traversal in `LocalStorage`** — `_full_path()`, `load_json()`,
@@ -47,8 +47,6 @@ Versioning: [Semantic Versioning](https://semver.org/)
   `os.path.normpath` to `Path.resolve()` actually closes that escape
   (the test is skipped, not failed, on platforms without symlink
   support).
-
-## [0.2.5] - 2026-07-14
 
 ### Security
 - **[High] Hardcoded default API key** — `EXPECTED_API_KEY` fell back to the

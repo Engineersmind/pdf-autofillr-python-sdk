@@ -22,17 +22,42 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 | Package | Latest | Changelog |
 |---------|--------|-----------|
-| pdf-autofillr (umbrella) | 1.1.4 | [packages/pdf_autofillr/CHANGELOG.md](packages/pdf_autofillr/CHANGELOG.md) |
-| pdf-autofillr-mapper | 1.0.10 | [packages/mapper/CHANGELOG.md](packages/mapper/CHANGELOG.md) |
-| pdf-autofillr-chatbot | 0.3.0 | [packages/chatbot/CHANGELOG.md](packages/chatbot/CHANGELOG.md) |
-| pdf-autofillr-doc-upload | 0.1.5 | [packages/doc_upload/CHANGELOG.md](packages/doc_upload/CHANGELOG.md) |
-| pdf-autofillr-rag | 0.2.4 | [packages/rag/CHANGELOG.md](packages/rag/CHANGELOG.md) |
+| pdf-autofillr (umbrella) | 1.1.5 | [packages/pdf_autofillr/CHANGELOG.md](packages/pdf_autofillr/CHANGELOG.md) |
+| pdf-autofillr-mapper | 1.0.11 | [packages/mapper/CHANGELOG.md](packages/mapper/CHANGELOG.md) |
+| pdf-autofillr-chatbot | 0.3.1 | [packages/chatbot/CHANGELOG.md](packages/chatbot/CHANGELOG.md) |
+| pdf-autofillr-doc-upload | 0.1.6 | [packages/doc_upload/CHANGELOG.md](packages/doc_upload/CHANGELOG.md) |
+| pdf-autofillr-rag | 0.2.5 | [packages/rag/CHANGELOG.md](packages/rag/CHANGELOG.md) |
 | pdf-autofiller-core | 1.0.0 | [plugins/core/CHANGELOG.md](plugins/core/CHANGELOG.md) |
 | pdf-autofiller-plugins | 0.1.0 | [plugins/pdf_autofillr/CHANGELOG.md](plugins/pdf_autofillr/CHANGELOG.md) |
 
 ---
 
 ## [Unreleased]
+
+---
+
+## [umbrella-1.1.5 / mapper-1.0.11 / chatbot-0.3.1 / doc-upload-0.1.6 / rag-0.2.5] — 2026-07-14
+
+### Security
+- **[High] Unauthenticated arbitrary local file disclosure** in `doc_upload`'s
+  `/extract` endpoint (coordinated disclosure, reported by Farid Narimanov) —
+  `document_path`/`schema_path` reached the storage backend with no directory
+  restriction. Fixed with an explicit allow-list of directories every request
+  path must resolve inside.
+- **[High] Auth silently disabled when unconfigured** across `doc_upload`,
+  `chatbot`, and `mapper` — each service accepted requests with no API key
+  check whenever its key env var was unset. All three now fail closed with a
+  config error unless the key is set, or `*_ALLOW_INSECURE_NO_AUTH=true` is
+  explicitly set for local dev.
+- **[High] Hardcoded default API key** (`"dev-key"`) removed from every `rag`
+  entrypoint — the installer now generates a unique random secret per install.
+- **[Medium] Path traversal via `user_id`/`session_id`** in `chatbot`'s
+  `LocalStorage` — both are now validated as single path segments before any
+  filesystem access.
+- API key comparisons across all four packages now use
+  `hmac.compare_digest` to avoid timing side-channels.
+
+See each package's own `CHANGELOG.md` for full per-package detail.
 
 ---
 
@@ -80,7 +105,7 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
-## [doc-upload-0.1.5] — 2026-05-16
+## [doc-upload-0.1.6] — 2026-05-16
 
 ### Fixed
 - Suppress interpreter shutdown errors from background PDF fill thread

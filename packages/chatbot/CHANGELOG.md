@@ -1,6 +1,6 @@
 # Changelog — pdf-autofillr-chatbot
 
-## [0.4.0] - 2026-07-14
+## [0.3.1] - 2026-07-14
 
 ### Security
 - **[High] No authentication on any endpoint** — the FastAPI app had no API

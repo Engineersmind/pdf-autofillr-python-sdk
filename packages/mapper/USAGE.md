@@ -338,7 +338,7 @@ curl http://localhost:8000/health
 ```
 
 ```json
-{"status": "ok", "version": "1.0.6"}
+{"status": "ok", "version": "1.0.11"}
 ```
 
 ---

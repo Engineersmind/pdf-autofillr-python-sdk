@@ -46,11 +46,11 @@ Blank PDF form + your data
 
 | Package | PyPI | Version | Description |
 |---------|------|---------|-------------|
-| **pdf-autofillr** | umbrella | 1.1.4 | Install any combination via extras |
-| **pdf-autofillr-mapper** | `pip install pdf-autofillr-mapper` | 1.0.10 | Core engine: extract · map · embed · fill |
-| **pdf-autofillr-chatbot** | `pip install "pdf-autofillr[chatbot]"` | 0.3.0 | LLM conversation → PDF fill |
-| **pdf-autofillr-doc-upload** | `pip install "pdf-autofillr[doc-upload]"` | 0.1.5 | Document extraction → PDF fill |
-| **pdf-autofillr-rag** | `pip install "pdf-autofillr[rag]"` | 0.2.4 | Self-learning field prediction |
+| **pdf-autofillr** | umbrella | 1.1.5 | Install any combination via extras |
+| **pdf-autofillr-mapper** | `pip install pdf-autofillr-mapper` | 1.0.11 | Core engine: extract · map · embed · fill |
+| **pdf-autofillr-chatbot** | `pip install "pdf-autofillr[chatbot]"` | 0.3.1 | LLM conversation → PDF fill |
+| **pdf-autofillr-doc-upload** | `pip install "pdf-autofillr[doc-upload]"` | 0.1.6 | Document extraction → PDF fill |
+| **pdf-autofillr-rag** | `pip install "pdf-autofillr[rag]"` | 0.2.5 | Self-learning field prediction |
 
 ---
 

@@ -4,11 +4,11 @@
 
 | Package | Version | Supported |
 |---------|---------|-----------|
-| pdf-autofillr-mapper | 1.0.10 | ✅ |
-| pdf-autofillr-chatbot | 0.3.0 | ✅ |
-| pdf-autofillr-doc-upload | 0.1.5 | ✅ |
-| pdf-autofillr-rag | 0.2.4 | ✅ |
-| pdf-autofillr (umbrella) | 1.1.4 | ✅ |
+| pdf-autofillr-mapper | 1.0.11 | ✅ |
+| pdf-autofillr-chatbot | 0.3.1 | ✅ |
+| pdf-autofillr-doc-upload | 0.1.6 | ✅ |
+| pdf-autofillr-rag | 0.2.5 | ✅ |
+| pdf-autofillr (umbrella) | 1.1.5 | ✅ |
 | Any previous version | < latest | ❌ |
 
 ---

@@ -543,8 +543,8 @@ pytest
 # Increment version in pyproject.toml
 # Update CHANGELOG.md
 
-git commit -am "Release v0.2.4"
-git tag v0.2.4
+git commit -am "Release v0.2.5"
+git tag v0.2.5
 git push origin main --tags
 # GitHub Actions publishes to PyPI automatically
 ```

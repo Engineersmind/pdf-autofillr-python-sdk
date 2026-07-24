@@ -17,9 +17,10 @@ the running services to confirm the exploit is closed and legitimate use still w
 | Package | Old version | New version |
 |---|---|---|
 | `pdf-autofillr-doc-upload` | 0.1.5 | 0.1.6 |
-| `pdf-autofillr-chatbot` | 0.3.0 | 0.4.0 |
+| `pdf-autofillr-chatbot` | 0.3.0 | 0.3.1 |
 | `pdf-autofillr-mapper` | 1.0.10 | 1.0.11 |
 | `pdf-autofillr-rag` | 0.2.4 | 0.2.5 |
+| `pdf-autofillr` | 1.1.4 | 1.1.5 |
 
 ---
 
