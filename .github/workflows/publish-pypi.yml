@@ -77,7 +77,13 @@ jobs:
           distribution: temurin
           java-version: "17"
       - run: pip install -e ".[dev]"
-      - run: pytest tests/ --tb=short -q
+      - name: Run tests
+        run: |
+          if [ -d tests ]; then
+            pytest tests/ --tb=short -q
+          else
+            echo "No tests/ directory - skipping."
+          fi
 
   build:
     name: Build ${{ needs.resolve.outputs.package_name }}
