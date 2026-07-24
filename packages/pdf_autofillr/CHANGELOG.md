@@ -18,6 +18,13 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [1.1.5] - 2026-07-24
+
+### Fixed
+- CI: skip `pytest tests/` when no `tests/` directory exists (umbrella is a meta-package with no unit tests)
+
+---
+
 ## Packages
 
 | Package | Latest | Changelog |
