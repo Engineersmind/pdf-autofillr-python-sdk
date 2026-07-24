@@ -112,7 +112,9 @@ jobs:
     name: Publish ${{ needs.resolve.outputs.package_name }}
     runs-on: ubuntu-latest
     needs: [resolve, build]
-    continue-on-error: ${{ needs.resolve.outputs.package_name == 'pdf-autofillr' }}
+    # TODO: remove this condition once PyPI Trusted Publisher is configured for pdf-autofillr
+    # Tracked in: https://github.com/Engineersmind/pdf-autofillr-python-sdk/issues/58
+    if: needs.resolve.outputs.package_name != 'pdf-autofillr'
     environment: pypi
     permissions:
       id-token: write
