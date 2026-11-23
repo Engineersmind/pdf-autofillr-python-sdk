@@ -65,14 +65,14 @@ jobs:
       run:
         working-directory: ${{ needs.resolve.outputs.package_dir }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
       - name: Java (mapper only)
         if: startsWith(github.ref_name, 'mapper-v')
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
@@ -93,8 +93,8 @@ jobs:
       run:
         working-directory: ${{ needs.resolve.outputs.package_dir }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
       - name: Verify version matches tag
